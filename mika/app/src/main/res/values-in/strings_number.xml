@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="number_title">Nomor Tadolio</string>
+    <string name="number_back">Kembali</string>
+    <string name="number_unclaimed">Belum ada nomor</string>
+    <string name="number_claim">Dapatkan nomor</string>
+    <string name="number_copy">Salin</string>
+    <string name="number_change">Ganti nomor</string>
+    <string name="number_recipient">Nomor penerima</string>
+    <string name="number_open">Buka percakapan</string>
+    <string name="number_inbox">Kotak masuk</string>
+    <string name="number_sent">Terkirim</string>
+    <string name="number_received">Diterima</string>
+    <string name="number_block">Blokir</string>
+    <string name="number_unblock">Buka blokir</string>
+    <string name="number_message">Pesan</string>
+    <string name="number_send">Kirim</string>
+    <string name="number_failed">Tidak dapat menyelesaikan. Periksa nomor, koneksi, atau batas harian lalu coba lagi.</string>
+    <string name="number_change_confirm">Ganti nomor? Nomor lama langsung berhenti menerima pesan baru.</string>
+    <string name="number_cancel">Batal</string>
+    <string name="number_notification">Seseorang meninggalkan pesan untuk nomor Tadolio Anda.</string>
+    <string name="number_mine">Nomor saya %1$s</string>
+    <string name="number_new_chat">+</string>
+    <string name="number_menu">Menu</string>
+    <string name="number_yesterday">Kemarin</string>
+    <string name="number_empty">Bagikan nomor Tadolio Anda agar orang lain dapat meninggalkan pesan.</string>
+    <string name="number_blocked_banner">Nomor ini diblokir</string>
+    <string name="number_retry">! Coba lagi</string>
+    <string name="number_pending">Buka pesan tertunda</string>
+    <string name="number_invalid">Masukkan tepat 8 digit (0–9)</string>
+    <string name="number_public_card">Kartu publik</string>
+    <string name="number_public_card_hint">Hanya informasi publik, maksimal 1000 karakter</string>
+    <string name="number_auto_reply">Izinkan agen membalas</string>
+    <string name="number_auto_rounds">Agen membalas %1$d kali</string>
+    <string name="number_take_over">Saya ambil alih</string>
+    <string name="number_give_agent">Serahkan ke agen</string>
+    <string name="number_save">Simpan</string>
+    <string name="number_auto_handoff">Perlu perhatian pemilik.</string>
+</resources>

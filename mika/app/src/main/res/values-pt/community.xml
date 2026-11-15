@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="community_title">Computação comunitária Tadolio</string>
+    <string name="community_use_compute">Usar um nó aleatório</string>
+    <string name="community_invite">Código de convite (opcional)</string>
+    <string name="community_bind">Buscar ou trocar operador</string>
+    <string name="community_show_provider">Ver seu operador</string>
+    <string name="community_provider">Seu operador: %1$s</string>
+    <string name="community_unbind">Desvincular operador</string>
+    <string name="community_unavailable">Serviço indisponível. Verifique o hub e a aprovação do operador.</string>
+    <string name="community_use_operator">Concordar e usar este operador</string>
+    <string name="community_cloud_miner">Minerador na nuvem (%1$s)</string>
+    <string name="community_local_source">Modo de nó comunitário</string>
+    <string name="community_cloud_privacy">Alguns mineradores executam modelos de código aberto na nuvem. O conteúdo passa por essa plataforma.</string>
+    <string name="community_privacy_app_blocked">O modo comunitário bloqueia apps privados para impedir que o conteúdo chegue a mineradores aleatórios. Use seu próprio modelo nesta tarefa.</string>
+    <string name="community_calls_unavailable">AI calls are unavailable with community compute. Select your own key or account to use calls.</string>
+</resources>

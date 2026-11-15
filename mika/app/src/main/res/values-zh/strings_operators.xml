@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="operator_explanation">服务商：用自己的模型账户带你用 agent 的人、社群或公司。绑定后你用他的算力；他能看到你的 Tadolio 号、能给你发消息，你随时能解绑或拉黑。</string>
+    <string name="operator_directory">查找服务商</string>
+    <string name="operator_invite">有服务商邀请码？</string>
+    <string name="operator_empty">还没有服务商。你可以在侧栏“当矿工”里选“只帮自己人”，当第一个。</string>
+    <string name="operator_use">同意并使用</string>
+    <string name="operator_report">举报</string>
+    <string name="operator_reason">举报原因（可选，最多 200 字）</string>
+    <string name="operator_reported">举报已记录</string>
+    <string name="operator_share">分成 %1$d%%</string>
+    <string name="operator_share_rule">调低比例立即对所有人生效；调高只对新绑定的人生效，老用户需要重新点同意。</string>
+    <string name="operator_online">在线</string>
+    <string name="operator_offline">暂不可用</string>
+    <string name="operator_full">已满</string>
+    <string name="operator_users">有效用户 %1$s</string>
+    <string name="operator_official">官方</string>
+    <string name="operator_more">加载更多</string>
+    <string name="operator_mine">我是服务商</string>
+    <string name="operator_manage">在侧栏“当矿工”里修改名片、重置邀请码。</string>
+    <string name="operator_invite_value">邀请码 %1$s</string>
+    <string name="operator_counts">有效用户 %1$d · 绑定用户 %2$d / %3$d</string>
+    <string name="operator_listed">在服务商列表里：显示中</string>
+    <string name="operator_unlisted">在服务商列表里：尚未显示</string>
+    <string name="operator_share_link">用 Tadolio，填我的邀请码 %1$s %2$s</string>
+    <string name="hivo_operator_daily_limit">你的服务商今天的额度用完了，明天恢复。</string>
+    <string name="operator_share_action">分享</string>
+    <string name="operator_invite_not_found">没找到这个邀请码，核对一下再试。</string>
+    <string name="operator_full_error">这个服务商人满了，换一个吧。</string>
+    <string name="operator_unavailable_error">这个服务商暂时不能用，稍后再试或换一个。</string>
+    <string name="operator_use_invite">用这个邀请码</string>
+    <string name="operator_refresh">刷新</string>
+</resources>

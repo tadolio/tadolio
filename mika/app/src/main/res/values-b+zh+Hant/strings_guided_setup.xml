@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="setup_conversation_intro">要讓我幫你操作手機，需要打開幾個開關，我帶你做，大約一分鐘。</string>
+    <string name="setup_conversation_intro_wireless_only">手機重新開機過，「無線偵錯」關掉了。我帶你過去，打開一下就好。</string>
+    <string name="setup_conversation_password">這一步需要你自己輸入螢幕鎖定密碼，我會等你。</string>
+    <string name="setup_conversation_stalled">這一步需要你幫忙；可以重新開啟目前頁面，或查看詳細指引。</string>
+    <string name="setup_conversation_developer">我正在幫你打開，稍等。</string>
+    <string name="setup_conversation_accessibility">馬上帶你去系統的無障礙頁面。到了之後：先點「已下載的應用」（有的手機叫「已安裝的應用」），再點「Tadolio」，打開開關。開好我會自己回來。</string>
+    <string name="setup_conversation_wireless">我正在幫你打開，稍等。</string>
+    <string name="setup_conversation_pair_auto">我正在幫你連接手機助手，稍等。</string>
+    <string name="setup_conversation_pair_manual">這一步我沒能自動連線。請打開系統叫作「使用配對碼配對裝置」的入口，把裡面的數字填入 Tadolio 通知。</string>
+    <string name="setup_conversation_notifications">請允許 Tadolio 傳送通知，這樣需要幫忙時我才能提醒你。</string>
+    <string name="setup_conversation_battery">請選擇 Tadolio 並允許不受限制的電池使用，讓系統保留助手執行。</string>
+    <string name="setup_conversation_done">手機已經設定好了，現在可以跟 Tadolio 說話了。</string>
+    <string name="setup_conversation_share">讓孩子幫我</string>
+    <string name="setup_conversation_continue">開始</string>
+    <string name="setup_conversation_finish">開始使用 Tadolio</string>
+    <string name="setup_conversation_manual">詳細指引／USB 啟動</string>
+    <string name="setup_conversation_later">稍後再說</string>
+    <string name="setup_conversation_retry">再試一次</string>
+    <string name="setup_conversation_problems">遇到問題</string>
+    <string name="setup_conversation_needed">這件事要先開個權限，我帶你弄。</string>
+    <string name="setup_conversation_developer_manual">這一步我沒能自動打開，需要你幫忙。在「軟體資訊」裡連點七次「版本號碼」；系統把這個開關叫作「開發人員選項」。</string>
+    <string name="setup_conversation_wireless_manual">這一步我沒能自動打開，請打開「無線偵錯」；這是系統對本機助手連線開關的叫法。</string>
+    <string name="setup_highlight_tap">點這裡</string>
+    <string name="setup_highlight_build">點這裡，連點 7 下</string>
+    <string name="setup_accessibility_toast">點「已下載的應用」，再點「Tadolio」，打開開關</string>
+</resources>

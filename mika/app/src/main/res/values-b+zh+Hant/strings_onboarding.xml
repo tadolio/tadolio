@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="onboarding_greeting">你好，我是 Tadolio。我會幫你用手機，點開始，或按住說「開始」。</string>
+    <string name="onboarding_read_aloud">語音朗讀</string>
+    <string name="onboarding_tts_missing">暫時不能朗讀，可以繼續點按鈕。</string>
+    <string name="onboarding_model_question">你想讓我用哪種模型？</string>
+    <string name="onboarding_community">用免費的社群算力，什麼都不用填</string>
+    <string name="onboarding_account">用 ChatGPT、Grok 或 OpenRouter 帳號登入</string>
+    <string name="onboarding_key">我有 API Key</string>
+    <string name="onboarding_account_question">你想用哪個帳號登入？</string>
+</resources>

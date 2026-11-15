@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="phone_operator_role">只帮自己人（当服务商）</string>
+    <string name="phone_miner_role">帮陌生人（当矿工）</string>
+    <string name="phone_operator_switch">换身份会先停下现在的，新身份要再过一次入场考试。以后换回来不用重考。</string>
+    <string name="phone_operator_online">绑定你的人用的是你手机上的 Key。手机要一直联网、别关掉 Tadolio，最好插着电、连着 Wi-Fi；手机离线时他们就用不了。</string>
+    <string name="phone_operator_name">名字</string>
+    <string name="phone_operator_intro">一句介绍</string>
+    <string name="phone_operator_contact">联系方式（可选）</string>
+    <string name="phone_operator_share">分成（0–100%）</string>
+    <string name="phone_operator_capacity">最多带多少人</string>
+    <string name="phone_operator_declaration">我用的是自己的按量付费 API，有权为我的用户提供服务；我会为自己发的消息负责。</string>
+    <string name="phone_operator_reset">重置邀请码</string>
+    <string name="phone_operator_reset_confirm">重置邀请码？旧码立即失效，已有绑定保留。</string>
+<string name="phone_operator_offline">你的服务商现在不在线</string>
+<string name="phone_operator_once">这次先用随机社区算力</string>
+<string name="phone_operator_edit">修改名片</string>
+    <string name="phone_operator_title">当服务商</string>
+    <string name="phone_operator_share_hint">你的用户收到别人付的金币时，你分其中几成。不是新发的金币。写在名片上，绑定前能看到。调低立即生效，调高须老用户重新同意。</string>
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="community_title">Вычисления сообщества Tadolio</string>
+    <string name="community_use_compute">Использовать случайный узел</string>
+    <string name="community_invite">Код приглашения (необязательно)</string>
+    <string name="community_bind">Найти или сменить оператора</string>
+    <string name="community_show_provider">Показать вашего оператора</string>
+    <string name="community_provider">Ваш оператор: %1$s</string>
+    <string name="community_unbind">Отвязать оператора</string>
+    <string name="community_unavailable">Сервис недоступен. Проверьте hub и допуск оператора.</string>
+    <string name="community_use_operator">Согласиться и выбрать оператора</string>
+    <string name="community_cloud_miner">Облачный майнер (%1$s)</string>
+    <string name="community_local_source">Режим узла сообщества</string>
+    <string name="community_cloud_privacy">Некоторые майнеры запускают открытые модели в облаке. Содержимое проходит через эту платформу.</string>
+    <string name="community_privacy_app_blocked">В режиме сообщества приватные приложения заблокированы, чтобы их содержимое не попало к случайному майнеру. Используйте свою модель для этой задачи.</string>
+    <string name="community_calls_unavailable">AI calls are unavailable with community compute. Select your own key or account to use calls.</string>
+</resources>

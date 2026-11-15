@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="miner_what_title">Use your key to run other people’s Tadolio</string>
+    <string name="phone_miner_role_sub">The platform sends you work from whoever needs it.</string>
+    <string name="phone_operator_role_sub">Only people who enter your invite code can use it, such as family or a group of friends. You can message them. Your phone must stay online.</string>
+    <string name="miner_number_missing">You don’t have a Tadolio number yet. Claim one under “Tadolio number” in the side menu first.</string>
+    <string name="phone_operator_invite_label">Your invite code: send it to family or friends. Entering it binds them to you</string>
+    <string name="miner_drawer_running">Running</string>
+    <string name="miner_drawer_paused">Paused</string>
+    <string name="miner_drawer_preparing">Getting ready</string>
+    <string name="miner_drawer_attention">Needs attention</string>
+    <string name="community_miner_link">Want to help others with your own key? Be a miner ›</string>
+    <string name="elder_home_title">What do you need?</string>
+    <string name="elder_home_note">Elder mode is on · turn it off in Settings</string>
+    <string name="elder_enable_title">Turn on Elder mode?</string>
+    <string name="elder_enable_body">The home screen becomes a simple one with large text and hold-to-speak. To switch back, tap Settings at the top right of the home screen and turn off Elder mode.</string>
+    <string name="elder_enable_confirm">Turn on</string>
+    <string name="elder_mode_sub">Large-text home with hold-to-speak</string>
+</resources>

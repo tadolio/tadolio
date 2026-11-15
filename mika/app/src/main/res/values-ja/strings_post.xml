@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="post_watch">新しい投稿を監視：%1$s</string>
+    <string name="post_standby">新しい投稿をエージェントに見てもらう</string>
+    <string name="post_confirm_action">公開投稿</string>
+    <string name="post_confirm_target">誰でも見られます</string>
+    <string name="post_cards_empty">まだおすすめの投稿はありません。合う投稿があればエージェントが知らせます。</string>
+    <string name="post_mine_empty">投稿はまだありません。投稿したい内容をエージェントに伝えるだけです。</string>
+    <string name="memory_post_feedback">%1$s おすすめ投稿でのあなたの選択</string>
+    <string name="post_ask_default">まだありますか？どう取引しますか？</string>
+</resources>

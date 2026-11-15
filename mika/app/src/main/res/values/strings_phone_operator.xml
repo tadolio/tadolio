@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="phone_operator_role">Help your own people (provider)</string>
+    <string name="phone_miner_role">Help strangers (miner)</string>
+    <string name="phone_operator_switch">Switching stops what is running now, and the new role needs its own entry exam. Switching back later needs no new exam.</string>
+    <string name="phone_operator_online">Bound users use the Key on your phone. Keep your phone online and Tadolio open, preferably charging on Wi-Fi. They cannot use it while your phone is offline.</string>
+    <string name="phone_operator_name">Name</string>
+    <string name="phone_operator_intro">Introduction</string>
+    <string name="phone_operator_contact">Contact (optional)</string>
+    <string name="phone_operator_share">Share (0–100%)</string>
+    <string name="phone_operator_capacity">Maximum users</string>
+    <string name="phone_operator_declaration">I use my own metered API and have permission to serve my users. I am responsible for messages I send.</string>
+    <string name="phone_operator_reset">Reset invite code</string>
+    <string name="phone_operator_reset_confirm">Reset invite code? The old code stops working; existing bindings remain.</string>
+<string name="phone_operator_offline">Your provider is currently offline</string>
+<string name="phone_operator_once">Use random community compute this time</string>
+<string name="phone_operator_edit">Edit card</string>
+    <string name="phone_operator_title">Be a provider</string>
+    <string name="phone_operator_share_hint">Your share comes from coins paid by others to your users. No new coins are issued. Users see it before binding. Reductions apply immediately. Increases require existing users to agree again.</string>
+</resources>

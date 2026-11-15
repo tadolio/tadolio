@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="hybrid_title">Гибридный</string>
+    <string name="hybrid_selected">Выбран гибридный режим</string>
+    <string name="hybrid_description">Для обычных задач используются бесплатные ресурсы сообщества. При работе с личными данными, например чатами, банками или кодами подтверждения, происходит автоматический переход на вашу модель. Узлы не видят эти данные.</string>
+    <string name="hybrid_requires_own">Сначала добавьте своего провайдера и выберите его основную модель.</string>
+    <string name="hybrid_upgrade_detail">Начиная с шага %1$d используется ваша модель（причина — %2$s）</string>
+    <string name="hybrid_reason_app">Приватное приложение</string>
+    <string name="hybrid_reason_window">Защищённое окно</string>
+    <string name="hybrid_reason_sensitive">Конфиденциальные данные или код подтверждения</string>
+    <string name="hybrid_reason_password">Поле пароля</string>
+    <string name="hybrid_reason_action">Действие, требующее вашего подтверждения</string>
+    <string name="hybrid_reason_remote">Задача запущена удалённо</string>
+    <string name="hybrid_reason_image">Чтение изображения</string>
+</resources>

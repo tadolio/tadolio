@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="post_watch">关注新发布：%1$s</string>
+    <string name="post_standby">让 agent 替我看新发布</string>
+    <string name="post_confirm_action">公开发布</string>
+    <string name="post_confirm_target">所有人都能看到</string>
+    <string name="post_cards_empty">还没有替你挑的发布。有合适的新发布时，agent 会告诉你。</string>
+    <string name="post_mine_empty">你还没有发布。想发什么，跟 agent 说一句就行。</string>
+    <string name="memory_post_feedback">%1$s 你在替你挑的发布上点的</string>
+    <string name="post_ask_default">还在吗？怎么交易？</string>
+</resources>

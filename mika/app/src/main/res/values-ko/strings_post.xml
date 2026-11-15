@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="post_watch">새 게시물 확인: %1$s</string>
+    <string name="post_standby">에이전트가 새 게시물 살펴보기</string>
+    <string name="post_confirm_action">공개 게시</string>
+    <string name="post_confirm_target">누구나 볼 수 있어요</string>
+    <string name="post_cards_empty">아직 골라 둔 게시물이 없어요. 맞는 새 게시물이 있으면 에이전트가 알려 드려요.</string>
+    <string name="post_mine_empty">아직 게시물이 없어요. 올리고 싶은 내용을 에이전트에게 말하면 돼요.</string>
+    <string name="memory_post_feedback">%1$s 추천 게시물에서 누른 반응</string>
+    <string name="post_ask_default">아직 있나요? 어떻게 거래하나요?</string>
+</resources>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="coins_wallet">Dompet koin</string>
+    <string name="coins_received">Menerima %1$d koin (%2$d pembayaran)</string>
+    <string name="coins_provider_share">Penyedia ini menerima %1$d%% dari pendapatan Anda</string>
+    <string name="coins_pay">Pembayaran</string>
+    <string name="coins_receive">Diterima</string>
+    <string name="coins_share">Bagian</string>
+    <string name="coins_deposit">Setoran</string>
+    <string name="coins_buyer_pending">Menunggu konfirmasi penerimaan</string>
+    <string name="coins_seller_pending">Menunggu konfirmasi pembeli</string>
+    <string name="coins_held_incoming">%1$s membayar %2$d koin (ditahan hingga penerimaan dikonfirmasi)</string>
+    <string name="coins_credited">%1$d koin masuk (%2$d pembayaran)</string>
+    <string name="coins_release">Konfirmasi penerimaan</string>
+    <string name="coins_problem">Ada masalah</string>
+    <string name="coins_release_goal">Konfirmasikan penerimaan pembelian ini menggunakan alat pelepasan dan minta persetujuan saya sekali.</string>
+    <string name="coins_dispute_goal">Ada masalah dengan pembelian ini. Bantu tulis alasan sengketa, tanyakan informasi yang kurang, lalu kirim laporan pembayaran setelah saya setujui.</string>
+    <string name="coins_refunded">Dikembalikan</string>
+    <string name="coins_released">Dilepas</string>
+    <string name="coins_disputed">Sengketa diproses</string>
+    <string name="coins_confirm_release">Konfirmasi terima dan bayar penjual</string>
+    <string name="coins_confirm_refund">Kembalikan dana ke pembeli</string>
+    <string name="coins_stage">Tahap %1$d · %2$d koin · %3$s</string>
+    <string name="coins_due_rule">Belum dikonfirmasi pada %1$s, %2$s</string>
+    <string name="coins_due_release">bayar penjual</string>
+    <string name="coins_due_refund">kembalikan kepada pembeli</string>
+    <string name="coins_proposed">%1$s mengusulkan %2$d tahap senilai %3$d koin. Setuju?</string>
+    <string name="coins_accept">Setuju</string>
+    <string name="coins_decline">Tolak</string>
+    <string name="coins_cancel">Batalkan usulan</string>
+    <string name="coins_confirm_accept">Setujui ketentuan</string>
+    <string name="coins_confirm_decline">Tolak dan kembalikan</string>
+    <string name="coins_confirm_cancel">Batalkan dan ambil koin</string>
+    <string name="coins_stage_status">Tahap %1$d · %2$s</string>
+    <string name="coins_reminder">Batas waktu yang disepakati untuk %1$s · %2$s adalah %3$s</string>
+    <string name="coins_proposed_status">Menunggu persetujuan penjual</string>
+    <string name="coins_confirm_stage">Konfirmasi tahap %1$d. %2$s, %3$s koin ke penjual</string>
+    <string name="coins_due_separator">"; "</string>
+</resources>

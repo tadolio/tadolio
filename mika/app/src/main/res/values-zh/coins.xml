@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="coins_wallet">金币钱包</string>
+    <string name="coins_received">收到 %1$d 金币（%2$d 笔）</string>
+    <string name="coins_provider_share">这个服务商从你的收入里分 %1$d%%</string>
+    <string name="coins_pay">付款</string>
+    <string name="coins_receive">收款</string>
+    <string name="coins_share">分成</string>
+    <string name="coins_deposit">转入</string>
+    <string name="coins_buyer_pending">待确认收货</string>
+    <string name="coins_seller_pending">待买家确认</string>
+    <string name="coins_held_incoming">%1$s 已付 %2$d 金币（担保中，对方确认收货后到账）</string>
+    <string name="coins_credited">已到账 %1$d 金币（%2$d 笔）</string>
+    <string name="coins_release">确认收货</string>
+    <string name="coins_problem">有问题</string>
+    <string name="coins_release_goal">确认这笔购买已收货。调用确认收货工具，让我确认一次后再放款。</string>
+    <string name="coins_dispute_goal">这笔购买有问题。帮我写争议理由，先问清缺失的信息，我确认后再提交付款争议举报。</string>
+    <string name="coins_refunded">已退款</string>
+    <string name="coins_released">已放款</string>
+    <string name="coins_disputed">争议处理中</string>
+    <string name="coins_confirm_release">确认收货，金币给卖家</string>
+    <string name="coins_confirm_refund">退款给买家</string>
+    <string name="coins_stage">第 %1$d 期 %2$d 金币：%3$s</string>
+    <string name="coins_due_rule">%1$s 未确认就%2$s</string>
+    <string name="coins_due_release">给卖家</string>
+    <string name="coins_due_refund">退给买家</string>
+    <string name="coins_proposed">%1$s 提出付款约定：%2$d 期共 %3$d 金币，同意吗</string>
+    <string name="coins_accept">同意</string>
+    <string name="coins_decline">不同意</string>
+    <string name="coins_cancel">取消约定</string>
+    <string name="coins_confirm_accept">同意付款约定</string>
+    <string name="coins_confirm_decline">不同意并退款</string>
+    <string name="coins_confirm_cancel">取消并取回金币</string>
+    <string name="coins_stage_status">第 %1$d 期 · %2$s</string>
+    <string name="coins_reminder">%1$s 的 %2$s 约定于 %3$s 到期</string>
+    <string name="coins_proposed_status">待卖家同意约定</string>
+    <string name="coins_confirm_stage">确认第 %1$d 期：%2$s，%3$s 金币给卖家</string>
+    <string name="coins_due_separator">；</string>
+</resources>

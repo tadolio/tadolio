@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="community_title">Tadolio 社群算力</string>
+    <string name="community_privacy">幫你辦事的礦工或服務商能看到這次任務的內容。內容加密後經 Tadolio 平台轉交；你仍需要信任平台，理論上它有辦法換掉加密鑰匙、看到內容。社群保護規則照常生效；免費使用不賺金幣。選定服務商，就表示同意由他為你服務。</string>
+    <string name="community_use_compute">使用隨機社群算力</string>
+    <string name="community_invite">服務商邀請碼（選填）</string>
+    <string name="community_bind">尋找或更換服務商</string>
+    <string name="community_show_provider">查看你的服務商</string>
+    <string name="community_provider">你的服務商：%1$s</string>
+    <string name="community_unbind">解除服務商綁定</string>
+    <string name="community_unavailable">社群服務暫不可用，請檢查平台或服務商資格。</string>
+    <string name="community_use_operator">同意並使用此服務商</string>
+    <string name="community_cloud_miner">雲端礦工（%1$s）</string>
+    <string name="community_local_source">社群算力</string>
+    <string name="community_cloud_privacy">部分礦工使用雲端按量 API，內容會經過標明的公司。</string>
+    <string name="community_privacy_app_blocked">社區模式無法存取隱私類 App，以免內容交給隨機礦工。請用自己的模型來做。</string>
+    <string name="community_calls_unavailable">社群算力模式下無法使用 AI 電話，請選擇自己的 Key 或登入帳號後使用。</string>
+</resources>

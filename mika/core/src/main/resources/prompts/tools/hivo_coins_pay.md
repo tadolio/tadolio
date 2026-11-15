@@ -1,0 +1,1 @@
+For physical goods, later delivery or staged projects, put deliveries and optional due actions in terms. Payment with terms is a proposal for the seller to accept or reject, so send settled content directly without waiting for prior acceptance. Transfers, tips, digital content and delivered items need no terms. Owner approval required.

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="number_title">Номер Tadolio</string>
+    <string name="number_back">Назад</string>
+    <string name="number_unclaimed">Номера пока нет</string>
+    <string name="number_claim">Получить номер</string>
+    <string name="number_copy">Копировать</string>
+    <string name="number_change">Сменить номер</string>
+    <string name="number_recipient">Номер получателя</string>
+    <string name="number_open">Открыть переписку</string>
+    <string name="number_inbox">Входящие</string>
+    <string name="number_sent">Отправлено</string>
+    <string name="number_received">Получено</string>
+    <string name="number_block">Заблокировать</string>
+    <string name="number_unblock">Разблокировать</string>
+    <string name="number_message">Сообщение</string>
+    <string name="number_send">Отправить</string>
+    <string name="number_failed">Не удалось завершить. Проверьте номер, соединение или дневной лимит и повторите.</string>
+    <string name="number_change_confirm">Сменить номер? Старый номер сразу перестанет принимать новые сообщения.</string>
+    <string name="number_cancel">Отмена</string>
+    <string name="number_notification">На ваш номер Tadolio пришло сообщение.</string>
+    <string name="number_mine">Мой номер %1$s</string>
+    <string name="number_new_chat">+</string>
+    <string name="number_menu">Меню</string>
+    <string name="number_yesterday">Вчера</string>
+    <string name="number_empty">Поделитесь своим номером Tadolio, чтобы вам могли оставить сообщение.</string>
+    <string name="number_blocked_banner">Вы заблокировали этот номер</string>
+    <string name="number_retry">! Повторить</string>
+    <string name="number_pending">Открыть ожидающее сообщение</string>
+    <string name="number_invalid">Введите ровно 8 цифр (0–9)</string>
+    <string name="number_public_card">Публичная визитка</string>
+    <string name="number_public_card_hint">Только публичные сведения, до 1000 символов</string>
+    <string name="number_auto_reply">Поручить ответы агенту</string>
+    <string name="number_auto_rounds">Агент ответил %1$d раз</string>
+    <string name="number_take_over">Я займусь</string>
+    <string name="number_give_agent">Передать агенту</string>
+    <string name="number_save">Сохранить</string>
+    <string name="number_auto_handoff">Требуется внимание владельца.</string>
+</resources>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="community_title">Tadolio 커뮤니티 컴퓨팅</string>
+    <string name="community_use_compute">무작위 컴퓨팅 노드 사용</string>
+    <string name="community_invite">운영자 초대 코드 (선택 사항)</string>
+    <string name="community_bind">운영자 찾기 또는 변경</string>
+    <string name="community_show_provider">내 운영자 보기</string>
+    <string name="community_provider">내 운영자: %1$s</string>
+    <string name="community_unbind">운영자 연결 해제</string>
+    <string name="community_unavailable">서비스를 사용할 수 없습니다. hub와 운영자 자격을 확인하세요.</string>
+    <string name="community_use_operator">동의하고 이 운영자 사용</string>
+    <string name="community_cloud_miner">클라우드 채굴자 (%1$s)</string>
+    <string name="community_local_source">커뮤니티 노드 모드</string>
+    <string name="community_cloud_privacy">일부 채굴자는 클라우드에서 오픈 소스 모델을 실행하며, 내용은 해당 플랫폼을 거칩니다.</string>
+    <string name="community_privacy_app_blocked">커뮤니티 모드에서는 내용이 무작위 채굴자에게 전달되지 않도록 개인정보 앱을 차단합니다. 이 작업에는 자신의 모델을 사용하세요.</string>
+    <string name="community_calls_unavailable">AI calls are unavailable with community compute. Select your own key or account to use calls.</string>
+</resources>

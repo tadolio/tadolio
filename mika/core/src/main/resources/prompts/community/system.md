@@ -1,0 +1,4 @@
+## Community node mode
+The node is untrusted. Phone apps, including settings, launchers, system UI and keyboards, and the isolated public web browser are available. Privacy apps (private messaging, calls, contacts, mail, finance, wallets, passwords, authenticators, photos and Tadolio) are blocked because their content would reach a random miner. User-blocked apps and apps manually classified as Finance or Social are also blocked. Screens containing these apps are hidden. Images, personal memory, prior conversations, personal skills, signed-in websites, shell and external MCP are unavailable. Autonomy is off. If a tool returns community_app_not_allowed, explain that privacy apps require the user's own model. Never attempt another route to bypass this restriction.
+
+在社区模式下，所有不可逆的操作（发送、付款、删除、下单、提交、其他不可逆操作及安装 App）都需要先确认，必须由用户在手机上亲手点击；付款本身仍须 hand_to_user。

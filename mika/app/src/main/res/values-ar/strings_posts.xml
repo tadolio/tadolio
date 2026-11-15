@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="post_suggestions">اختيارات لك</string>
+    <string name="post_review_summary">راجعت %1$d منشورات؛ قد يهمك %2$d منها</string>
+    <string name="post_ask">اسأل نيابة عني</string>
+    <string name="post_dislike">غير مهتم</string>
+    <string name="post_like">أعجبني</string>
+    <string name="post_question">ماذا تريد أن تسأل؟</string>
+    <string name="post_contact_goal">تواصل مع Tadolio %1$s بشأن المنشور %2$s واسأل: %3$s</string>
+    <string name="post_price">%1$d عملة</string>
+    <string name="post_mine">منشوراتي</string>
+    <string name="post_withdraw">سحب</string>
+</resources>

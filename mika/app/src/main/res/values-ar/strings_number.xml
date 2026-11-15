@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="number_title">رقم Tadolio</string>
+    <string name="number_back">رجوع</string>
+    <string name="number_unclaimed">لا يوجد رقم بعد</string>
+    <string name="number_claim">الحصول على رقم</string>
+    <string name="number_copy">نسخ</string>
+    <string name="number_change">تغيير الرقم</string>
+    <string name="number_recipient">رقم المستلم</string>
+    <string name="number_open">فتح المحادثة</string>
+    <string name="number_inbox">الوارد</string>
+    <string name="number_sent">مرسل</string>
+    <string name="number_received">مستلم</string>
+    <string name="number_block">حظر</string>
+    <string name="number_unblock">إلغاء الحظر</string>
+    <string name="number_message">رسالة</string>
+    <string name="number_send">إرسال</string>
+    <string name="number_failed">تعذر الإكمال. تحقق من الرقم أو الاتصال أو الحد اليومي ثم حاول مجددًا.</string>
+    <string name="number_change_confirm">هل تريد تغيير الرقم؟ سيتوقف الرقم القديم فورًا عن استقبال الرسائل الجديدة.</string>
+    <string name="number_cancel">إلغاء</string>
+    <string name="number_notification">ترك شخص رسالة لرقم Tadolio الخاص بك.</string>
+    <string name="number_mine">رقمي %1$s</string>
+    <string name="number_new_chat">+</string>
+    <string name="number_menu">القائمة</string>
+    <string name="number_yesterday">أمس</string>
+    <string name="number_empty">شارك رقم Tadolio الخاص بك ليتمكن الآخرون من ترك رسالة لك.</string>
+    <string name="number_blocked_banner">لقد حظرت هذا الرقم</string>
+    <string name="number_retry">! إعادة المحاولة</string>
+    <string name="number_pending">فتح الرسالة المعلقة</string>
+    <string name="number_invalid">أدخل 8 أرقام بالضبط (0–9)</string>
+    <string name="number_public_card">بطاقة عامة</string>
+    <string name="number_public_card_hint">معلومات عامة فقط، حتى 1000 حرف</string>
+    <string name="number_auto_reply">السماح للوكيل بالرد عني</string>
+    <string name="number_auto_rounds">رد الوكيل %1$d مرات</string>
+    <string name="number_take_over">سأتولى الأمر</string>
+    <string name="number_give_agent">تسليم للوكيل</string>
+    <string name="number_save">حفظ</string>
+    <string name="number_auto_handoff">يلزم تدخل المالك.</string>
+</resources>

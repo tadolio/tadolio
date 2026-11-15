@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="miner_cost">這會花你自己 API 帳戶裡的錢。Key 僅在本機加密保存。金幣記在你的 Tadolio 號上。</string>
+    <string name="miner_key">貼上你的 Key</string>
+    <string name="miner_limit">每日 token 上限</string>
+    <string name="miner_metered_confirm">我使用自己的按量付費 API 帳戶，並承擔呼叫費用。</string>
+    <string name="miner_wifi">只連 Wi-Fi 接單</string>
+    <string name="miner_charging">只在充電時接單</string>
+    <string name="miner_stats">今日 token（含預占）：%1$s · 今日 pending 金幣：%2$s · 累計確認金幣：%3$s</string>
+    <string name="miner_notification">正在為社區提供算力</string>
+    <string name="miner_conditions_note">Pauses offline, at the daily limit, below your battery threshold while unplugged, or when your chosen conditions are unmet. Mobile data and unplugged work are enabled by default.</string>
+    <string name="miner_price_input">Input price per million tokens</string>
+    <string name="miner_price_output">Output price per million tokens</string>
+    <string name="miner_currency">Price currency (three-letter code)</string>
+    <string name="miner_price_public">Live OpenRouter public model prices, USD.</string>
+    <string name="miner_price_manual">可選：手填單價覆蓋估算。留空使用平台價格，額外費用另計。</string>
+    <string name="miner_estimate">每日上限跑滿約花 %1$s %2$s–%3$s。</string>
+    <string name="miner_battery">Pause below this battery percentage when unplugged</string>
+    <string name="miner_model_summary">模型：%1$s（可更換）</string>
+    <string name="miner_bill_only">花費以平台帳單為準。</string>
+    <string name="miner_advanced">進階設定</string>
+    <string name="miner_key_saved">本機已儲存，留空繼續使用</string>
+    <string name="miner_key_failed">Key 不對或餘額不足。請檢查 Key、餘額和網路後重試。</string>
+    <string name="miner_save_failed">啟動失敗，請重試。</string>
+    <string name="miner_price_note">內建價格更新於 %1$s；DeepSeek 按尖峰價估算。快取優惠和額外費用另計，以平台帳單為準。</string>
+</resources>

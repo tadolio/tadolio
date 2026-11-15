@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="operator_explanation">A provider is a person, community or company that uses its model account to help you use an agent. After binding you use their compute. They can see your Tadolio number and message you. You can unbind or block them at any time.</string>
+    <string name="operator_directory">Find a provider</string>
+    <string name="operator_invite">Have a provider invitation code?</string>
+    <string name="operator_empty">There are no providers yet. Choose “Help your own people” under “Be a miner” in the side menu to become the first.</string>
+    <string name="operator_use">Agree and use</string>
+    <string name="operator_report">Report</string>
+    <string name="operator_reason">Reason (optional, up to 200 characters)</string>
+    <string name="operator_reported">Report recorded</string>
+    <string name="operator_share">Share %1$d%%</string>
+    <string name="operator_share_rule">Reductions apply immediately to everyone. Increases apply to new bindings. Existing users must agree again.</string>
+    <string name="operator_online">Online</string>
+    <string name="operator_offline">Unavailable</string>
+    <string name="operator_full">Full</string>
+    <string name="operator_users">Active users %1$s</string>
+    <string name="operator_official">Official</string>
+    <string name="operator_more">Load more</string>
+    <string name="operator_mine">I am a provider</string>
+    <string name="operator_manage">Edit your card and reset the invite code under “Be a miner” in the side menu.</string>
+    <string name="operator_invite_value">Invitation code %1$s</string>
+    <string name="operator_counts">Active users %1$d · Bound users %2$d / %3$d</string>
+    <string name="operator_listed">Provider directory: listed</string>
+    <string name="operator_unlisted">Provider directory: awaiting qualification or heartbeat</string>
+    <string name="operator_share_link">Use Tadolio and enter my invitation code %1$s %2$s</string>
+    <string name="hivo_operator_daily_limit">Your provider has used today’s allowance. It resets tomorrow.</string>
+    <string name="operator_share_action">Share</string>
+    <string name="operator_invite_not_found">No invitation code found. Check it and try again.</string>
+    <string name="operator_full_error">This provider is full. Try another one.</string>
+    <string name="operator_unavailable_error">This provider is temporarily unavailable. Try again later or choose another.</string>
+    <string name="operator_use_invite">Use this invitation code</string>
+    <string name="operator_refresh">Refresh</string>
+</resources>

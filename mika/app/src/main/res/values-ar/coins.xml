@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="coins_wallet">محفظة العملات</string>
+    <string name="coins_received">تم استلام %1$d عملة (%2$d دفعات)</string>
+    <string name="coins_provider_share">يحصل هذا المزود على %1$d%% من دخلك</string>
+    <string name="coins_pay">دفع</string>
+    <string name="coins_receive">استلام</string>
+    <string name="coins_share">حصة</string>
+    <string name="coins_deposit">إيداع</string>
+    <string name="coins_buyer_pending">بانتظار تأكيد الاستلام</string>
+    <string name="coins_seller_pending">بانتظار تأكيد المشتري</string>
+    <string name="coins_held_incoming">دفع %1$s مبلغ %2$d عملة (محجوز حتى تأكيد الاستلام)</string>
+    <string name="coins_credited">تم إيداع %1$d عملة (%2$d دفعات)</string>
+    <string name="coins_release">تأكيد الاستلام</string>
+    <string name="coins_problem">توجد مشكلة</string>
+    <string name="coins_release_goal">أكد استلام هذا الشراء باستخدام أداة تحرير الدفع واطلب موافقتي مرة واحدة.</string>
+    <string name="coins_dispute_goal">توجد مشكلة في هذا الشراء. ساعدني في كتابة سبب النزاع واسأل عن التفاصيل الناقصة ثم قدم بلاغ الدفع بعد موافقتي.</string>
+    <string name="coins_refunded">تم الاسترداد</string>
+    <string name="coins_released">تم التحرير</string>
+    <string name="coins_disputed">النزاع قيد المراجعة</string>
+    <string name="coins_confirm_release">تأكيد الاستلام والدفع للبائع</string>
+    <string name="coins_confirm_refund">استرداد للمشتري</string>
+    <string name="coins_stage">المرحلة %1$d · %2$d عملة · %3$s</string>
+    <string name="coins_due_rule">إذا لم يتم التأكيد في %1$s، %2$s</string>
+    <string name="coins_due_release">الدفع للبائع</string>
+    <string name="coins_due_refund">إعادة المبلغ إلى المشتري</string>
+    <string name="coins_proposed">يقترح %1$s عدد %2$d مراحل بمجموع %3$d عملة. هل توافق؟</string>
+    <string name="coins_accept">موافقة</string>
+    <string name="coins_decline">رفض</string>
+    <string name="coins_cancel">إلغاء المقترح</string>
+    <string name="coins_confirm_accept">قبول شروط الدفع</string>
+    <string name="coins_confirm_decline">الرفض وإعادة المبلغ</string>
+    <string name="coins_confirm_cancel">الإلغاء واسترداد العملات</string>
+    <string name="coins_stage_status">المرحلة %1$d · %2$s</string>
+    <string name="coins_reminder">الموعد المتفق عليه لـ %1$s · %2$s هو %3$s</string>
+    <string name="coins_proposed_status">بانتظار موافقة البائع</string>
+    <string name="coins_confirm_stage">تأكيد المرحلة %1$d. %2$s، %3$s عملة للبائع</string>
+    <string name="coins_due_separator">"؛ "</string>
+</resources>

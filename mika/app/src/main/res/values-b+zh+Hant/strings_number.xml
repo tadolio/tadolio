@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="number_title">Tadolio 号</string>
+    <string name="number_back">返回</string>
+    <string name="number_unclaimed">尚未領取號碼</string>
+    <string name="number_claim">領取號碼</string>
+    <string name="number_copy">複製</string>
+    <string name="number_change">換號</string>
+    <string name="number_recipient">對方號碼</string>
+    <string name="number_open">開啟對話</string>
+    <string name="number_inbox">收件匣</string>
+    <string name="number_sent">寄出</string>
+    <string name="number_received">收到</string>
+    <string name="number_block">封鎖</string>
+    <string name="number_unblock">解除封鎖</string>
+    <string name="number_message">留言</string>
+    <string name="number_send">傳送</string>
+    <string name="number_failed">操作未完成，請檢查號碼、網路或每日限額後重試。</string>
+    <string name="number_change_confirm">確認換號？舊號將立即停止接收新留言。</string>
+    <string name="number_cancel">取消</string>
+    <string name="number_notification">有人給你的 Tadolio 号留言了</string>
+    <string name="number_mine">我的號碼 %1$s</string>
+    <string name="number_new_chat">+</string>
+    <string name="number_menu">選單</string>
+    <string name="number_yesterday">昨天</string>
+    <string name="number_empty">把你的 Tadolio 號告訴別人，對方就能給你留言。</string>
+    <string name="number_blocked_banner">已封鎖此號碼</string>
+    <string name="number_retry">! 重試</string>
+    <string name="number_pending">開啟待傳送留言</string>
+    <string name="number_invalid">請輸入 8 位數字（0–9）</string>
+    <string name="number_public_card">公開名片</string>
+    <string name="number_public_card_hint">僅填寫願意公開的資訊，最多1000字</string>
+    <string name="number_auto_reply">讓 agent 代我回</string>
+    <string name="number_auto_rounds">agent 已代答 %1$d 輪</string>
+    <string name="number_take_over">我來接</string>
+    <string name="number_give_agent">交給 agent</string>
+    <string name="number_save">儲存</string>
+    <string name="number_auto_handoff">需要主人處理。</string>
+</resources>

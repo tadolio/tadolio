@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="post_suggestions">Подобрано для вас</string>
+    <string name="post_review_summary">Просмотрено %1$d публикаций; %2$d могут заинтересовать</string>
+    <string name="post_ask">Спросить за меня</string>
+    <string name="post_dislike">Неинтересно</string>
+    <string name="post_like">Нравится</string>
+    <string name="post_question">Что вы хотите спросить?</string>
+    <string name="post_contact_goal">Свяжись с Tadolio %1$s по публикации %2$s и спроси: %3$s</string>
+    <string name="post_price">%1$d монет</string>
+    <string name="post_mine">Мои публикации</string>
+    <string name="post_withdraw">Отозвать</string>
+</resources>

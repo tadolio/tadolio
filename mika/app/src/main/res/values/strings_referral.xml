@@ -1,0 +1,15 @@
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="referral_title">Invite friends</string>
+    <string name="referral_intro">Invite friends to use Tadolio and you each receive coins.</string>
+    <string name="referral_prompt">Who referred you? Enter their Tadolio number (you can skip).</string>
+    <string name="referral_disclosure">The other person will see your Tadolio number. You can bind a referrer once, within 7 days of creating your number. This cannot be changed.</string>
+    <string name="referral_confirm">Confirm</string>
+    <string name="referral_confirm_number">Bind referrer %1$s?</string>
+    <string name="referral_skip">Skip</string>
+    <string name="referral_counts">Invited %1$d · Counted %2$d</string>
+    <string name="referral_bound">Your referrer is %1$s</string>
+    <string name="referral_closed">Referrer binding is unavailable.</string>
+    <string name="referral_error">Could not complete this request. Check the number and your eligibility, then try again.</string>
+    <string name="referral_retry">Refresh</string>
+</resources>

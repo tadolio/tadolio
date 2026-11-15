@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<!-- Logo A (one eye open, one closed) scaled for the 24dp status bar; same paths as hivo_launcher_monochrome. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp" android:height="24dp" android:viewportWidth="48" android:viewportHeight="48">
+    <group android:translateX="-28.43" android:translateY="-30">
+        <path android:fillColor="#FFFFFFFF" android:pathData="M30.99,54 a7.2,7.2 0 1,0 14.4,0 a7.2,7.2 0 1,0 -14.4,0 Z" />
+        <path android:strokeColor="#FFFFFFFF" android:strokeWidth="6.26" android:strokeLineCap="round" android:pathData="M54.47,50.24 Q64.17,62.76 73.87,50.24" />
+    </group>
+</vector>

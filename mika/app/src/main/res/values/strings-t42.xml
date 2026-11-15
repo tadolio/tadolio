@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="t42_album_files">Photos / files</string>
+    <string name="t42_no_vision">The current model cannot view images</string>
+    <string name="t42_community_image_notice">Images will be viewed by the community model helping you. Do not send identity documents or passwords.</string>
+    <string name="t42_camera_permission">Allow camera access to take photos and scan codes.</string>
+    <string name="t42_camera_settings">Open settings</string>
+    <string name="t42_camera_failed">The camera could not open. Please try again.</string>
+    <string name="t42_qr_found">QR code found</string>
+    <string name="t42_shutter">Take photo</string>
+    <string name="t42_manual">Enter transfer code</string>
+    <string name="t42_scan_number">Scan to transfer a number here</string>
+    <string name="t42_recovery">Recovery code</string>
+    <string name="t42_saved">Saved</string>
+    <string name="t42_unsaved">Not saved</string>
+    <string name="t42_receive_title">Transfer number here</string>
+    <string name="t42_restore_title">Recover number</string>
+    <string name="t42_transfer_code">8-digit transfer code</string>
+    <string name="t42_recovery_code">24-character recovery code</string>
+    <string name="t42_receive">Transfer</string>
+    <string name="t42_restore">Recover</string>
+    <string name="t42_old_phone_hint">On your old phone, tap ?Move number to a new phone?.</string>
+    <string name="t42_replace_number">The current number %1$s on this phone will stop working after the transfer.</string>
+    <string name="t42_lost_phone">Lost your old phone? Use a recovery code</string>
+    <string name="t42_have_number">I have a Tadolio number</string>
+    <string name="t42_to_phone">Move number to a new phone</string>
+    <string name="t42_complete">Number transferred</string>
+    <string name="t42_old_warning">After the transfer, this phone can no longer use this number.</string>
+    <string name="t42_album_qr">Read QR from a photo</string>
+    <string name="t42_no_qr">No QR code found in this image.</string>
+    <string name="t42_moving_number">Number to move: %1$s</string>
+    <string name="t42_transfer_intro">Scan this QR code with the new phone. If it cannot scan, type the transfer code below on the new phone.</string>
+    <string name="t42_transfer_code_label">Transfer code (not a phone number, valid 10 minutes)</string>
+</resources>

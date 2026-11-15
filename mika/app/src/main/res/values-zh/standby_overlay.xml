@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="standby_overlay_suffix">尾号 %1$s</string>
+    <string name="standby_overlay_ack">知道了</string>
+    <string name="standby_overlay_details">看详情</string>
+</resources>

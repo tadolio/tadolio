@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="number_title">Tadolio 番号</string>
+    <string name="number_back">戻る</string>
+    <string name="number_unclaimed">番号は未取得です</string>
+    <string name="number_claim">番号を取得</string>
+    <string name="number_copy">コピー</string>
+    <string name="number_change">番号を変更</string>
+    <string name="number_recipient">相手の番号</string>
+    <string name="number_open">会話を開く</string>
+    <string name="number_inbox">受信箱</string>
+    <string name="number_sent">送信</string>
+    <string name="number_received">受信</string>
+    <string name="number_block">ブロック</string>
+    <string name="number_unblock">ブロック解除</string>
+    <string name="number_message">メッセージ</string>
+    <string name="number_send">送信</string>
+    <string name="number_failed">完了できませんでした。番号、接続、上限を確認して再試行してください。</string>
+    <string name="number_change_confirm">番号を変更しますか？旧番号はすぐに新しいメッセージを受信できなくなります。</string>
+    <string name="number_cancel">キャンセル</string>
+    <string name="number_notification">あなたの Tadolio 番号にメッセージが届きました。</string>
+    <string name="number_mine">自分の番号 %1$s</string>
+    <string name="number_new_chat">+</string>
+    <string name="number_menu">メニュー</string>
+    <string name="number_yesterday">昨日</string>
+    <string name="number_empty">Tadolio 番号を相手に伝えると、メッセージを受け取れます。</string>
+    <string name="number_blocked_banner">この番号をブロックしています</string>
+    <string name="number_retry">! 再試行</string>
+    <string name="number_pending">送信待ちメッセージを開く</string>
+    <string name="number_invalid">半角数字8桁を入力してください</string>
+    <string name="number_public_card">公開プロフィール</string>
+    <string name="number_public_card_hint">公開できる情報のみ、1000文字まで</string>
+    <string name="number_auto_reply">エージェントが代理返信</string>
+    <string name="number_auto_rounds">代理返信 %1$d 回</string>
+    <string name="number_take_over">自分で対応</string>
+    <string name="number_give_agent">エージェントに任せる</string>
+    <string name="number_save">保存</string>
+    <string name="number_auto_handoff">本人の対応が必要です。</string>
+</resources>

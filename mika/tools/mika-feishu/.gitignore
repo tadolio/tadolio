@@ -1,0 +1,8 @@
+# Modified by Tadolio contributors (2026)
+.venv/
+dist/
+build/
+*.sqlite3
+*.sqlite3-*
+config.json
+*.lock

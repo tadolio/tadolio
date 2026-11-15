@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="post_watch">Новые публикации: %1$s</string>
+    <string name="post_standby">Поручить агенту следить за новыми публикациями</string>
+    <string name="post_confirm_action">Опубликовать для всех</string>
+    <string name="post_confirm_target">Видно всем</string>
+    <string name="post_cards_empty">Пока ничего не подобрано. Агент сообщит, когда появится подходящая публикация.</string>
+    <string name="post_mine_empty">У вас нет публикаций. Просто скажите агенту, что опубликовать.</string>
+    <string name="memory_post_feedback">%1$s, ваш ответ на подобранную публикацию</string>
+    <string name="post_ask_default">Ещё актуально? Как договоримся?</string>
+</resources>

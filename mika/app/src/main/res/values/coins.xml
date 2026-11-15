@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="coins_wallet">Coin wallet</string>
+    <string name="coins_received">Received %1$d coins (%2$d payments)</string>
+    <string name="coins_provider_share">This provider receives %1$d%% of your income</string>
+    <string name="coins_pay">Payment</string>
+    <string name="coins_receive">Received</string>
+    <string name="coins_share">Share</string>
+    <string name="coins_deposit">Deposit</string>
+    <string name="coins_buyer_pending">Awaiting delivery confirmation</string>
+    <string name="coins_seller_pending">Waiting for buyer confirmation</string>
+    <string name="coins_held_incoming">%1$s paid %2$d coins (held until they confirm delivery)</string>
+    <string name="coins_credited">%1$d coins credited (%2$d payments)</string>
+    <string name="coins_release">Confirm delivery</string>
+    <string name="coins_problem">There is a problem</string>
+    <string name="coins_release_goal">Confirm receipt of this purchase. Use the release tool and ask me to approve once.</string>
+    <string name="coins_dispute_goal">There is a problem with this purchase. Help me write a dispute reason, ask for any missing details, then submit a payment report after I approve.</string>
+    <string name="coins_refunded">Refunded</string>
+    <string name="coins_released">Released</string>
+    <string name="coins_disputed">Dispute in progress</string>
+    <string name="coins_confirm_release">Confirm receipt and pay the seller</string>
+    <string name="coins_confirm_refund">Refund the buyer</string>
+    <string name="coins_stage">Stage %1$d · %2$d coins · %3$s</string>
+    <string name="coins_due_rule">If unconfirmed on %1$s, %2$s</string>
+    <string name="coins_due_release">pay seller</string>
+    <string name="coins_due_refund">refund buyer</string>
+    <string name="coins_proposed">%1$s proposes %2$d stages totaling %3$d coins. Agree?</string>
+    <string name="coins_accept">Agree</string>
+    <string name="coins_decline">Decline</string>
+    <string name="coins_cancel">Cancel proposal</string>
+    <string name="coins_confirm_accept">Accept payment terms</string>
+    <string name="coins_confirm_decline">Decline and refund</string>
+    <string name="coins_confirm_cancel">Cancel and recover coins</string>
+    <string name="coins_stage_status">Stage %1$d · %2$s</string>
+    <string name="coins_reminder">Agreed deadline for %1$s · %2$s is %3$s</string>
+    <string name="coins_proposed_status">Awaiting seller agreement</string>
+    <string name="coins_confirm_stage">Confirm stage %1$d. %2$s, %3$s coins to the seller</string>
+    <string name="coins_due_separator">"; "</string>
+</resources>

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="post_suggestions">あなた向けの投稿</string>
+    <string name="post_review_summary">新着 %1$d 件を確認し、%2$d 件を選びました</string>
+    <string name="post_ask">代わりに聞く</string>
+    <string name="post_dislike">興味なし</string>
+    <string name="post_like">いいね</string>
+    <string name="post_question">何を聞きたいですか？</string>
+    <string name="post_contact_goal">Tadolio %1$s に投稿 %2$s について質問：%3$s</string>
+    <string name="post_price">%1$d コイン</string>
+    <string name="post_mine">自分の投稿</string>
+    <string name="post_withdraw">取り下げる</string>
+</resources>

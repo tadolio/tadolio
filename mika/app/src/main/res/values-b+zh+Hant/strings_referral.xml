@@ -1,0 +1,15 @@
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="referral_title">邀請朋友</string>
+    <string name="referral_intro">邀請朋友用 Tadolio，你們各得金幣。</string>
+    <string name="referral_prompt">誰推薦你的？填他的 Tadolio 號（可以跳過）</string>
+    <string name="referral_disclosure">對方會看到你的 Tadolio 號。只能在自己號碼建立 7 天內綁定一次，綁定後不能更改。</string>
+    <string name="referral_confirm">確認綁定</string>
+    <string name="referral_confirm_number">綁定推薦人 %1$s？</string>
+    <string name="referral_skip">跳過</string>
+    <string name="referral_counts">邀請了 %1$d 人 · 已算數 %2$d 人</string>
+    <string name="referral_bound">你的推薦人是 %1$s</string>
+    <string name="referral_closed">目前無法補填推薦人。</string>
+    <string name="referral_error">暫時無法完成，請檢查號碼和綁定條件後重試。</string>
+    <string name="referral_retry">重新整理</string>
+</resources>

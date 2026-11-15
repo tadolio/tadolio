@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="setup_conversation_intro">휴대폰 조작을 도우려면 몇 가지 설정을 켜야 해요. 제가 안내할게요. 약 1분 걸려요.</string>
+    <string name="setup_conversation_intro_wireless_only">휴대폰이 다시 시작되어 무선 디버깅이 꺼졌어요. 그 화면으로 안내할게요. 한 번만 켜 주세요.</string>
+    <string name="setup_conversation_password">Please enter your screen-lock password yourself; I will wait.</string>
+    <string name="setup_conversation_stalled">This screen needs your help; open the current step again or use the detailed guide.</string>
+    <string name="setup_conversation_developer">제가 열고 있어요. 잠시만 기다려 주세요.</string>
+    <string name="setup_conversation_accessibility">Turn on Tadolio on this accessibility page so I can help tap the screen.</string>
+    <string name="setup_conversation_wireless">제가 켜고 있어요. 잠시만 기다려 주세요.</string>
+    <string name="setup_conversation_pair_auto">휴대폰 도우미를 연결하고 있어요. 잠시만 기다려 주세요.</string>
+    <string name="setup_conversation_pair_manual">자동으로 연결하지 못했어요. 시스템에서 페어링 코드로 기기 페어링이라고 부르는 항목을 열고 표시된 숫자를 Tadolio 알림에 입력해 주세요.</string>
+    <string name="setup_conversation_notifications">Allow Tadolio notifications so I can tell you when I need help.</string>
+    <string name="setup_conversation_battery">Select Tadolio and allow unrestricted battery use so Android can keep it running.</string>
+    <string name="setup_conversation_done">Your phone is ready; you can start talking to Tadolio.</string>
+    <string name="setup_conversation_share">Ask my child for help</string>
+    <string name="setup_conversation_continue">시작</string>
+    <string name="setup_conversation_finish">Start using Tadolio</string>
+    <string name="setup_conversation_manual">Detailed guide / USB</string>
+    <string name="setup_conversation_later">Later</string>
+    <string name="setup_conversation_retry">다시 시도</string>
+    <string name="setup_conversation_problems">문제가 있어요</string>
+    <string name="setup_conversation_needed">먼저 권한이 필요해요. 제가 안내할게요.</string>
+    <string name="setup_conversation_developer_manual">자동으로 열지 못했어요. 소프트웨어 정보에서 빌드 번호를 일곱 번 눌러 주세요. 시스템에서는 개발자 옵션이라고 불러요.</string>
+    <string name="setup_conversation_wireless_manual">자동으로 켜지 못했어요. 무선 디버깅을 켜 주세요. 시스템에서 휴대폰 도우미 연결 설정을 부르는 이름이에요.</string>
+    <string name="setup_highlight_tap">여기를 누르세요</string>
+    <string name="setup_highlight_build">여기를 7번 누르세요</string>
+    <string name="setup_accessibility_toast">Tap Downloaded apps, tap Tadolio, turn the switch on</string>
+</resources>

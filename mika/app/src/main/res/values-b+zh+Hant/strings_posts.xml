@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="post_suggestions">替你挑的發布</string>
+    <string name="post_review_summary">替你看了 %1$d 則新發布，有 %2$d 則你可能想要</string>
+    <string name="post_ask">幫我問問</string>
+    <string name="post_dislike">不感興趣</string>
+    <string name="post_like">挺好</string>
+    <string name="post_question">想問清楚什麼？</string>
+    <string name="post_contact_goal">聯絡 Tadolio 號 %1$s，詢問發布 %2$s：%3$s</string>
+    <string name="post_price">%1$d 金幣</string>
+    <string name="post_mine">我的發布</string>
+    <string name="post_withdraw">撤回</string>
+</resources>

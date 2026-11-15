@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@color/hivo_launcher_background" />
+    <foreground android:drawable="@drawable/hivo_launcher_foreground" />
+    <monochrome android:drawable="@drawable/hivo_launcher_monochrome" />
+</adaptive-icon>

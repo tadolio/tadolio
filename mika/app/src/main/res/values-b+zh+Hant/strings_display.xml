@@ -1,0 +1,9 @@
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="hidden_card">[卡號已隱藏]</string>
+    <string name="hidden_otp">[驗證碼已隱藏]</string>
+    <string name="hidden_id">[證件號已隱藏]</string>
+    <string name="hidden_password">[密碼已隱藏]</string>
+    <string name="hidden_mnemonic">[助記詞已隱藏]</string>
+    <string name="hidden_private_key">[私鑰已隱藏]</string>
+</resources>

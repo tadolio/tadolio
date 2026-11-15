@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="miner_what_title">用你的 Key，帮别人的 Tadolio 办事</string>
+    <string name="phone_miner_role_sub">平台随机派活，谁需要就帮谁。</string>
+    <string name="phone_operator_role_sub">只有填了你邀请码的人能用，比如家人、朋友群。你能给他们发消息；手机要一直在线。</string>
+    <string name="miner_number_missing">你还没有 Tadolio 号。先到侧栏“Tadolio 号”领一个，才能开始。</string>
+    <string name="phone_operator_invite_label">你的邀请码：发给家人朋友，他们填上就绑定你</string>
+    <string name="miner_drawer_running">运行中</string>
+    <string name="miner_drawer_paused">已暂停</string>
+    <string name="miner_drawer_preparing">准备中</string>
+    <string name="miner_drawer_attention">要处理</string>
+    <string name="community_miner_link">想用自己的 Key 帮别人？当矿工 ›</string>
+    <string name="elder_home_title">想办什么事？</string>
+    <string name="elder_home_note">现在是长辈模式 · 在“设置”里可以关</string>
+    <string name="elder_enable_title">开启长辈模式？</string>
+    <string name="elder_enable_body">首页会换成大字、按住说话的简单界面。想换回来：点首页右上角“设置”，关掉“长辈模式”。</string>
+    <string name="elder_enable_confirm">开启</string>
+    <string name="elder_mode_sub">首页换成大字、按住说话</string>
+</resources>

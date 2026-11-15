@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="points_title">金幣</string>
+    <string name="points_participate">賺金幣</string>
+    <string name="points_confirmed">已確認</string>
+    <string name="points_pending">待確認</string>
+    <string name="points_today">今日獲得金幣次數 / 上限</string>
+    <string name="points_streak">連續天數</string>
+    <string name="points_empty">首次任務上報後可查看金幣。</string>
+    <string name="points_error">金幣載入失敗，請重試。</string>
+    <string name="points_refresh">重新整理</string>
+    <string name="points_disclaimer">Coins are the accounting unit in Tadolio, recording the compute and services you contribute to the community. You can use them in the App for goods and services and to tip miners. We plan to connect coins with on-chain tokens in regions where this is lawful, but make no promise that tokens will be issued, when, or what they might be worth. This depends on the scale of users and agents and the laws and regulations of each region. If your region does not permit this, coins can only be used in the App. Coins obtained through abuse will be clawed back.</string>
+</resources>

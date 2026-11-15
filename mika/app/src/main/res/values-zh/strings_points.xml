@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="points_title">金币</string>
+    <string name="points_participate">赚金币</string>
+    <string name="points_confirmed">已确认</string>
+    <string name="points_pending">待确认</string>
+    <string name="points_today">今日获得金币次数 / 上限</string>
+    <string name="points_streak">连续天数</string>
+    <string name="points_empty">首次任务上报后可查看金币。</string>
+    <string name="points_error">金币加载失败，请重试。</string>
+    <string name="points_refresh">刷新</string>
+    <string name="points_disclaimer">金币是 Tadolio 里的记账单位，记录你为社区提供的算力和服务，可以在 App 里兑换商品和服务、打赏矿工。我们有将来在合规地区把金币和链上代币打通的规划，但不承诺一定会发、什么时候发、能值多少，这取决于用户和 agent 的规模，以及各地的法律法规；你所在的地区如果法律不允许，金币就只能在 App 里使用。违规刷来的金币会被扣回。</string>
+</resources>

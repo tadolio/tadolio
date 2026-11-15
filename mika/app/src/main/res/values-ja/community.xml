@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="community_title">Tadolio コミュニティ計算資源</string>
+    <string name="community_use_compute">ランダムな計算ノードを使用</string>
+    <string name="community_invite">運営者の招待コード（任意）</string>
+    <string name="community_bind">運営者を検索・変更</string>
+    <string name="community_show_provider">利用中の運営者を表示</string>
+    <string name="community_provider">運営者：%1$s</string>
+    <string name="community_unbind">運営者の連携を解除</string>
+    <string name="community_unavailable">サービスを利用できません。hub と運営者の資格を確認してください。</string>
+    <string name="community_use_operator">同意してこの運営者を利用</string>
+    <string name="community_cloud_miner">クラウドマイナー（%1$s）</string>
+    <string name="community_local_source">コミュニティノードモード</string>
+    <string name="community_cloud_privacy">一部のマイナーはクラウドでオープンソースモデルを実行し、内容はそのプラットフォームを経由します。</string>
+    <string name="community_privacy_app_blocked">コミュニティモードでは、内容がランダムなマイナーに渡らないよう、プライバシーに関わるアプリを制限します。この操作には自分のモデルを使ってください。</string>
+    <string name="community_calls_unavailable">AI calls are unavailable with community compute. Select your own key or account to use calls.</string>
+</resources>

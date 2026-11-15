@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="coins_wallet">Monedero de monedas</string>
+    <string name="coins_received">Recibidas %1$d monedas (%2$d pagos)</string>
+    <string name="coins_provider_share">Este proveedor recibe el %1$d%% de tus ingresos</string>
+    <string name="coins_pay">Pago</string>
+    <string name="coins_receive">Recibido</string>
+    <string name="coins_share">Reparto</string>
+    <string name="coins_deposit">Ingreso</string>
+    <string name="coins_buyer_pending">Pendiente de confirmar la entrega</string>
+    <string name="coins_seller_pending">Esperando confirmación del comprador</string>
+    <string name="coins_held_incoming">%1$s pagó %2$d monedas (retenidas hasta confirmar la entrega)</string>
+    <string name="coins_credited">Abonadas %1$d monedas (%2$d pagos)</string>
+    <string name="coins_release">Confirmar entrega</string>
+    <string name="coins_problem">Hay un problema</string>
+    <string name="coins_release_goal">Confirma la recepción de esta compra con la herramienta de liberación y pide mi aprobación una vez.</string>
+    <string name="coins_dispute_goal">Hay un problema con esta compra. Ayúdame a redactar el motivo de disputa, pregunta lo que falte y envía el reporte de pago tras mi aprobación.</string>
+    <string name="coins_refunded">Reembolsado</string>
+    <string name="coins_released">Liberado</string>
+    <string name="coins_disputed">Disputa en curso</string>
+    <string name="coins_confirm_release">Confirmar recepción y pagar al vendedor</string>
+    <string name="coins_confirm_refund">Reembolsar al comprador</string>
+    <string name="coins_stage">Etapa %1$d · %2$d monedas · %3$s</string>
+    <string name="coins_due_rule">Sin confirmar el %1$s, %2$s</string>
+    <string name="coins_due_release">pagar al vendedor</string>
+    <string name="coins_due_refund">reembolsar al comprador</string>
+    <string name="coins_proposed">%1$s propone %2$d etapas por %3$d monedas. ¿Aceptas?</string>
+    <string name="coins_accept">Aceptar</string>
+    <string name="coins_decline">Rechazar</string>
+    <string name="coins_cancel">Cancelar propuesta</string>
+    <string name="coins_confirm_accept">Aceptar condiciones</string>
+    <string name="coins_confirm_decline">Rechazar y reembolsar</string>
+    <string name="coins_confirm_cancel">Cancelar y recuperar monedas</string>
+    <string name="coins_stage_status">Etapa %1$d · %2$s</string>
+    <string name="coins_reminder">Plazo acordado para %1$s · %2$s el %3$s</string>
+    <string name="coins_proposed_status">Pendiente de aceptación del vendedor</string>
+    <string name="coins_confirm_stage">Confirmar etapa %1$d. %2$s, %3$s monedas al vendedor</string>
+    <string name="coins_due_separator">"; "</string>
+</resources>

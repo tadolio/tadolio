@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="number_title">Número Tadolio</string>
+    <string name="number_back">Volver</string>
+    <string name="number_unclaimed">Aún sin número</string>
+    <string name="number_claim">Obtener número</string>
+    <string name="number_copy">Copiar</string>
+    <string name="number_change">Cambiar número</string>
+    <string name="number_recipient">Número del destinatario</string>
+    <string name="number_open">Abrir conversación</string>
+    <string name="number_inbox">Bandeja de entrada</string>
+    <string name="number_sent">Enviado</string>
+    <string name="number_received">Recibido</string>
+    <string name="number_block">Bloquear</string>
+    <string name="number_unblock">Desbloquear</string>
+    <string name="number_message">Mensaje</string>
+    <string name="number_send">Enviar</string>
+    <string name="number_failed">No se pudo completar. Revisa el número, la conexión o el límite diario e inténtalo de nuevo.</string>
+    <string name="number_change_confirm">¿Cambiar número? El anterior dejará de recibir mensajes nuevos inmediatamente.</string>
+    <string name="number_cancel">Cancelar</string>
+    <string name="number_notification">Alguien dejó un mensaje para tu número Tadolio.</string>
+    <string name="number_mine">Mi número %1$s</string>
+    <string name="number_new_chat">+</string>
+    <string name="number_menu">Menú</string>
+    <string name="number_yesterday">Ayer</string>
+    <string name="number_empty">Comparte tu número Tadolio para que puedan dejarte mensajes.</string>
+    <string name="number_blocked_banner">Has bloqueado este número</string>
+    <string name="number_retry">! Reintentar</string>
+    <string name="number_pending">Abrir mensaje pendiente</string>
+    <string name="number_invalid">Introduce exactamente 8 dígitos (0–9)</string>
+    <string name="number_public_card">Tarjeta pública</string>
+    <string name="number_public_card_hint">Solo información pública, hasta 1000 caracteres</string>
+    <string name="number_auto_reply">Dejar que el agente responda</string>
+    <string name="number_auto_rounds">El agente respondió %1$d veces</string>
+    <string name="number_take_over">Me encargo yo</string>
+    <string name="number_give_agent">Delegar al agente</string>
+    <string name="number_save">Guardar</string>
+    <string name="number_auto_handoff">Se necesita la atención del propietario.</string>
+</resources>

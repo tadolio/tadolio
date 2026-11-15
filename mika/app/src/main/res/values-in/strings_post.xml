@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="post_watch">Memantau posting baru: %1$s</string>
+    <string name="post_standby">Biarkan agen memantau postingan baru</string>
+    <string name="post_confirm_action">Terbitkan publik</string>
+    <string name="post_confirm_target">Semua orang bisa melihatnya</string>
+    <string name="post_cards_empty">Belum ada yang dipilihkan untuk Anda. Agen akan memberi tahu saat ada postingan yang cocok.</string>
+    <string name="post_mine_empty">Anda belum punya postingan. Cukup beri tahu agen apa yang ingin diposting.</string>
+    <string name="memory_post_feedback">%1$s, dari tanggapan Anda pada postingan pilihan</string>
+    <string name="post_ask_default">Masih ada? Bagaimana cara transaksinya?</string>
+</resources>

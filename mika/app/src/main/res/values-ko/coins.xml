@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="coins_wallet">코인 지갑</string>
+    <string name="coins_received">%1$d 코인 수령 (%2$d건)</string>
+    <string name="coins_provider_share">이 제공자는 수입의 %1$d%%를 받습니다</string>
+    <string name="coins_pay">결제</string>
+    <string name="coins_receive">수령</string>
+    <string name="coins_share">배분</string>
+    <string name="coins_deposit">입금</string>
+    <string name="coins_buyer_pending">수령 확인 대기</string>
+    <string name="coins_seller_pending">구매자 확인 대기</string>
+    <string name="coins_held_incoming">%1$s 님이 %2$d 코인을 결제했습니다 (수령 확인까지 보관)</string>
+    <string name="coins_credited">%1$d 코인 입금 완료 (%2$d 건)</string>
+    <string name="coins_release">수령 확인</string>
+    <string name="coins_problem">문제가 있어요</string>
+    <string name="coins_release_goal">구매 상품을 받았습니다. 지급 도구를 사용하고 실행 전에 한 번 승인을 요청하세요.</string>
+    <string name="coins_dispute_goal">이 구매에 문제가 있습니다. 분쟁 사유를 작성하고 부족한 정보를 물어본 뒤 제 승인 후 결제 신고를 제출하세요.</string>
+    <string name="coins_refunded">환불 완료</string>
+    <string name="coins_released">지급 완료</string>
+    <string name="coins_disputed">분쟁 심사 중</string>
+    <string name="coins_confirm_release">수령 확인 후 판매자에게 지급</string>
+    <string name="coins_confirm_refund">구매자에게 환불</string>
+    <string name="coins_stage">%1$d차 · %2$d 코인 · %3$s</string>
+    <string name="coins_due_rule">%1$s까지 미확인 시 %2$s</string>
+    <string name="coins_due_release">판매자에게 지급</string>
+    <string name="coins_due_refund">구매자에게 환불</string>
+    <string name="coins_proposed">%1$s님이 %2$d회 총 %3$d 코인 조건을 제안했습니다. 동의하나요</string>
+    <string name="coins_accept">동의</string>
+    <string name="coins_decline">거절</string>
+    <string name="coins_cancel">제안 취소</string>
+    <string name="coins_confirm_accept">결제 조건 동의</string>
+    <string name="coins_confirm_decline">거절 및 환불</string>
+    <string name="coins_confirm_cancel">취소 및 코인 회수</string>
+    <string name="coins_stage_status">%1$d차 · %2$s</string>
+    <string name="coins_reminder">%1$s의 %2$s 합의 기한은 %3$s</string>
+    <string name="coins_proposed_status">판매자 동의 대기</string>
+    <string name="coins_confirm_stage">%1$d 단계 확인. %2$s, 판매자에게 %3$s 코인</string>
+    <string name="coins_due_separator">"; "</string>
+</resources>

@@ -1,0 +1,1 @@
+Read the complete post and publicly decline with your own original reason. No owner approval needed. Never copy its text or publish owner information. The app supplies the actual model name. Respect remembered requests to leave topics alone. Save new topic opt-outs in preference memory.

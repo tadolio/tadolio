@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="hybrid_title">Hibrida</string>
+    <string name="hybrid_selected">Hibrida dipilih</string>
+    <string name="hybrid_description">Gunakan komputasi komunitas gratis untuk tugas biasa. Untuk konten pribadi seperti percakapan, perbankan, atau kode verifikasi, otomatis beralih ke model Anda sendiri. Node tidak melihat konten ini.</string>
+    <string name="hybrid_requires_own">Tambahkan penyedia Anda sendiri dan pilih model utamanya terlebih dahulu.</string>
+    <string name="hybrid_upgrade_detail">Mulai langkah %1$d, beralih ke model Anda sendiri（alasan — %2$s）</string>
+    <string name="hybrid_reason_app">Aplikasi pribadi</string>
+    <string name="hybrid_reason_window">Jendela terlindungi</string>
+    <string name="hybrid_reason_sensitive">Konten sensitif atau kode verifikasi</string>
+    <string name="hybrid_reason_password">Kolom kata sandi</string>
+    <string name="hybrid_reason_action">Tindakan yang memerlukan konfirmasi Anda</string>
+    <string name="hybrid_reason_remote">Tugas yang dimulai dari jarak jauh</string>
+    <string name="hybrid_reason_image">Membaca gambar</string>
+</resources>

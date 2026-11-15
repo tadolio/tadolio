@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="hybrid_title">مختلط</string>
+    <string name="hybrid_selected">تم اختيار الوضع المختلط</string>
+    <string name="hybrid_description">استخدم حوسبة المجتمع المجانية للمهام العادية. عند التعامل مع محتوى خاص مثل المحادثات أو الخدمات المصرفية أو رموز التحقق، يتم التبديل تلقائيًا إلى نموذجك الخاص. لا ترى العقد هذا المحتوى.</string>
+    <string name="hybrid_requires_own">أضف مزودك الخاص واختر نموذجه الرئيسي أولًا.</string>
+    <string name="hybrid_upgrade_detail">تم التبديل إلى نموذجك الخاص من الخطوة %1$d（السبب — %2$s）</string>
+    <string name="hybrid_reason_app">تطبيق خاص</string>
+    <string name="hybrid_reason_window">نافذة محمية</string>
+    <string name="hybrid_reason_sensitive">محتوى حساس أو رمز تحقق</string>
+    <string name="hybrid_reason_password">حقل كلمة مرور</string>
+    <string name="hybrid_reason_action">إجراء يتطلب تأكيدك</string>
+    <string name="hybrid_reason_remote">مهمة بدأت عن بُعد</string>
+    <string name="hybrid_reason_image">قراءة صورة</string>
+</resources>

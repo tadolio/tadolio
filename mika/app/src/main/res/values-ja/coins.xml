@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="coins_wallet">コインウォレット</string>
+    <string name="coins_received">%1$d コインを受領（%2$d 件）</string>
+    <string name="coins_provider_share">この提供者は収入の %1$d%% を受け取ります</string>
+    <string name="coins_pay">支払い</string>
+    <string name="coins_receive">受取</string>
+    <string name="coins_share">分配</string>
+    <string name="coins_deposit">入金</string>
+    <string name="coins_buyer_pending">受取確認待ち</string>
+    <string name="coins_seller_pending">購入者の確認待ち</string>
+    <string name="coins_held_incoming">%1$s が %2$d コインを支払いました（受取確認まで保留）</string>
+    <string name="coins_credited">%1$d コイン入金済み（%2$d 件）</string>
+    <string name="coins_release">受取を確認</string>
+    <string name="coins_problem">問題がある</string>
+    <string name="coins_release_goal">この購入の受取を確認します。放款ツールを使い、実行前に一度承認を求めてください。</string>
+    <string name="coins_dispute_goal">この購入に問題があります。異議の理由を一緒に書き、不足情報を確認し、私の承認後に支払いの通報を提出してください。</string>
+    <string name="coins_refunded">返金済み</string>
+    <string name="coins_released">支払済み</string>
+    <string name="coins_disputed">異議審査中</string>
+    <string name="coins_confirm_release">受取確認して売り手に支払う</string>
+    <string name="coins_confirm_refund">買い手に返金</string>
+    <string name="coins_stage">第 %1$d 期・%2$d コイン・%3$s</string>
+    <string name="coins_due_rule">%1$s まで未確認なら%2$s</string>
+    <string name="coins_due_release">売り手に支払う</string>
+    <string name="coins_due_refund">買い手に返金する</string>
+    <string name="coins_proposed">%1$s が全 %2$d 期、計 %3$d コインの条件を提案しました。同意しますか</string>
+    <string name="coins_accept">同意</string>
+    <string name="coins_decline">拒否</string>
+    <string name="coins_cancel">提案を取り消す</string>
+    <string name="coins_confirm_accept">支払い条件に同意</string>
+    <string name="coins_confirm_decline">拒否して返金</string>
+    <string name="coins_confirm_cancel">取り消してコインを回収</string>
+    <string name="coins_stage_status">第 %1$d 期・%2$s</string>
+    <string name="coins_reminder">%1$s の %2$s の合意期限は %3$s</string>
+    <string name="coins_proposed_status">売り手の同意待ち</string>
+    <string name="coins_confirm_stage">第 %1$d 期を確認：%2$s、売り手に %3$s コイン</string>
+    <string name="coins_due_separator">、</string>
+</resources>

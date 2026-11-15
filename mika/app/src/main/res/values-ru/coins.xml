@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="coins_wallet">Кошелёк монет</string>
+    <string name="coins_received">Получено %1$d монет (%2$d платежей)</string>
+    <string name="coins_provider_share">Этот поставщик получает %1$d%% вашего дохода</string>
+    <string name="coins_pay">Оплата</string>
+    <string name="coins_receive">Получено</string>
+    <string name="coins_share">Доля</string>
+    <string name="coins_deposit">Внесение</string>
+    <string name="coins_buyer_pending">Ожидает подтверждения получения</string>
+    <string name="coins_seller_pending">Ожидает подтверждения покупателя</string>
+    <string name="coins_held_incoming">%1$s оплатил %2$d монет (до подтверждения получения средства удерживаются)</string>
+    <string name="coins_credited">Зачислено %1$d монет (%2$d платежей)</string>
+    <string name="coins_release">Подтвердить получение</string>
+    <string name="coins_problem">Есть проблема</string>
+    <string name="coins_release_goal">Подтверди получение этой покупки через инструмент перечисления и запроси моё одобрение один раз.</string>
+    <string name="coins_dispute_goal">С этой покупкой проблема. Помоги составить причину спора, уточни недостающие сведения и подай жалобу по платежу после моего одобрения.</string>
+    <string name="coins_refunded">Возвращено</string>
+    <string name="coins_released">Перечислено</string>
+    <string name="coins_disputed">Спор рассматривается</string>
+    <string name="coins_confirm_release">Подтвердить получение и заплатить продавцу</string>
+    <string name="coins_confirm_refund">Вернуть деньги покупателю</string>
+    <string name="coins_stage">Этап %1$d · %2$d монет · %3$s</string>
+    <string name="coins_due_rule">Без подтверждения %1$s — %2$s</string>
+    <string name="coins_due_release">оплатить продавцу</string>
+    <string name="coins_due_refund">вернуть покупателю</string>
+    <string name="coins_proposed">%1$s предлагает %2$d этапов на %3$d монет. Согласны?</string>
+    <string name="coins_accept">Согласиться</string>
+    <string name="coins_decline">Отклонить</string>
+    <string name="coins_cancel">Отменить предложение</string>
+    <string name="coins_confirm_accept">Принять условия оплаты</string>
+    <string name="coins_confirm_decline">Отклонить и вернуть</string>
+    <string name="coins_confirm_cancel">Отменить и вернуть монеты</string>
+    <string name="coins_stage_status">Этап %1$d · %2$s</string>
+    <string name="coins_reminder">Согласованный срок %1$s · %2$s — %3$s</string>
+    <string name="coins_proposed_status">Ожидается согласие продавца</string>
+    <string name="coins_confirm_stage">Подтвердить этап %1$d. %2$s, %3$s монет продавцу</string>
+    <string name="coins_due_separator">"; "</string>
+</resources>

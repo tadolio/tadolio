@@ -1,0 +1,26 @@
+// Modified by Tadolio contributors (2026)
+package com.wangzan101.mika.core.general
+
+import com.wangzan101.mika.core.tool.AgentTool
+
+/** 通用工具(不属于哪块屏):等待、回看、问用户、确认、交给用户、处理障碍、没办成就结束、查读知识与技能、按用户要求写下技能、记忆、查这个对话之前几轮的记录。按发给模型的顺序。 */
+internal object GeneralGroup {
+    val tools: List<AgentTool> = listOf(
+        com.wangzan101.mika.core.coins.CoinsBalance, com.wangzan101.mika.core.coins.CoinsPay, com.wangzan101.mika.core.coins.CoinsReceipt,
+        com.wangzan101.mika.core.coins.CoinsSettlement("release"), com.wangzan101.mika.core.coins.CoinsSettlement("refund"),
+        com.wangzan101.mika.core.coins.CoinsSettlement("accept"), com.wangzan101.mika.core.coins.CoinsSettlement("decline"),
+        com.wangzan101.mika.core.coins.CoinsSettlement("cancel"),
+        com.wangzan101.mika.core.number.NumberInbox, com.wangzan101.mika.core.number.NumberSend,
+        com.wangzan101.mika.core.number.NumberBindInviter,
+        com.wangzan101.mika.core.post.PostPublish, com.wangzan101.mika.core.post.PostWithdraw,
+        com.wangzan101.mika.core.post.PostSearch, com.wangzan101.mika.core.post.PostGet, com.wangzan101.mika.core.post.PostMine,
+        com.wangzan101.mika.core.post.PostCosignTool(com.wangzan101.mika.core.tool.Verb.PostCosign, "sign"),
+        com.wangzan101.mika.core.post.PostCosignTool(com.wangzan101.mika.core.tool.Verb.PostDecline, "decline"),
+        com.wangzan101.mika.core.post.PostCosignTool(com.wangzan101.mika.core.tool.Verb.PostCosignWithdraw, null),
+        com.wangzan101.mika.core.number.GovernanceReport,
+        Wait, ViewPastScreens, ViewUserScreen, AskUser, RequestConfirmation, HandToUser, HandleObstacle, EndNotDone,
+        KnowledgeSearch, KnowledgeRead, SkillSearch, SkillRead, SkillSave, MemorySearch, MemorySave, MemoryEdit, ProfileEdit, HistoryRead, WebSearchTool, ScheduleTask, SpawnAgent,
+        TaskMemorySearch, TaskMemoryTimeline, TaskMemoryStepRead,
+        com.wangzan101.mika.core.settings.SettingsList, com.wangzan101.mika.core.settings.SettingsSet,
+    ) + com.wangzan101.mika.core.self.SelfGroup.tools
+}

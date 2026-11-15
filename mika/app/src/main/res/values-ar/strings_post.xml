@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="post_watch">متابعة المنشورات الجديدة: %1$s</string>
+    <string name="post_standby">السماح للوكيل بمتابعة المنشورات الجديدة</string>
+    <string name="post_confirm_action">نشر للعامة</string>
+    <string name="post_confirm_target">يمكن للجميع رؤيته</string>
+    <string name="post_cards_empty">لا يوجد شيء مختار لك بعد. سيخبرك وكيلك عندما يناسبك منشور جديد.</string>
+    <string name="post_mine_empty">ليس لديك منشورات. أخبر وكيلك بما تريد نشره.</string>
+    <string name="memory_post_feedback">%1$s، من ردك على منشور مختار</string>
+    <string name="post_ask_default">هل ما زال متاحًا؟ كيف نتفق على التبادل؟</string>
+</resources>

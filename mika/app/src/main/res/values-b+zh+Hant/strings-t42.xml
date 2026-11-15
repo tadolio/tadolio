@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="t42_album_files">相簿/檔案</string>
+    <string name="t42_no_vision">目前模型看不了圖片</string>
+    <string name="t42_community_image_notice">圖片會交給幫你做事的社群算力查看，別傳證件和密碼。</string>
+    <string name="t42_camera_permission">開啟相機權限後，就能拍照和掃碼。</string>
+    <string name="t42_camera_settings">去設定開啟</string>
+    <string name="t42_camera_failed">相機沒能開啟，請再試一次。</string>
+    <string name="t42_qr_found">識別到 QR 碼</string>
+    <string name="t42_shutter">拍照</string>
+    <string name="t42_manual">手動輸入轉移碼</string>
+    <string name="t42_scan_number">掃碼轉入號碼</string>
+    <string name="t42_recovery">恢復碼</string>
+    <string name="t42_saved">已儲存</string>
+    <string name="t42_unsaved">未儲存</string>
+    <string name="t42_receive_title">轉入號碼</string>
+    <string name="t42_restore_title">找回號碼</string>
+    <string name="t42_transfer_code">8 位轉移碼</string>
+    <string name="t42_recovery_code">24 位恢復碼</string>
+    <string name="t42_receive">轉入</string>
+    <string name="t42_restore">找回</string>
+    <string name="t42_old_phone_hint">請在舊手機上點「把號碼轉到新手機」</string>
+    <string name="t42_replace_number">轉入後，這台手機目前的號碼 %1$s 會停用</string>
+    <string name="t42_lost_phone">舊手機丟了？用恢復碼找回</string>
+    <string name="t42_have_number">我有 Tadolio 號</string>
+    <string name="t42_to_phone">把號碼轉到新手機</string>
+    <string name="t42_complete">號碼已轉入</string>
+    <string name="t42_old_warning">轉移後這台手機就不能再用這個號碼</string>
+    <string name="t42_album_qr">識別相簿裡的 QR 碼</string>
+    <string name="t42_no_qr">這張圖片裡沒有找到 QR 碼。</string>
+    <string name="t42_moving_number">要轉走的號碼：%1$s</string>
+    <string name="t42_transfer_intro">用新手機掃這個 QR 碼。掃不了的話，在新手機上輸入下面的轉移碼。</string>
+    <string name="t42_transfer_code_label">轉移碼（不是號碼，10 分鐘內有效）</string>
+</resources>

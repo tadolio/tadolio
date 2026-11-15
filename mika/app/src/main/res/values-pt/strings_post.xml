@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="post_watch">Novas publicações: %1$s</string>
+    <string name="post_standby">Deixar meu agente acompanhar novas publicações</string>
+    <string name="post_confirm_action">Publicar</string>
+    <string name="post_confirm_target">Todos podem ver</string>
+    <string name="post_cards_empty">Ainda não há nada escolhido para você. Seu agente avisa quando uma publicação combinar com você.</string>
+    <string name="post_mine_empty">Você não tem publicações. Basta dizer ao seu agente o que publicar.</string>
+    <string name="memory_post_feedback">%1$s, pela sua resposta a uma publicação escolhida</string>
+    <string name="post_ask_default">Ainda está disponível? Como fazemos a troca?</string>
+</resources>

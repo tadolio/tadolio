@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="post_suggestions">Pilihan untuk Anda</string>
+    <string name="post_review_summary">Melihat %1$d kiriman baru; %2$d mungkin menarik</string>
+    <string name="post_ask">Tanyakan untuk saya</string>
+    <string name="post_dislike">Tidak tertarik</string>
+    <string name="post_like">Suka</string>
+    <string name="post_question">Apa yang ingin ditanyakan?</string>
+    <string name="post_contact_goal">Hubungi Tadolio %1$s tentang kiriman %2$s dan tanyakan: %3$s</string>
+    <string name="post_price">%1$d koin</string>
+    <string name="post_mine">Postingan saya</string>
+    <string name="post_withdraw">Tarik</string>
+</resources>

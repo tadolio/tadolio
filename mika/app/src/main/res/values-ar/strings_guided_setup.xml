@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="setup_conversation_intro">لأساعدك في استخدام الهاتف، نحتاج إلى تفعيل بعض الإعدادات. سأرشدك؛ يستغرق ذلك نحو دقيقة.</string>
+    <string name="setup_conversation_intro_wireless_only">أُعيد تشغيل الهاتف فتوقف تصحيح الأخطاء اللاسلكي. سآخذك إليه؛ فعّله مرة واحدة فقط.</string>
+    <string name="setup_conversation_password">Please enter your screen-lock password yourself; I will wait.</string>
+    <string name="setup_conversation_stalled">This screen needs your help; open the current step again or use the detailed guide.</string>
+    <string name="setup_conversation_developer">أفتح هذا لك الآن. انتظر قليلاً.</string>
+    <string name="setup_conversation_accessibility">Turn on Tadolio on this accessibility page so I can help tap the screen.</string>
+    <string name="setup_conversation_wireless">أفعّل هذا لك الآن. انتظر قليلاً.</string>
+    <string name="setup_conversation_pair_auto">أوصّل مساعد الهاتف الآن. انتظر قليلاً.</string>
+    <string name="setup_conversation_pair_manual">لم أتمكن من الاتصال تلقائياً. افتح إقران جهاز باستخدام رمز الإقران (اسم النظام)، ثم أدخل الأرقام في إشعار Tadolio.</string>
+    <string name="setup_conversation_notifications">Allow Tadolio notifications so I can tell you when I need help.</string>
+    <string name="setup_conversation_battery">Select Tadolio and allow unrestricted battery use so Android can keep it running.</string>
+    <string name="setup_conversation_done">Your phone is ready; you can start talking to Tadolio.</string>
+    <string name="setup_conversation_share">Ask my child for help</string>
+    <string name="setup_conversation_continue">ابدأ</string>
+    <string name="setup_conversation_finish">Start using Tadolio</string>
+    <string name="setup_conversation_manual">Detailed guide / USB</string>
+    <string name="setup_conversation_later">Later</string>
+    <string name="setup_conversation_retry">حاول مرة أخرى</string>
+    <string name="setup_conversation_problems">أواجه مشكلة</string>
+    <string name="setup_conversation_needed">نحتاج إلى إذن أولاً. سأرشدك.</string>
+    <string name="setup_conversation_developer_manual">لم أتمكن من فتحه تلقائياً. في معلومات البرنامج، اضغط رقم الإصدار سبع مرات. يسمي Android هذا خيارات المطوّر.</string>
+    <string name="setup_conversation_wireless_manual">لم أتمكن من تفعيله تلقائياً. فعّل تصحيح الأخطاء اللاسلكي؛ هذا اسم اتصال المساعد المحلي في Android.</string>
+    <string name="setup_highlight_tap">اضغط هنا</string>
+    <string name="setup_highlight_build">اضغط هنا 7 مرات</string>
+    <string name="setup_accessibility_toast">Tap Downloaded apps, tap Tadolio, turn the switch on</string>
+</resources>

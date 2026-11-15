@@ -1,0 +1,8 @@
+# Modified by Tadolio contributors (2026)
+system: 14915 bytes, 2 files
+capabilities: 37518 bytes, 11 files
+tools: 57327 bytes, 123 files
+entries: 2074 bytes, 9 files
+feedback: 51390 bytes, 2 files
+roles: 24392 bytes, 15 files
+community: 1002 bytes, 1 files

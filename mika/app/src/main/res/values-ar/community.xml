@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="community_title">حوسبة مجتمع Tadolio</string>
+    <string name="community_use_compute">استخدام عقدة عشوائية</string>
+    <string name="community_invite">رمز دعوة المشغل (اختياري)</string>
+    <string name="community_bind">البحث عن مشغل أو تغييره</string>
+    <string name="community_show_provider">عرض المشغل الخاص بك</string>
+    <string name="community_provider">المشغل الخاص بك: %1$s</string>
+    <string name="community_unbind">إلغاء ربط المشغل</string>
+    <string name="community_unavailable">الخدمة غير متاحة. تحقق من الموزع وأهلية المشغل.</string>
+    <string name="community_use_operator">الموافقة واستخدام هذا المشغل</string>
+    <string name="community_cloud_miner">معدّن سحابي (%1$s)</string>
+    <string name="community_local_source">وضع عقدة المجتمع</string>
+    <string name="community_cloud_privacy">يشغّل بعض المعدّنين نماذج مفتوحة المصدر على منصات سحابية. يمر المحتوى عبر تلك المنصة.</string>
+    <string name="community_privacy_app_blocked">يحظر وضع المجتمع التطبيقات الخاصة كي لا يصل محتواها إلى معدّنين عشوائيين. استخدم نموذجك الخاص لهذه المهمة.</string>
+    <string name="community_calls_unavailable">AI calls are unavailable with community compute. Select your own key or account to use calls.</string>
+</resources>
