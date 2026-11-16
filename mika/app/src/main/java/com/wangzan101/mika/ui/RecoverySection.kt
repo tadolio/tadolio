@@ -1,3 +1,4 @@
+// Modified by Tadolio contributors (2026)
 package com.wangzan101.mika.ui
 
 import com.wangzan101.mika.R
@@ -39,7 +40,7 @@ import com.wangzan101.mika.ui.theme.MikaType
 
 /**
  * 设置 › 恢复与修复 里手机操作的几个授权开关的文字(纯函数,便于测试)。和引导页一样说大白话,
- * 每一项都写清楚打开后 Mika 会做什么、怎么关;说明一直写在开关下面。都默认打开,配好手机操作后 Mika 自己补上。
+ * 每一项都写清楚打开后 Mika 会做什么、怎么关;说明一直写在开关下面。电池由用户在系统设置里允许，其余未关闭的授权在连接可用时补上。
  */
 object RecoveryCopy {
     data class SwitchCopy(val title: String, val subtitle: String, val explain: String)
@@ -52,8 +53,8 @@ object RecoveryCopy {
         )
         RecoveryCapability.BatteryWhitelist -> SwitchCopy(
             tr(R.string.rec_battery),
-            tr(R.string.rec_default_on),
-            tr(R.string.rec_battery_body),
+            tr(R.string.t60_battery_manual),
+            tr(R.string.t60_battery_explanation),
         )
         RecoveryCapability.RestoreAfterReboot -> SwitchCopy(
             tr(R.string.rec_boot),
@@ -90,6 +91,7 @@ object RecoveryCopy {
         c: RecoveryCapability, consent: RecoveryConsent, paired: Boolean, autoFailed: Set<RecoveryCapability>,
         restart: HelperRestart = HelperRestart.None,
     ): String? = when {
+        c == RecoveryCapability.BatteryWhitelist -> null
         !consent.wants(c) -> null
         restart == HelperRestart.UsbCommand && c in NEEDS_PAIRING -> tr(R.string.rec_needs_pairing)
         consent.isApplied(c) -> null
@@ -127,7 +129,14 @@ fun RecoverySwitches() {
     val context = LocalContext.current
     val phone = remember { PhoneServices.of(context) }
     val settings = phone.recoverySettings
-    val consent by settings.consent.collectAsState()
+    val savedConsent by settings.consent.collectAsState()
+    val power = context.getSystemService(android.os.PowerManager::class.java)
+    var batteryAllowed by remember { mutableStateOf(power.isIgnoringBatteryOptimizations(context.packageName)) }
+    androidx.lifecycle.compose.LifecycleEventEffect(androidx.lifecycle.Lifecycle.Event.ON_RESUME) {
+        batteryAllowed = power.isIgnoringBatteryOptimizations(context.packageName)
+    }
+    val battery = RecoveryCapability.BatteryWhitelist
+    val consent = savedConsent.withApplied(battery, batteryAllowed).chose(battery, batteryAllowed)
     val shell by phone.shellControl.status.collectAsState()
     val autoFailed by phone.recovery.permissions.autoFailed.collectAsState()
     val lastRestore by settings.lastRestore.collectAsState()
@@ -146,13 +155,19 @@ fun RecoverySwitches() {
         consent = consent, busy = busy, notes = notes, lastRestore = lastRestore, restartNote = RecoveryCopy.restarted(repaired),
         autoOnNote = RecoveryCopy.autoOnBlocked(autoOnBlocked),
         onToggle = { cap, on ->
-            busy = cap
-            message = null
-            // 不跟页面走:用户离开设置页时命令也要跑完,选择才和系统一致
-            phone.pairing.scope.launch {
-                val r = phone.recovery.permissions.set(cap, on)
-                message = RecoveryCopy.result(r)?.let { cap to it }
-                busy = null
+            if (cap == RecoveryCapability.BatteryWhitelist) {
+                val action = if (on) android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS
+                    else android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                context.startActivity(android.content.Intent(action, android.net.Uri.fromParts("package", context.packageName, null)))
+            } else {
+                busy = cap
+                message = null
+                // 不跟页面走:用户离开设置页时命令也要跑完,选择才和系统一致
+                phone.pairing.scope.launch {
+                    val r = phone.recovery.permissions.set(cap, on)
+                    message = RecoveryCopy.result(r)?.let { cap to it }
+                    busy = null
+                }
             }
         },
     )

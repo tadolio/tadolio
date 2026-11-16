@@ -1,28 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Modified by Tadolio contributors (2026) -->
 <resources>
-    <string name="setup_conversation_intro">スマホ操作を手伝うには、いくつかの設定が必要です。一緒に進めましょう。約1分です。</string>
-    <string name="setup_conversation_intro_wireless_only">スマホが再起動したため、ワイヤレスデバッグがオフになりました。画面までご案内するので、一度オンにするだけです。</string>
-    <string name="setup_conversation_password">Please enter your screen-lock password yourself; I will wait.</string>
-    <string name="setup_conversation_stalled">This screen needs your help; open the current step again or use the detailed guide.</string>
-    <string name="setup_conversation_developer">代わりに開いています。少しお待ちください。</string>
-    <string name="setup_conversation_accessibility">Turn on Tadolio on this accessibility page so I can help tap the screen.</string>
-    <string name="setup_conversation_wireless">代わりに有効にしています。少しお待ちください。</string>
-    <string name="setup_conversation_pair_auto">スマホのアシスタントに接続しています。少しお待ちください。</string>
-    <string name="setup_conversation_pair_manual">自動では接続できませんでした。システムで「ペア設定コードによるデバイスのペア設定」と呼ばれる項目を開き、表示された数字をTadolioの通知に入力してください。</string>
-    <string name="setup_conversation_notifications">Allow Tadolio notifications so I can tell you when I need help.</string>
-    <string name="setup_conversation_battery">Select Tadolio and allow unrestricted battery use so Android can keep it running.</string>
-    <string name="setup_conversation_done">Your phone is ready; you can start talking to Tadolio.</string>
-    <string name="setup_conversation_share">Ask my child for help</string>
     <string name="setup_conversation_continue">開始</string>
-    <string name="setup_conversation_finish">Start using Tadolio</string>
-    <string name="setup_conversation_manual">Detailed guide / USB</string>
     <string name="setup_conversation_later">Later</string>
     <string name="setup_conversation_retry">もう一度試す</string>
-    <string name="setup_conversation_problems">困ったときは</string>
-    <string name="setup_conversation_needed">先に権限が必要です。一緒に設定しましょう。</string>
-    <string name="setup_conversation_developer_manual">自動では開けませんでした。「ソフトウェア情報」の「ビルド番号」を7回タップしてください。システムでは「開発者向けオプション」と呼ばれます。</string>
-    <string name="setup_conversation_wireless_manual">自動では有効にできませんでした。「ワイヤレスデバッグ」をオンにしてください。システムでの、この端末のアシスタント接続設定の名前です。</string>
     <string name="setup_highlight_tap">ここをタップ</string>
     <string name="setup_highlight_build">ここを 7 回タップ</string>
     <string name="setup_accessibility_toast">Tap Downloaded apps, tap Tadolio, turn the switch on</string>

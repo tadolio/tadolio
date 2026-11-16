@@ -66,7 +66,7 @@ class VoiceInput(
                 val t = transcriber(p)
                 val iso = SystemSpeech.isoCode(tag)
                 ProviderSpeech(PcmRecorder(), { wav ->
-                    t.transcribe(p, providers.providerKey(p.id), spec.model, spec.method, wav, iso)
+                    providers.withProviderKey(p.id) { key -> t.transcribe(p, key, spec.model, spec.method, wav, iso) }
                 })
             }
             is SpeechEngineSpec.Unavailable -> FailedSession(SpeechFailure.Unavailable(spec.why))

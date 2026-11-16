@@ -2,7 +2,7 @@
 <!-- Modified by Tadolio contributors (2026) -->
 <resources>
     <string name="community_title">Tadolio Community Compute</string>
-    <string name="community_privacy">The miner or provider doing the work can see this task. Content is encrypted and relayed by the Tadolio platform. You still have to trust the platform: in theory it could swap the encryption keys and read it. Community protections apply; free users earn no coins. Choosing a provider means you agree to be served by the provider shown.</string>
+    <string name="community_privacy">Free compute comes from community members. They can see your task and screen, including chat and banking apps you ask it to open. If you prefer, use your own model. Content is encrypted and relayed by the Tadolio platform. You still have to trust the platform because in theory it could swap the encryption keys and read it. Free users earn no coins. Choosing a provider means you agree to be served by the provider shown.</string>
     <string name="community_use_compute">Use random community compute</string>
     <string name="community_invite">provider invite code (optional)</string>
     <string name="community_bind">Find or change provider</string>
@@ -14,6 +14,5 @@
     <string name="community_cloud_miner">Cloud miner (%1$s)</string>
     <string name="community_local_source">Community compute</string>
     <string name="community_cloud_privacy">Some miners use metered cloud APIs; content passes through the named company.</string>
-    <string name="community_privacy_app_blocked">Community mode blocks privacy apps so their content stays away from random miners. Use your own model for this task.</string>
     <string name="community_calls_unavailable">AI calls are unavailable with community compute. Select your own key or account to use calls.</string>
 </resources>

@@ -42,6 +42,8 @@ data class Explanation(
 )
 
 object StatusCopy {
+    fun batteryBanner() = BannerCopy(tr(R.string.t60_battery_title), "", tr(R.string.t60_battery_allow))
+
     /** 不经模型连做几步时卡片和通知上的说法。 */
     fun progress(p: RunProgress): String = when (p) {
         is RunProgress.Replay -> tr(R.string.progress_replay, p.step, p.total)

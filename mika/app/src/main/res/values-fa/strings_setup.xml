@@ -1,24 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Modified by Tadolio contributors (2026) -->
 <resources>
-    <string name="welcome_title">سلام، من Tadolio هستم</string>
-    <string name="welcome_lead">دستیار شخصی شما در گوشی.\nبگویید چه کاری انجام دهم تا آن را در پس‌زمینه انجام دهم.</string>
-    <string name="welcome_note">پیش از شروع، یک مدل تنظیم کنید و کنترل گوشی را روشن کنید. حدود ۳ دقیقه طول می‌کشد.</string>
-    <string name="welcome_start">شروع</string>
-    <string name="welcome_apps">استفاده از برنامه‌ها</string>
-    <string name="welcome_apps_body">لمس، تایپ و پیمایش در صفحه‌ای در پس‌زمینه، بدون اشغال صفحهٔ شما</string>
-    <string name="welcome_web">مرور وب</string>
-    <string name="welcome_web_body">مرورگر داخلی برای خواندن صفحات، مقایسهٔ قیمت‌ها و جست‌وجو</string>
-    <string name="welcome_files">کار با فایل‌ها</string>
-    <string name="welcome_files_body">پردازش و سازمان‌دهی صفحه‌گسترده‌ها، PDFها و داده‌ها در محیطی جداگانه</string>
-    <string name="welcome_schedule">اجرای زمان‌بندی‌شده</string>
-    <string name="welcome_schedule_body">روزانه، هفتگی یا به‌طور خودکار هنگام برقرار شدن شرط</string>
     <string name="back">بازگشت</string>
     <string name="hide">پنهان کردن</string>
     <string name="show">نمایش</string>
     <string name="model_setup_title">تنظیم مدل</string>
-    <string name="model_setup_lead">Tadolio با سرویس مدل شما فکر می‌کند. ابتدا یک ارائه‌دهنده متصل کنید، سپس برای هر نقش یک مدل انتخاب کنید.</string>
-    <string name="model_setup_onboarding_note">فقط مدل اصلی لازم است؛ دو مدل دیگر را می‌توانید بعداً تنظیم کنید.</string>
     <string name="model_kind">نوع API</string>
     <string name="model_base_url">نشانی پایه</string>
     <string name="model_provider_name">نام</string>

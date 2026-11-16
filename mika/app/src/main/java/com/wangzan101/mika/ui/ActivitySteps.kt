@@ -12,10 +12,12 @@ import com.wangzan101.mika.core.record.RunEvent
 internal fun activityStepRows(
     activities: List<RunEvent.Activity>, toolLabel: (String) -> String,
     appLabel: (String) -> String, notes: Map<Int, String> = emptyMap(),
+    includeNotices: Boolean = true,
 ): MutableList<StepRow> {
     val out = mutableListOf<StepRow>()
     val said = mutableSetOf<Int>()
     for (a in activities) {
+        if (!includeNotices && a.kind == "notice") continue
         val where = a.target?.let { where(it, appLabel) }
         if (a.kind == "observe") {
             // 读成功了却不知道读的是哪里:不列;没读成的照样列出来

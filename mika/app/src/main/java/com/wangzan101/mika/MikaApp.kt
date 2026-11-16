@@ -376,12 +376,12 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
             imageSupported = {
                 val store = com.wangzan101.mika.settings.ProviderStore.get(app)
                 store.configFor(com.wangzan101.mika.core.model.ModelRole.Main)?.let {
-                    store.hybridSelected.value || it.kind == com.wangzan101.mika.settings.ProviderConfig.Kind.Community || it.capabilities.vision
+                    it.kind == com.wangzan101.mika.settings.ProviderConfig.Kind.Community || it.capabilities.vision
                 } == true
             },
             communityImages = {
                 val store = com.wangzan101.mika.settings.ProviderStore.get(app)
-                !store.hybridSelected.value && store.configFor(com.wangzan101.mika.core.model.ModelRole.Main)?.kind == com.wangzan101.mika.settings.ProviderConfig.Kind.Community
+                store.configFor(com.wangzan101.mika.core.model.ModelRole.Main)?.kind == com.wangzan101.mika.settings.ProviderConfig.Kind.Community
             },
             imageNoticeSeen = { app.getSharedPreferences("attach", MODE_PRIVATE).getBoolean("community_image_sent", false) },
             markImageNoticeSeen = { check(app.getSharedPreferences("attach", MODE_PRIVATE).edit().putBoolean("community_image_sent", true).commit()) },

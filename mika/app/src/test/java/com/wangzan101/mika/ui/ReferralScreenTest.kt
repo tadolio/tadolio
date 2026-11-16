@@ -12,8 +12,9 @@ class ReferralScreenTest {
     private val ui = File("src/main/java/com/wangzan101/mika/ui")
     @Test fun welcomeCanContinueAndNumberPageOffersLateBinding() {
         val welcome = File(ui, "WelcomeScreen.kt").readText()
-        assertTrue(welcome.contains("MikaButton(WelcomeCopy.START, onStart"))
-        assertTrue(welcome.contains("R.string.referral_prompt"))
+        assertTrue(welcome.contains("R.string.t60_start_free"))
+        assertFalse(welcome.contains("R.string.referral_prompt"))
+        assertTrue(File(ui, "DeferredSetupPrompts.kt").readText().contains("R.string.t60_referrer_title"))
         assertTrue(File(ui, "NumberScreen.kt").readText().contains("ReferralScreen(back"))
         val screen = File(ui, "ReferralScreen.kt").readText()
         assertTrue(screen.contains("\"canBind\""))

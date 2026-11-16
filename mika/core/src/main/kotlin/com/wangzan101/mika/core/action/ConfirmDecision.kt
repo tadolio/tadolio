@@ -100,7 +100,6 @@ class ConfirmDecision(
         // 复看确认过的所见文字(@vN 才有):读屏里没有文字时(自绘界面)付款的同意按它核对象
         val seen = aim.seen
         val communityHit = if (tools.community) IrreversibleDetector.classifyCommunity(target, checked, snap, fresh) else null
-        if (communityHit != null) tools.promoteHybrid(com.wangzan101.mika.core.access.HybridReason.IrreversibleAction)
         val hit = if (tools.community) communityHit else IrreversibleDetector.classify(target, checked, snap, fresh)
         var familyHit = if (approvals.familyRequired) IrreversibleDetector.classifyCommunity(target, checked, snap, fresh) else hit
         if (approvals.familyRequired) {
@@ -147,8 +146,6 @@ class ConfirmDecision(
         tool: String, checked: JsonObject, origin: Origin, hit: Irreversible?, risk: Risk, screen: ScreenSnapshot?,
         typing: String?, seen: String?, familyCandidate: Irreversible? = hit,
     ): Decision? {
-        if (hit != null || risk.level.outward || risk.ask != null)
-            tools.promoteHybrid(com.wangzan101.mika.core.access.HybridReason.IrreversibleAction)
         val policy = origin.policy
         val familyHit = familyCandidate ?: Irreversible(IrrevAction.other, tool)
         val category = if (familyHit.matched in setOf("verification", "security", "transfer")) familyHit.matched else familyHit.action.name

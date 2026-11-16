@@ -72,15 +72,15 @@ class ModelSetupScreenTest {
         compose.setContent { MikaTheme { ModelSetupContent(ui, onboarding = onboarding, actions = actions, onBack = {}) } }
 
     @Test fun welcomeStarts() {
-        compose.setContent { MikaTheme { WelcomeScreen { calls += "start" } } }
-        compose.onNodeWithTag("onboarding-message").assertIsDisplayed()
-        compose.onNodeWithTag("welcome-start").performClick()
+        compose.setContent { MikaTheme { WelcomeContent(true, { calls += "start" }, {}, {}, {}) } }
+        compose.onNodeWithTag("setup-title").assertIsDisplayed()
+        compose.onNodeWithTag("setup-primary").performScrollTo().performClick()
         assertEquals(listOf("start"), calls)
     }
 
     @Test fun firstVisitShowsFormAndNextIsDisabled() {
         show(ModelSetupUi(form))
-        compose.onNodeWithTag("setup-next").assertIsNotEnabled()
+        compose.onNodeWithTag("setup-next").assertDoesNotExist()
         // 上面多了「用账号登录」一组,按钮可能在屏幕外:先滚到再点
         compose.onNodeWithTag("setup-test").performScrollTo().assertIsEnabled().performClick()
         compose.onNodeWithTag("preset-Kimi").performScrollTo().performClick()
@@ -90,9 +90,21 @@ class ModelSetupScreenTest {
     @Test fun freshOnboardingOffersConversationBeforeImplicitProviderForm() {
         val store = ProviderStore(tmp.root, AesGcmKeyCipher { error("Fixture has no API key") })
         compose.setContent { MikaTheme { ModelSetupScreen(store, onboarding = true, onBack = {}, onDone = {}) } }
-        compose.onNodeWithTag("onboarding-message").assertIsDisplayed()
-        compose.onNodeWithTag("onboarding-hold").assertExists()
+        compose.onNodeWithTag("setup-title").assertIsDisplayed()
+        compose.onNodeWithTag("onboarding-hold").assertDoesNotExist()
         compose.onNodeWithTag("setup-test").assertDoesNotExist()
+        compose.onNodeWithTag("setup-next").assertDoesNotExist()
+    }
+
+    @Test fun onboardingKeyFormOmitsCommunityAndRoleCards() {
+        compose.setContent { MikaTheme {
+            ModelSetupContent(ModelSetupUi(form), onboarding = true,
+                actions = ModelSetupActions(communityContent = { androidx.compose.material3.Text("community fixture") }), onBack = {})
+        } }
+        compose.onNodeWithText("community fixture").assertDoesNotExist()
+        compose.onNodeWithTag("role-main").assertDoesNotExist()
+        compose.onNodeWithTag("role-vision").assertDoesNotExist()
+        compose.onNodeWithTag("role-light").assertDoesNotExist()
         compose.onNodeWithTag("setup-next").assertDoesNotExist()
     }
 
@@ -111,8 +123,8 @@ class ModelSetupScreenTest {
         assertEquals(listOf("save untested"), calls)
     }
 
-    @Test fun connectedProvidersAreListedAndNextEnables() {
-        show(connected())
+    @Test fun settingsProvidersAndRolesRemainAvailable() {
+        show(connected(), onboarding = false)
         compose.onNodeWithTag("context-main").assertDoesNotExist()
         compose.onNodeWithText(ModelsCopy.PROVIDERS).assertIsDisplayed()
         compose.onNodeWithText("已连接 · 2 个模型 · 主模型、轻量模型在用").assertIsDisplayed()
@@ -122,8 +134,8 @@ class ModelSetupScreenTest {
         compose.onNodeWithText(ModelsCopy.ADD_PROVIDER).performClick()
         compose.onNodeWithTag("provider-通义千问").performClick()
         compose.onNodeWithTag("role-vision").performScrollTo().performClick()
-        compose.onNodeWithTag("setup-next").assertIsEnabled().performClick()
-        assertEquals(listOf("open form", "provider p2", "role Vision", "next"), calls)
+        compose.onNodeWithTag("setup-next").assertDoesNotExist()
+        assertEquals(listOf("open form", "provider p2", "role Vision"), calls)
     }
 
     @Test fun settingsPageShowsAllThreeRolesWithoutBottomButton() {

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="key_add_backup">新增備用 Key</string>
+    <string name="key_remove">刪除</string>
+    <string name="key_move_up">上移</string>
+    <string name="key_available">可用</string>
+    <string name="key_invalid">已失效</string>
+    <string name="key_exhausted">額度用完</string>
+    <string name="key_rate_limited">限流中</string>
+    <string name="key_active">正在用第 %1$d 個 Key</string>
+    <string name="keys_all_invalid">%1$d 個 Key 都已失效</string>
+    <string name="keys_all_exhausted">所有 Key 額度都用完了</string>
+    <string name="keys_all_limited">所有 Key 都在限流中</string>
+    <string name="keys_all_unavailable">所有 Key 都需要處理</string>
+    <string name="model_backup">備用模型</string>
+    <string name="model_backup_none">不使用</string>
+    <string name="model_backup_notice">%1$s 的 Key 都無法使用，已改用備用模型 %2$s。</string>
+</resources>

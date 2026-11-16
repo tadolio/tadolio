@@ -318,8 +318,7 @@ class TaskService : Service() {
         channelPeer: ChannelPeer? = null, channelMessageId: String? = null, notificationAppName: String? = null, triggerCondition: String? = null) {
         if (provenance.origin == RunOrigin.Channel && !com.wangzan101.mika.wechat.WechatTaskPolicy.allowed(
                 com.wangzan101.mika.settings.ProviderStore.get(this).configFor(com.wangzan101.mika.core.model.ModelRole.Main)?.kind == com.wangzan101.mika.settings.ProviderConfig.Kind.Community ||
-                    com.wangzan101.mika.settings.CommunitySimulation.mode(this) == com.wangzan101.mika.core.run.ComputeMode.Community,
-                hybrid = com.wangzan101.mika.settings.ProviderStore.get(this).hybridSelected.value)) {
+                    com.wangzan101.mika.settings.CommunitySimulation.mode(this) == com.wangzan101.mika.core.run.ComputeMode.Community)) {
             acknowledgeChannel(channelPeer, channelMessageId)
             return
         }

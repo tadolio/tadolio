@@ -115,6 +115,7 @@ internal fun JsonObject.operatorFlag(key: String): Boolean = this[key]?.jsonPrim
                         Text(stringResource(R.string.coins_provider_share, card["share"]?.jsonPrimitive?.intOrNull ?: 0))
                         Text(stringResource(R.string.operator_share_rule))
                         Text(stringResource(R.string.community_binding_contact))
+                        Text(stringResource(R.string.t60_provider_consent))
                         card.operatorText("number").takeIf { it.matches(Regex("[0-9]{8}")) }?.let { number ->
                             TextButton(enabled = !busy, onClick = { work {
                                 com.wangzan101.mika.number.NumberClient.get(context).block(number, true)

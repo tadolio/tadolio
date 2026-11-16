@@ -205,12 +205,9 @@ class MainActivity : ComponentActivity() {
                     operatorInvite?.let { invite -> OperatorDirectory(
                         com.wangzan101.mika.community.CommunityClients.get(this), invite,
                         used = {
-                            val own = store.configs.value.filter { it.kind != com.wangzan101.mika.settings.ProviderConfig.Kind.Community }.map { it.id }.toSet()
-                            if (store.roles.value.main in own && own.containsAll(store.roles.value.referenced)) store.retainHybridOwnRoles(store.roles.value)
-                            store.selectHybrid(false)
                             val provider = store.connect("Tadolio Community", com.wangzan101.mika.settings.ProviderConfig.Kind.Community, com.wangzan101.mika.about.HivoConfig.HUB_URL, null,
-                                models = listOf(com.wangzan101.mika.core.model.ListedModel("operator", toolCalls = true, vision = false)))
-                            store.use(com.wangzan101.mika.core.model.ModelRole.Main, provider.id, "operator", com.wangzan101.mika.core.model.Capabilities(toolCalls = true, vision = false, contextTokens = 32000, reasoning = false))
+                                models = listOf(com.wangzan101.mika.core.model.ListedModel("operator", toolCalls = true, vision = true)))
+                            store.use(com.wangzan101.mika.core.model.ModelRole.Main, provider.id, "operator", com.wangzan101.mika.core.model.Capabilities(toolCalls = true, vision = true, contextTokens = 32000, reasoning = false))
                         }, close = { operatorInvite = null; setIntent(Intent(this@MainActivity, MainActivity::class.java)) }) }
                     familyCode?.let { code -> FamilyJoinPrompt(code) { familyCode = null } }
                     referralNumber?.let { number -> ReferralScreen(initialInviter = number, back = {
@@ -647,8 +644,8 @@ private fun MikaRoot(
     LaunchedEffect(nav.current, setupForTask, setupComplete, status, setupChat) {
         val pending = phoneSetup.pending
         if (nav.current == Route.Chat && setupForTask && setupComplete && pending != null &&
-            check.phoneReady &&
-            app.chat.retryPhoneSetup(pending.conversationId, pending.goal, check)) {
+            check.phoneReady) {
+            app.chat.retryPhoneSetup(pending.conversationId, pending.goal, check)
             setupForTask = false
             phoneSetup.clear()
         }
@@ -664,7 +661,13 @@ private fun MikaRoot(
             phoneSetup.markGuideSeen()
             if (onboarding == OnboardingStep.Phone) goOnboarding(null) else nav.back()
         }
-        Route.Welcome -> WelcomeScreen { goOnboarding(OnboardingStep.Model) }
+        Route.Welcome -> WelcomeScreen(store, onStart = {
+            onboardingState.startCommunity(store)
+            goOnboarding(null)
+        }, onOwnModel = { goOnboarding(OnboardingStep.Model) }, onProviderSelected = {
+            onboardingState.markModelSetupDone()
+            goOnboarding(null)
+        })
         Route.ModelSetup -> {
             val inOnboarding = onboarding == OnboardingStep.Model
             ModelSetupScreen(

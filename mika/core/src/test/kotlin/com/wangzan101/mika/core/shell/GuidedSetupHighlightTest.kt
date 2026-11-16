@@ -19,6 +19,14 @@ class GuidedSetupHighlightTest {
         assertEquals(box, hints(Step.Wireless, listOf(Node("Wireless debugging", true)), failed = true).single().bounds)
         assertTrue(hints(Step.Wireless, listOf(Node("Wireless debugging", true))).isEmpty())
     }
+    @Test fun wirelessConsentIsHighlightedAndNeverClicked() {
+        for (label in listOf("允许", "始终允许", "Allow", "Always allow")) {
+            val nodes = listOf(Node(label, true))
+            assertEquals(GuidedSetup.Action.Manual, GuidedSetup.action(Step.Wireless, nodes, true))
+            assertEquals(listOf(Highlight(box, HintText.Tap)), hints(Step.Wireless, nodes))
+            assertTrue(hints(Step.Wireless, nodes, settings = false).isEmpty())
+        }
+    }
     @Test fun buildNumberRequestsSevenTaps() {
         assertEquals(HintText.BuildSeven, hints(Step.Developer, listOf(Node("Build number"))).single().text)
     }

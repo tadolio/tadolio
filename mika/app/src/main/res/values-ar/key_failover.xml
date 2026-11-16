@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="key_add_backup">إضافة Key احتياطي</string>
+    <string name="key_remove">حذف</string>
+    <string name="key_move_up">نقل لأعلى</string>
+    <string name="key_available">متاح</string>
+    <string name="key_invalid">غير صالح</string>
+    <string name="key_exhausted">نفدت الحصة</string>
+    <string name="key_rate_limited">محدود الطلبات</string>
+    <string name="key_active">استخدام Key رقم %1$d</string>
+    <string name="keys_all_invalid">جميع المفاتيح البالغ عددها %1$d غير صالحة</string>
+    <string name="keys_all_exhausted">نفدت حصة جميع المفاتيح</string>
+    <string name="keys_all_limited">جميع المفاتيح محدودة الطلبات</string>
+    <string name="keys_all_unavailable">جميع المفاتيح تحتاج إلى مراجعة</string>
+    <string name="model_backup">النموذج الاحتياطي</string>
+    <string name="model_backup_none">بدون</string>
+    <string name="model_backup_notice">مفاتيح %1$s غير متاحة. تم التبديل إلى النموذج الاحتياطي %2$s.</string>
+</resources>

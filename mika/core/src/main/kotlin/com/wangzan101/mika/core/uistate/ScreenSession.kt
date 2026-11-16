@@ -159,7 +159,6 @@ internal class ScreenSession(
 
     suspend fun observe(withImage: Boolean, adaptiveImage: Boolean = false, recordFrame: Boolean = true): ToolExecution {
         val s = snapshot()
-        if (s.communityHidden) return ToolExecution(com.wangzan101.mika.core.access.CommunityPolicy.placeholder(s.packageName))
         val (tree, ocr, ocrStatus) = readTree(s)
         val imageReason = if (adaptiveImage && tree.poor) tree.reason else null
         val sendImage = withImage || imageReason != null
@@ -295,10 +294,6 @@ internal class ScreenSession(
         // 连续差异最多 MAX_CHAIN_DIFFS 次就发一次全量:链越长越难读,压缩时要保留的往返也越多
         val seen = chain.isNotEmpty() && chain.size - 1 < MAX_CHAIN_DIFFS && (v == null || chain.all { it in v })
         val s = cur.screen
-        if (s.communityHidden) {
-            shown = null; chain.clear()
-            return r.with(content = JsonObject(r.content + ("screen" to com.wangzan101.mika.core.access.CommunityPolicy.placeholder(s.packageName))))
-        }
         val (tree, ocr, ocrStatus) = readTree(s)
         val shotId = shots.next()
         val diff = if (s.protected) {

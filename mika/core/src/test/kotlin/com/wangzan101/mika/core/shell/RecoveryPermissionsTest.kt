@@ -231,27 +231,23 @@ class RecoveryPermissionsTest {
     }
 
     @Test
-    fun applyPendingRecordsFailuresQuietlyAndClearsThemLater() = runTest {
-        var shell = FakeShell(failOn = "deviceidle")
+    fun automaticRecoveryLeavesBatteryForTheUsersPermissionPrompt() = runTest {
+        val shell = FakeShell()
         val store = Store()
         val p = RecoveryPermissions({ shell }, store, pkg)
-
-        assertTrue(p.applyPending() is PermissionResult.Failed)
-        // 一项失败不挡住其余几项
-        assertEquals(RecoveryConsent(applied = setOf(a11y, restore, autoOn)), store.consent.value)
-        assertEquals(setOf(battery), p.autoFailed.value)
-
-        shell = FakeShell()
         assertEquals(PermissionResult.Done, p.applyPending())
-        assertEquals(listOf(PermissionCommands.whitelistAdd(pkg)), shell.ran)
+        assertEquals(RecoveryConsent(applied = setOf(a11y, restore, autoOn)), store.consent.value)
+        assertFalse(PermissionCommands.whitelistAdd(pkg) in shell.ran)
         assertTrue(p.autoFailed.value.isEmpty())
+        assertEquals(PermissionResult.Done, p.set(battery, true))
+        assertTrue(PermissionCommands.whitelistAdd(pkg) in shell.ran)
     }
 
     @Test
     fun appliesEachTimeTheHelperBecomesRunning() = runTest {
         val shell = FakeShell()
         val status = MutableStateFlow<BuiltinShellStatus>(BuiltinShellStatus.NotPaired)
-        val store = Store(RecoveryConsent(declined = setOf(a11y, restore, autoOn)))
+        val store = Store(RecoveryConsent(declined = setOf(a11y, battery, autoOn)))
         val p = RecoveryPermissions({ shell }, store, pkg)
         val job = launch { p.applyWhenRunning(status) }
 
@@ -263,7 +259,7 @@ class RecoveryPermissionsTest {
 
         status.value = BuiltinShellStatus.Running
         runCurrent()
-        assertEquals(listOf(PermissionCommands.whitelistAdd(pkg)), shell.ran)
+        assertEquals(listOf(PermissionCommands.grantWriteSecureSettings(pkg)), shell.ran)
 
         // 掉线又重起:这期间收回过(比如解除配对又配上),再补一次
         status.value = BuiltinShellStatus.Connecting
@@ -271,7 +267,7 @@ class RecoveryPermissionsTest {
         store.save(store.consent.value.copy(applied = emptySet()))
         status.value = BuiltinShellStatus.Running
         runCurrent()
-        assertEquals(listOf(PermissionCommands.whitelistAdd(pkg), PermissionCommands.whitelistAdd(pkg)), shell.ran)
+        assertEquals(List(2) { PermissionCommands.grantWriteSecureSettings(pkg) }, shell.ran)
         job.cancel()
     }
 
@@ -280,14 +276,14 @@ class RecoveryPermissionsTest {
         val shell = FakeShell()
         val status = MutableStateFlow(BuiltinShellStatus.Running)
         val active = MutableStateFlow(false)
-        val store = Store(RecoveryConsent(declined = setOf(a11y, restore, autoOn)))
+        val store = Store(RecoveryConsent(declined = setOf(a11y, battery, autoOn)))
         val p = RecoveryPermissions({ shell }, store, pkg)
         val job = launch { p.applyWhenRunning(status, active) }
         runCurrent()
         assertTrue(shell.ran.isEmpty())
         active.value = true
         runCurrent()
-        assertEquals(listOf(PermissionCommands.whitelistAdd(pkg)), shell.ran)
+        assertEquals(listOf(PermissionCommands.grantWriteSecureSettings(pkg)), shell.ran)
         job.cancel()
     }
 

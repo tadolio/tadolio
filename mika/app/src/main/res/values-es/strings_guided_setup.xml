@@ -1,28 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Modified by Tadolio contributors (2026) -->
 <resources>
-    <string name="setup_conversation_intro">Para ayudarte a usar el teléfono, hay que activar unos ajustes. Te guío; lleva un minuto aproximadamente.</string>
-    <string name="setup_conversation_intro_wireless_only">El teléfono se reinició y la depuración inalámbrica se apagó. Te llevo allí; solo actívala una vez.</string>
-    <string name="setup_conversation_password">Please enter your screen-lock password yourself; I will wait.</string>
-    <string name="setup_conversation_stalled">This screen needs your help; open the current step again or use the detailed guide.</string>
-    <string name="setup_conversation_developer">Lo estoy abriendo por ti. Espera un momento.</string>
-    <string name="setup_conversation_accessibility">Turn on Tadolio on this accessibility page so I can help tap the screen.</string>
-    <string name="setup_conversation_wireless">Lo estoy activando por ti. Espera un momento.</string>
-    <string name="setup_conversation_pair_auto">Estoy conectando el asistente del teléfono. Espera un momento.</string>
-    <string name="setup_conversation_pair_manual">No pude conectar automáticamente. Abre Vincular dispositivo con código (nombre de Android) e introduce sus números en la notificación de Tadolio.</string>
-    <string name="setup_conversation_notifications">Allow Tadolio notifications so I can tell you when I need help.</string>
-    <string name="setup_conversation_battery">Select Tadolio and allow unrestricted battery use so Android can keep it running.</string>
-    <string name="setup_conversation_done">Your phone is ready; you can start talking to Tadolio.</string>
-    <string name="setup_conversation_share">Ask my child for help</string>
     <string name="setup_conversation_continue">Empezar</string>
-    <string name="setup_conversation_finish">Start using Tadolio</string>
-    <string name="setup_conversation_manual">Detailed guide / USB</string>
     <string name="setup_conversation_later">Later</string>
     <string name="setup_conversation_retry">Intentar de nuevo</string>
-    <string name="setup_conversation_problems">Tengo un problema</string>
-    <string name="setup_conversation_needed">Primero hace falta un permiso. Te guío.</string>
-    <string name="setup_conversation_developer_manual">No pude abrirlo automáticamente. En Información de software, toca siete veces Número de compilación. Android lo llama Opciones de desarrollador.</string>
-    <string name="setup_conversation_wireless_manual">No pude activarlo automáticamente. Activa Depuración inalámbrica: así llama Android a la conexión local del asistente.</string>
     <string name="setup_highlight_tap">Toca aquí</string>
     <string name="setup_highlight_build">Toca aquí 7 veces</string>
     <string name="setup_accessibility_toast">Tap Downloaded apps, tap Tadolio, turn the switch on</string>

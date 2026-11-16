@@ -13,6 +13,5 @@
     <string name="community_cloud_miner">Minero en la nube (%1$s)</string>
     <string name="community_local_source">Modo de nodo comunitario</string>
     <string name="community_cloud_privacy">Algunos mineros ejecutan modelos de código abierto en la nube. El contenido pasa por esa plataforma.</string>
-    <string name="community_privacy_app_blocked">El modo comunitario bloquea las aplicaciones privadas para evitar que su contenido llegue a mineros aleatorios. Usa tu propio modelo para esta tarea.</string>
     <string name="community_calls_unavailable">AI calls are unavailable with community compute. Select your own key or account to use calls.</string>
 </resources>

@@ -282,6 +282,7 @@ internal const val MODEL_PREVIEW = 3
 // ---------- 一个服务商 ----------
 
 class ProviderDetailActions(
+    val keyControls: (@Composable () -> Unit)? = null,
     val refresh: () -> Unit = {},
     val changeKey: (String) -> Unit = {},
     val remove: () -> Unit = {},
@@ -340,6 +341,7 @@ fun ProviderDetailContent(ui: ModelSetupUi, p: Provider, actions: ProviderDetail
                 }
             }
         }
+        if (p.kind in ProviderConfig.Kind.withApiKey) actions.keyControls?.invoke()
         (state as? ListState.Failed)?.let { FooterNote(ModelSetupCopy.failed(it.message), color = c.bad) }
 
         GroupCard {

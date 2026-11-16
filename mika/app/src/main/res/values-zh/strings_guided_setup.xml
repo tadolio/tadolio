@@ -1,28 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Modified by Tadolio contributors (2026) -->
 <resources>
-    <string name="setup_conversation_intro">要让我帮你操作手机，需要打开几个开关，我带你做，大约一分钟。</string>
-    <string name="setup_conversation_intro_wireless_only">手机重启过，「无线调试」关掉了。我带你过去，打开一下就好。</string>
-    <string name="setup_conversation_password">这一步需要你自己输入锁屏密码，我会等你。</string>
-    <string name="setup_conversation_stalled">这一步需要你帮忙；可以重新打开当前页面，或查看详细指导。</string>
-    <string name="setup_conversation_developer">我正在帮你打开，稍等。</string>
-    <string name="setup_conversation_accessibility">马上带你去系统的无障碍页面。到了之后：先点“已下载的应用”（有的手机叫“已安装的应用”），再点“Tadolio”，打开开关。开好我会自己回来。</string>
-    <string name="setup_conversation_wireless">我正在帮你打开，稍等。</string>
-    <string name="setup_conversation_pair_auto">我正在帮你连接手机助手，稍等。</string>
-    <string name="setup_conversation_pair_manual">这一步我没能自动连接。请打开系统叫作“使用配对码配对设备”的入口，把里面的数字填进 Tadolio 通知。</string>
-    <string name="setup_conversation_notifications">请允许 Tadolio 发送通知，这样需要帮忙时我才能提醒你。</string>
-    <string name="setup_conversation_battery">请选择 Tadolio 并允许不受限制的电池使用，让系统保留助手运行。</string>
-    <string name="setup_conversation_done">手机已经设置好了，现在可以跟 Tadolio 说话了。</string>
-    <string name="setup_conversation_share">让孩子帮我</string>
     <string name="setup_conversation_continue">开始</string>
-    <string name="setup_conversation_finish">开始使用 Tadolio</string>
-    <string name="setup_conversation_manual">详细指导／USB 启动</string>
     <string name="setup_conversation_later">稍后再说</string>
     <string name="setup_conversation_retry">再试一次</string>
-    <string name="setup_conversation_problems">遇到问题</string>
-    <string name="setup_conversation_needed">这件事要先开个权限，我带你弄。</string>
-    <string name="setup_conversation_developer_manual">这一步我没能自动打开，需要你帮忙。在“软件信息”里连续点七次“版本号”；系统把这个开关叫作“开发者选项”。</string>
-    <string name="setup_conversation_wireless_manual">这一步我没能自动打开，需要你打开“无线调试”；这是系统对本机助手连接开关的叫法。</string>
+    <string name="setup_conversation_needed">这件事要我替你点手机，得先开一次权限。</string>
     <string name="setup_highlight_tap">点这里</string>
     <string name="setup_highlight_build">点这里，连点 7 下</string>
     <string name="setup_accessibility_toast">点“已下载的应用”，再点“Tadolio”，打开开关</string>

@@ -75,7 +75,6 @@ data class TimelineHeader(
     val usedMemory: List<String> = emptyList(),
     /** 这次运行的小结;记录里没有开始事件时为 null(只显示用时)。 */
     val metrics: RunMetrics? = null,
-    val hybridUpgrade: String? = null,
 )
 
 sealed interface TimelineUi {
@@ -128,8 +127,6 @@ class RunTimelineViewModel(
             } ?: 0,
             usedMemory = resolveMemory(events.filterIsInstance<RunEvent.MemoryUsed>().lastOrNull()?.ids.orEmpty()),
             metrics = metrics,
-            hybridUpgrade = events.filterIsInstance<RunEvent.State>()
-                .firstOrNull { it.name == "hybrid_upgrade" }?.let { hybridUpgradeLabel(it.detail) },
         )
         return TimelineUi.Ready(header, steps(events, toolLabels::label))
     }
@@ -140,22 +137,6 @@ class RunTimelineViewModel(
 
     companion object {
         const val SAID_MAX = 80
-
-        internal fun hybridUpgradeLabel(detail: String): String? {
-            val parts = detail.split(':', limit = 2)
-            val step = parts.firstOrNull()?.toIntOrNull()?.takeIf { it >= 1 } ?: return null
-            val reason = when (parts.getOrNull(1)) {
-                "AppNotAllowed" -> R.string.hybrid_reason_app
-                "WindowHidden" -> R.string.hybrid_reason_window
-                "SensitiveContent" -> R.string.hybrid_reason_sensitive
-                "PasswordField" -> R.string.hybrid_reason_password
-                "IrreversibleAction" -> R.string.hybrid_reason_action
-                "RemoteTask" -> R.string.hybrid_reason_remote
-                "Image" -> R.string.hybrid_reason_image
-                else -> return null
-            }
-            return tr(R.string.hybrid_upgrade_detail, step, tr(reason))
-        }
 
         /** 按步号归组;没有步号的事件(核查、确认、接管、障碍)挂在它之前最近的一步上。 */
         internal fun steps(events: List<RunEvent>, toolLabel: (String) -> String = { it }): List<TimelineStep> {

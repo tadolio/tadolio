@@ -1,3 +1,4 @@
+// Modified by Tadolio contributors (2026)
 package com.wangzan101.mika.cap.phone.setup
 
 import android.app.NotificationManager
@@ -45,14 +46,14 @@ class PairingNoticeTest {
     @Test
     fun pairingFailuresKeepTheInputWithHowToRetry() {
         assertEquals(
-            PairingNotice.EnterCode(5, "配对码不对或已失效：在配对窗口重新点「使用配对码配对设备」拿新的码，再填一次"),
+            PairingNotice.EnterCode(5, "码不对或过期了。重新点一次，会换新的 6 位数。"),
             PairingNotice.of(BuiltinShellStatus.Failed(BuiltinShellFailure.WrongCode), PairingDiscovery.Found(5)),
         )
         // 窗口关了(找不到配对窗口)也留着输入框,说同样的办法
         val closed = PairingNotice.of(BuiltinShellStatus.Failed(BuiltinShellFailure.PairingWindowClosed), PairingDiscovery.Searching)
         closed as PairingNotice.EnterCode
         assertNull(closed.port)
-        assertTrue(closed.error!!.endsWith("拿新的码，再填一次"))
+        assertEquals("配对窗口关了。重新点一次再填。", closed.error)
         // 配对之后的失败请用户回 Mika
         assertEquals(
             PairingNotice.Problem("连上了,但没能准备好"),

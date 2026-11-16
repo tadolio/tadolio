@@ -3,7 +3,6 @@ package com.wangzan101.mika.settings
 
 import com.wangzan101.mika.core.action.ApprovalSettings
 import com.wangzan101.mika.core.gate.ConfirmationGate
-import com.wangzan101.mika.core.access.HybridScreenBoundary
 
 /**
  * 一个任务自己的审批设置:自主与否是开工时取全局的,之后跟着开发者选项里的「自主模式」变([set])。
@@ -12,15 +11,13 @@ import com.wangzan101.mika.core.access.HybridScreenBoundary
 class RunApproval(
     startAutonomous: Boolean,
     private val community: Boolean = false,
-    private val hybridBoundary: HybridScreenBoundary? = null,
 ) : ApprovalSettings {
-    init { require(hybridBoundary == null || community) { "hybrid_requires_community_start" } }
-    private val pureCommunity = community && hybridBoundary == null
+    private val pureCommunity = community
     /** 开工时就是自主:这个任务没有确认关卡,也不给 request_confirmation;中途关掉自主留给下一个任务。 */
     val startedAutonomous: Boolean = startAutonomous && !pureCommunity
     @Volatile private var auto = startedAutonomous
 
-    override fun autonomous(): Boolean = auto && (!community || hybridBoundary?.community == false)
+    override fun autonomous(): Boolean = auto && !community
 
     fun set(autonomous: Boolean) {
         auto = autonomous && !pureCommunity
@@ -44,12 +41,9 @@ class ApprovalControl(private val store: ApprovalStore) {
     @Synchronized fun start(
         remote: Boolean = false,
         community: Boolean = false,
-        hybridBoundary: HybridScreenBoundary? = null,
     ): RunApproval {
-        val run = RunApproval(!remote && store.autonomous.value, community, hybridBoundary)
-        // Remote tasks retain their existing fixed ASK policy. Local Hybrid tasks follow the
-        // same setting updates as Own, while the shared boundary suppresses community autonomy.
-        if (!remote && (!community || hybridBoundary != null)) runs += run
+        val run = RunApproval(!remote && store.autonomous.value, community)
+        if (!remote && !community) runs += run
         return run
     }
 

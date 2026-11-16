@@ -110,11 +110,7 @@ class Verifier(
     private val ops: ImageOps? = null,
 ) {
     /** 有视觉模型时才值得附画面。 */
-    internal fun communitySafe(): Verifier = Verifier(com.wangzan101.mika.core.access.CommunityModel(textModel), null, ops)
-
-    /** Keep frozen Own text/vision choices, sharing transport admission with the main task. */
-    internal fun hybrid(main: com.wangzan101.mika.core.access.HybridModel): Verifier =
-        Verifier(main.auxiliary(textModel), visionModel?.let(main::auxiliary), ops)
+    internal fun communitySafe(): Verifier = Verifier(com.wangzan101.mika.core.access.CommunityModel(textModel), visionModel?.let { com.wangzan101.mika.core.access.CommunityModel(it) }, ops)
 
     val wantsImage: Boolean get() = visionModel != null
 

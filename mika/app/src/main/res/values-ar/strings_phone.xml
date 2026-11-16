@@ -111,8 +111,6 @@
     <string name="phone_degraded">التحكم بالهاتف غير جاهز، لذا لا يستطيع Tadolio استخدام التطبيقات الآن؛ وتعمل مهام الويب والملفات كالمعتاد.</string>
     <string name="phone_degraded_no_sandbox">التحكم بالهاتف غير جاهز، لذا لا يستطيع Tadolio استخدام التطبيقات الآن؛ وتعمل مهام الويب كالمعتاد.</string>
     <string name="phone_channel">الاقتران</string>
-    <string name="phone_notify_enter_title">أدخل رمز الاقتران</string>
-    <string name="phone_notify_enter_text">اكتب هنا الأرقام الستة الظاهرة على الشاشة — لا حاجة إلى مغادرة نافذة الاقتران</string>
     <string name="phone_notify_action">إدخال الرمز</string>
     <string name="phone_notify_input">6 أرقام</string>
     <string name="phone_notify_working">جارٍ الاقتران…</string>
@@ -120,8 +118,6 @@
     <string name="phone_notify_done_text">تم إعداد التحكم بالهاتف. يمكنك العودة إلى Tadolio الآن</string>
     <string name="phone_notify_problem">عُد إلى Tadolio لمعرفة كيفية حل المشكلة</string>
     <string name="phone_notify_window_found">تم العثور على نافذة الاقتران</string>
-    <string name="phone_notify_retry_code">الرمز خاطئ أو منتهي الصلاحية: في نافذة الاقتران، انقر مجددًا على «Pair device with pairing code» للحصول على رمز جديد، ثم أدخله</string>
-    <string name="phone_notify_retry_window">أُغلقت نافذة الاقتران أو انتهت صلاحية الرمز: انقر مجددًا على «Pair device with pairing code» للحصول على رمز جديد، ثم أدخله</string>
     <string name="phone_notify_code_invalid">أدخل 6 أرقام، ثم حاول مجددًا</string>
     <string name="phone_guide_1">انقر على «Pair device with pairing code»</string>
     <string name="phone_guide_2">سيظهر إشعار Tadolio أعلى الشاشة؛ وإذا لم يظهر، فاسحب لأسفل لفتح لوحة الإشعارات</string>

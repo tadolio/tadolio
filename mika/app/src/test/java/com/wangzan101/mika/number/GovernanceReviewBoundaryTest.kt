@@ -11,12 +11,12 @@ class GovernanceReviewBoundaryTest {
     @Test fun communityAndDisabledConstructNoModel() = runBlocking {
         for ((enabled, community) in listOf(true to true, false to false)) {
             GovernanceReviewBoundary.review(GovernanceJury(save = {}), cases, 0, enabled,
-                false, community, { error("own") }, { error("hybrid") }, { _, _ -> error("vote") })
+                community, { error("own") }, { _, _ -> error("vote") })
         }
     }
 
-    @Test fun hybridAndOwnHaveNoToolsAndUsePrivateModel() = runBlocking {
-        for (hybrid in listOf(false, true)) {
+    @Test fun ownHasNoToolsAndUsesPrivateModel() = runBlocking {
+        repeat(1) {
             var votes = 0
             val model = object : ChatModel {
                 override val capabilities = Capabilities(false, false, 32000, false)
@@ -29,7 +29,7 @@ class GovernanceReviewBoundaryTest {
                 }
             }
             GovernanceReviewBoundary.review(GovernanceJury(save = {}), cases, 0, true,
-                hybrid, hybrid, { assertFalse(hybrid); model }, { assertTrue(hybrid); model },
+                false, { model },
                 { _, ballot -> votes++; assertEquals("dismiss", ballot.vote) })
             assertEquals(1, votes)
         }

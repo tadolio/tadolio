@@ -401,17 +401,15 @@ internal class NumberClient private constructor(private val context: Context) {
     private suspend fun reviewGovernance() {
         if (!settings.governanceJuryEnabled()) return
         val providers = ProviderStore.get(context)
-        val hybrid = providers.hybridSelected.value
         val community = providers.configFor(ModelRole.Main)?.kind == ProviderConfig.Kind.Community
-        if (!hybrid && community) return
+        if (community) return
         GovernanceReviewBoundary.review(
-            governanceJury, governance.jury(), System.currentTimeMillis(), true, hybrid, community,
+            governanceJury, governance.jury(), System.currentTimeMillis(), true, community,
             own = {
                 val frozen = providers.freezeModels(com.wangzan101.mika.core.model.ModelSession.fresh())
                 check(frozen.mainConfig?.kind != ProviderConfig.Kind.Community) { "jury_own_model_required" }
                 frozen.main
             },
-            hybridOwn = { providers.freezeHybridModels(com.wangzan101.mika.core.model.ModelSession.fresh()).own.main },
             submit = { id, ballot ->
                 // Recheck consent after a potentially long model call.
                 check(settings.governanceJuryEnabled())
@@ -426,7 +424,6 @@ internal class NumberClient private constructor(private val context: Context) {
         val postMemory by lazy { com.wangzan101.mika.core.post.PostMemory(memory.store()) }
         PostReviewBoundary.review(
             postStandby, System.currentTimeMillis(), settings.postStandbyEnabled(),
-            providers.hybridSelected.value,
             providers.configFor(ModelRole.Main)?.kind == ProviderConfig.Kind.Community,
             preferences = {
                 if (memory.settings().switches.value.useMemory)
@@ -443,7 +440,6 @@ internal class NumberClient private constructor(private val context: Context) {
                 check(frozen.mainConfig?.kind != ProviderConfig.Kind.Community) { "post_own_model_required" }
                 frozen.main
             },
-            hybridOwn = { providers.freezeHybridModels(com.wangzan101.mika.core.model.ModelSession.fresh()).own.main },
             remote = { com.wangzan101.mika.community.CommunityModel(
                 com.wangzan101.mika.community.CommunityClients.get(context), "compute") },
             closeRemote = { (it as com.wangzan101.mika.community.CommunityModel).close() },
@@ -451,8 +447,7 @@ internal class NumberClient private constructor(private val context: Context) {
                 memory.settings().switches.value.useMemory && postMemory.skipCommunity(post)
             },
         )
-        if ((providers.hybridSelected.value ||
-                providers.configFor(ModelRole.Main)?.kind != ProviderConfig.Kind.Community) &&
+        if (providers.configFor(ModelRole.Main)?.kind != ProviderConfig.Kind.Community &&
             PostNotifications.allowed(context)) {
             postStandby.takeReminder(System.currentTimeMillis(), settings.postStandbyEnabled())?.let {
                 PostNotifications.show(context, it.first, it.second.size)

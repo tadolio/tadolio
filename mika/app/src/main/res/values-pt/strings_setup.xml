@@ -1,23 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
 <resources>
-    <string name="welcome_title">Oi, eu sou o Tadolio</string>
-    <string name="welcome_lead">Seu assistente pessoal no celular.\nDiga o que fazer e eu resolvo em segundo plano.</string>
-    <string name="welcome_note">Antes de começar: configure um modelo e ative o controle do celular. Leva cerca de 3 minutos.</string>
-    <string name="welcome_start">Começar</string>
-    <string name="welcome_apps">Usar apps</string>
-    <string name="welcome_apps_body">Toca, digita e rola em uma tela em segundo plano, deixando a sua livre</string>
-    <string name="welcome_web">Navegar na web</string>
-    <string name="welcome_web_body">Navegador integrado para ler páginas, comparar preços e pesquisar</string>
-    <string name="welcome_files">Trabalhar com arquivos</string>
-    <string name="welcome_files_body">Planilhas, PDFs e dados, calculados e organizados em um ambiente separado</string>
-    <string name="welcome_schedule">Fazer no horário combinado</string>
-    <string name="welcome_schedule_body">Todo dia, toda semana ou automaticamente quando uma condição for atendida</string>
     <string name="back">Voltar</string>
     <string name="hide">Ocultar</string>
     <string name="show">Mostrar</string>
     <string name="model_setup_title">Configurar um modelo</string>
-    <string name="model_setup_lead">O Tadolio pensa com o seu próprio serviço de modelos. Conecte primeiro um provedor e depois escolha um modelo para cada função.</string>
-    <string name="model_setup_onboarding_note">Só o modelo principal é obrigatório; os outros dois podem esperar.</string>
     <string name="model_kind">Tipo de API</string>
     <string name="model_base_url">URL base</string>
     <string name="model_provider_name">Nome</string>

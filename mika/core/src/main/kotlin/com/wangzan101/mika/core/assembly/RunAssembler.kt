@@ -25,7 +25,7 @@ internal class RunAssembler(private val providers: List<CapabilityProvider>) {
         retired: Map<String, String>, moved: Map<String, List<String>>): ToolDispatcher {
         check(providers.map { it.id }.distinct().size == providers.size) { "duplicate capability provider ids" }
         val community = spec.computeMode == com.wangzan101.mika.core.run.ComputeMode.Community
-        val retainOwn = !community || config.hybridBoundary != null
+        val retainOwn = !community
         val child = spec.provenance.origin == RunOrigin.Child
         val readOnly = spec.readOnly || child
         val capabilities = providers.filter { (retainOwn || it.id in setOf("phone", "web")) && (spec.capabilities == null || it.id in spec.capabilities) &&

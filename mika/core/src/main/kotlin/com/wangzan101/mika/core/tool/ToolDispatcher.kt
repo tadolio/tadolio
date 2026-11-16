@@ -55,14 +55,9 @@ class ToolDispatcher internal constructor(
     moved: Map<String, List<String>> = emptyMap(),
     private val communityAdmission: (AgentTool) -> Boolean = { true },
 ) {
+    val community: Boolean get() = ctx.config.community
     val computeMode = config.runSpec?.computeMode ?: com.wangzan101.mika.core.run.ComputeMode.Own
     internal fun usingModel(name: String) { ctx.config.cosignModel = name }
-    internal val hybridBoundary = config.hybridBoundary
-    val community: Boolean get() = ctx.config.community
-
-    internal suspend fun promoteHybrid(reason: com.wangzan101.mika.core.access.HybridReason) {
-        hybridBoundary?.requireOwn(reason)
-    }
     private val evidenceLog = EvidenceLog()
     private val shots = Shots()
     internal val ctx = ToolContext(
@@ -224,7 +219,6 @@ class ToolDispatcher internal constructor(
         if (community && call.name == "root_run_command")
             return fail("community_root_forbidden", "Root commands are unavailable in community mode.", recoverable = false)
         val tool = registry.declared(call.name)
-        tool?.let { communityRead(it)?.let { hidden -> return hidden } }
         if (tool != null && (!tool.readOnly || !tool.readOnly(parseArgs(call.argsJson)) || tool.approvalRisk(parseArgs(call.argsJson), ctx)?.alwaysConfirm == true)) {
             return fail("not_a_read", Feedback.format("not_a_read", "tool" to call.name), recoverable = false)
         }
@@ -242,11 +236,9 @@ class ToolDispatcher internal constructor(
     private var executed = 0
 
     private suspend fun dispatch(call: Part.ToolCall, step: Int?, sub: SubActions?): ToolExecution {
-        if (community && hybridBoundary != null) checkCommunityWrite(call.name)
         if (community && call.name == "root_run_command")
             return fail("community_root_forbidden", "Root commands are unavailable in community mode.", recoverable = false)
         surfaces.skip()
-        registry.declared(call.name)?.let { communityRead(it)?.let { hidden -> return hidden } }
         val tool = registry[call.name] ?: return unknown(call.name, parseArgs(call.argsJson))
         // 收着的组里的工具(入口,或模型凭记忆调了没给它看的)照常执行;它那一组就此展开,结果里说一句,下一次调用起看得到整组
         val group = groupOf(tool)
@@ -257,7 +249,6 @@ class ToolDispatcher internal constructor(
             else -> group
         }?.takeIf(::expand)
         val result = dispatchTool(tool, call, step, sub)
-        if (community && result.content["message"] == JsonPrimitive(com.wangzan101.mika.core.access.CommunityPolicy.HIDDEN)) return result
         val nextGroups = result.followUpTools.mapNotNull { verb ->
             ctx.tools.nameOf(verb)?.let { registry[it] }?.let(::groupOf)
         }.distinct().filter(::expand)
@@ -288,36 +279,7 @@ class ToolDispatcher internal constructor(
         }
     }
 
-    /** ActionExecutor and direct dispatch share the trusted promotion boundary and fresh phone probe. */
-    suspend fun checkCommunityWrite(name: String) {
-        if (!community) return
-        val tool = registry.declared(name) ?: return
-        if (hybridBoundary != null && registry[name] == null) {
-            promoteHybrid(com.wangzan101.mika.core.access.HybridReason.WindowHidden)
-            if (!community) return
-        }
-        if (tool.risk == Risk.Read) return
-        val owners = ctx.config.communityPhone!!.foregroundPackages()
-        val allowEmpty = tool.capability == "web" || tool.verb in setOf(Verb.LaunchApp, Verb.OpenLink, Verb.ShareText, Verb.Navigate, Verb.SetAlarm, Verb.SetTimer, Verb.ShowAlarms)
-        hybridBoundary?.beforeForeground(owners, allowEmpty)
-        if (community) com.wangzan101.mika.core.access.CommunityPolicy.requireForeground(owners, allowEmpty, ctx.config.communityPhone!!.appAccess.current())
-    }
-
-    private suspend fun communityRead(tool: AgentTool, after: Boolean = false): ToolExecution? {
-        if (!community) return null
-        val phone = ctx.config.communityPhone!!
-        if (tool.verb in setOf(Verb.ViewPastScreens, Verb.ViewUserScreen)) {
-            promoteHybrid(com.wangzan101.mika.core.access.HybridReason.WindowHidden)
-            if (!community) return null
-            return ToolExecution(com.wangzan101.mika.core.access.CommunityPolicy.placeholder(phone.foregroundPackages().firstOrNull()))
-        }
-        if (tool.capability != "phone" || (!after && tool.risk != Risk.Read && tool.verb !in setOf(Verb.PhoneFind, Verb.Collect, Verb.Diagnose)) || tool.verb == Verb.ListApps) return null
-        return phone.hiddenScreen()?.let { ToolExecution(it) }
-    }
-
     private suspend fun run(tool: AgentTool, args: Args, call: Part.ToolCall, step: Int?, sub: SubActions?): ToolExecution {
-        communityRead(tool)?.let { return it }
-        checkCommunityWrite(call.name)
         executed++
         ctx.currentStep = step ?: executed
         evidenceLog.step = ctx.currentStep
@@ -346,21 +308,19 @@ class ToolDispatcher internal constructor(
                 ctx.reportsEffect = false
             }
         }
-        communityRead(tool, after = true)?.let { return it }
-        val safeResult = if (community) result.with(images = emptyList(), frame = null, imageIds = emptyList()) else result
         val waited = ctx.pacedWaitMs
         ctx.pacedWaitMs = outerWait + waited
         val idled = ctx.idleScrolls
         ctx.idleScrolls = outerIdle + idled
-        val ok = safeResult.content["ok"] == JsonPrimitive(true)
-        if (tool.logged) evidenceLog.logAction(stepLabel(), tool.name, tool.logTarget(args.o, safeResult, ctx), tool.logTyped(args.o, safeResult), safeResult, tool.wideTarget)
+        val ok = result.content["ok"] == JsonPrimitive(true)
+        if (tool.logged) evidenceLog.logAction(stepLabel(), tool.name, tool.logTarget(args.o, result, ctx), tool.logTyped(args.o, result), result, tool.wideTarget)
         // 读到的(结果里能力给的,和工具按结果另给的)记进账本,结果里换成账本里那几条
-        val seen = remember(safeResult.observations + tool.observations(args.o, safeResult, evidenceLog), tool.capability)
+        val seen = remember(result.observations + tool.observations(args.o, result, evidenceLog), tool.capability)
         // 打进输入框的字(端口明确说不是密码框):之后读屏里的输入框回显不给回答作证
-        if (tool.verb == Verb.TypeText && ok && safeResult.content["secret"] == JsonPrimitive(false)) args.o.argStr("text")?.let(evidenceLog::noteTyped)
+        if (tool.verb == Verb.TypeText && ok && result.content["secret"] == JsonPrimitive(false)) args.o.argStr("text")?.let(evidenceLog::noteTyped)
         // 停留里轻轻滚过页面:只记进运行记录,不给模型
-        val record = if (idled > 0) JsonObject(safeResult.record + ("idleScrolls" to JsonPrimitive(idled))) else safeResult.record
-        return safeResult.with(observations = seen, place = placeAfter(tool.verb, safeResult.content), waitMs = waited, record = record)
+        val record = if (idled > 0) JsonObject(result.record + ("idleScrolls" to JsonPrimitive(idled))) else result.record
+        return result.with(observations = seen, place = placeAfter(tool.verb, result.content), waitMs = waited, record = record)
     }
 
     /** 记进账本;没写出处的按 [capability](核心的工具为 core)。返回账本里记下的那几条,每条也交给 [observer]。 */
@@ -416,8 +376,8 @@ class ToolDispatcher internal constructor(
     suspend fun evidence(withImage: Boolean = false, fresh: Boolean = true): Evidence {
         val e = evidenceLog
         // 看不到此刻的样子也照样交出之前读到的,由核查器判断
-        val look = if (fresh) capabilities.firstOrNull { it.id == surface }?.freshLook(ctx, withImage && !community) else null
-        return Evidence(look?.observations.orEmpty(), look?.image.takeUnless { community }, e.ledger.copy(), e.actionLog.toList(), look?.protected == true, ctx.appOpened,
+        val look = if (fresh) capabilities.firstOrNull { it.id == surface }?.freshLook(ctx, withImage) else null
+        return Evidence(look?.observations.orEmpty(), look?.image, e.ledger.copy(), e.actionLog.toList(), look?.protected == true, ctx.appOpened,
             e.takeovers.toList(), userFacts = e.userFacts.toList())
     }
 
@@ -479,13 +439,13 @@ class ToolDispatcher internal constructor(
      * 主模型能看图时此刻在用的那个地方的一帧画面和它的编号(可回看);受保护页面、付款页不给,还什么都没打开、拿不到时为 null。
      * 回放交还时用它。
      */
-    suspend fun imageNow(): Pair<ByteArray, Int>? = if (community) null else surfaces.imageNow()
+    suspend fun imageNow(): Pair<ByteArray, Int>? = surfaces.imageNow()
 
     /** 此刻的样子:给模型的内容([content],和读取一样登记编号)连同同一时刻的画面([image],没有为 null)。 */
     class Glance(val content: JsonObject, val image: ByteArray?, val imageId: Int, val observations: List<Observation> = emptyList())
 
     /** 主模型能看图时动作之后再看一眼:内容和画面是同一时刻的;什么都没打开时为 null。读到的记进账本。 */
-    suspend fun lookNow(): Glance? = surfaces.viewNow()?.let { v -> Glance(v.content, v.image.takeUnless { community }, v.imageId, remember(v.observations, surface)) }
+    suspend fun lookNow(): Glance? = surfaces.viewNow()?.let { v -> Glance(v.content, v.image, v.imageId, remember(v.observations, surface)) }
 
     /** 打开链接的工具此刻会不会放行这组参数(只看链接规则与参考资料,不执行)。 */
     fun linkAllowed(action: String?, uri: String?, pkg: String?): Boolean =

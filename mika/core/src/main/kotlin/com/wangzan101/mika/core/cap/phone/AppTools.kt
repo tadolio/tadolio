@@ -47,10 +47,6 @@ internal object ListApps : PhoneTool {
         val copies = ctx.phone.screen.appCopies().groupBy { it.packageName }
         val access = ctx.phone.screen.appAccess.current()
         return ok {
-            if (ctx.config.community) {
-                put("communityFiltered", true)
-                put("note", "社区模式已隐藏隐私类及用户禁用的 App，其他已安装 App 均可使用")
-            }
             put("apps", JsonArray(apps.flatMap { (p, l) ->
                 listOf(buildJsonObject {
                     put("package", p); put("label", l)

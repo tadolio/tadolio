@@ -13,6 +13,5 @@
     <string name="community_cloud_miner">Облачный майнер (%1$s)</string>
     <string name="community_local_source">Режим узла сообщества</string>
     <string name="community_cloud_privacy">Некоторые майнеры запускают открытые модели в облаке. Содержимое проходит через эту платформу.</string>
-    <string name="community_privacy_app_blocked">В режиме сообщества приватные приложения заблокированы, чтобы их содержимое не попало к случайному майнеру. Используйте свою модель для этой задачи.</string>
     <string name="community_calls_unavailable">AI calls are unavailable with community compute. Select your own key or account to use calls.</string>
 </resources>

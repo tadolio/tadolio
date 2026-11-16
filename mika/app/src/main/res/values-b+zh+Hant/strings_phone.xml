@@ -111,8 +111,8 @@
     <string name="phone_degraded">手機操作還沒準備好,這次沒法操作手機 App;網頁和檔案照常。</string>
     <string name="phone_degraded_no_sandbox">手機操作還沒準備好,這次沒法操作手機 App;網頁照常。</string>
     <string name="phone_channel">配對</string>
-    <string name="phone_notify_enter_title">輸入配對碼</string>
-    <string name="phone_notify_enter_text">把螢幕上的 6 位數字填在這裡，不用離開配對視窗</string>
+    <string name="phone_notify_enter_title">在這裡填 6 位配對碼</string>
+    <string name="phone_notify_enter_text">點下面的「填配對碼」。看不到就把這條通知往下拉開。</string>
     <string name="phone_notify_action">填配對碼</string>
     <string name="phone_notify_input">6 位數字</string>
     <string name="phone_notify_working">正在配對…</string>
@@ -120,8 +120,8 @@
     <string name="phone_notify_done_text">手機操作設定好了，可以回到 Tadolio 了</string>
     <string name="phone_notify_problem">回到 Tadolio 檢視怎麼處理</string>
     <string name="phone_notify_window_found">已找到配對視窗</string>
-    <string name="phone_notify_retry_code">配對碼不對或已失效：在配對視窗重新點「使用配對碼配對裝置」拿新的碼，再填一次</string>
-    <string name="phone_notify_retry_window">配對視窗關了或配對碼已失效：在配對視窗重新點「使用配對碼配對裝置」拿新的碼，再填一次</string>
+    <string name="phone_notify_retry_code">碼不對或過期了。重新點一次，會換新的 6 位數。</string>
+    <string name="phone_notify_retry_window">配對視窗關了。重新點一次再填。</string>
     <string name="phone_notify_code_invalid">要填 6 位數字，再填一次</string>
     <string name="phone_guide_1">點「使用配對碼配對裝置」</string>
     <string name="phone_guide_2">螢幕頂部彈出 Tadolio 的通知；沒看到就下拉通知欄</string>

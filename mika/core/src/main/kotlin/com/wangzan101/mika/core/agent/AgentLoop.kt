@@ -175,28 +175,25 @@ class AgentLoop(
     /** 同一网站、App 里连着做对外动作(发送、提交)时两次之间的间隔;默认不等。 */
     private val outwardPacing: OutwardPacing = OutwardPacing.Off,
     private val trace: RunTrace? = null,
-    /** Frozen Own base prompt; selected only after trusted hybrid promotion. */
-    private val hybridOwnBasePrompt: String? = null,
 ) {
-    private val retainOwnApproval = tools.hybridBoundary != null
-    private val activeBasePrompt: String get() = if (!tools.community && model is com.wangzan101.mika.core.access.HybridModel) hybridOwnBasePrompt ?: basePrompt else basePrompt
+    private val activeBasePrompt: String get() = basePrompt
     private val ownFlags = flags
-    private val communityFlags = flags.copy(replay = false, lightSteps = false, adaptiveVision = false)
+    private val communityFlags = flags.copy(replay = false, lightSteps = false, adaptiveVision = flags.adaptiveVision)
     val flags: SpeedFlags get() = if (tools.community) communityFlags else ownFlags
-    private val confirmations = if (tools.community && !retainOwnApproval) confirmations?.takeIf { it.phoneOnly } ?: ConfirmationGate(phoneOnly = true) else confirmations
-    private val approvals = if (tools.community && !retainOwnApproval && !approvals.familyRequired) ApprovalSettings.ASK else approvals
+    private val confirmations = if (tools.community) confirmations?.takeIf { it.phoneOnly } ?: ConfirmationGate(phoneOnly = true) else confirmations
+    private val approvals = if (tools.community && !approvals.familyRequired) ApprovalSettings.ASK else approvals
     private val retainedKnowledge = knowledge
     private val knowledge: KnowledgeStore? get() = if (tools.community) null else retainedKnowledge
     private val retainedSkills = skills
     private val skills: GuideCatalog? get() = if (tools.community) null else retainedSkills
     private val retainedMemory = memory
     private val memory: MemoryStore? get() = if (tools.community) null else retainedMemory
-    private val userScreens = if (tools.community && tools.hybridBoundary == null) null else userScreens
+    private val userScreens = userScreens
     private val retainedChannelFacts = channelFacts
     private val channelFacts: (suspend () -> ChannelFacts)? get() = if (tools.community) null else retainedChannelFacts
     private val retainedProfile = profileSnapshot.toList()
     private val profileSnapshot: List<ProfileEntry> get() = if (tools.community) emptyList() else retainedProfile
-    private val autonomous = if (tools.community && !retainOwnApproval) false else autonomous
+    private val autonomous = if (tools.community) false else autonomous
     init {
         require(maxSteps > 0) { "maxSteps must be positive" }
         // 只有开着回放才在写操作前取目标元素与锚点
@@ -213,8 +210,8 @@ class AgentLoop(
         tools.observer = { record { order.observed(RunEvent.Observed.of(it)) } }
     }
 
-    private val caller = ModelCaller(model, tools, if (model is com.wangzan101.mika.core.access.HybridModel) router?.hybrid(model) else router, ownFlags, retry, ::emit, ::now, autonomous, trace)
-    private fun auxiliary(model: ChatModel): ChatModel = if (this.model is com.wangzan101.mika.core.access.HybridModel) this.model.auxiliary(model) else if (!tools.community) model else com.wangzan101.mika.core.access.CommunityModel(model) {
+    private val caller = ModelCaller(model, tools, router, ownFlags, retry, ::emit, ::now, autonomous, trace)
+    private fun auxiliary(model: ChatModel): ChatModel = if (!tools.community) model else com.wangzan101.mika.core.access.CommunityModel(model) {
         emit(RunEvent.State(now(), "community_sensitive_redacted", com.wangzan101.mika.core.access.CommunitySensitive.NOTICE))
     }
     private val intentGate = intentJudge?.let { IntentGate(auxiliary(it), model.takeUnless { main -> main === it }?.let(::auxiliary)) }
@@ -247,7 +244,7 @@ class AgentLoop(
     private val utterances get() = tools.utterances
 
     private val user = UserExchange(tools, confirmations, confirmTimeoutMs, inputTimeoutMs, { utterances }, { _state.value = it }, ::emit, ::now, approvals)
-    private val retainedReplay = routes.takeUnless { tools.community && tools.hybridBoundary == null }?.let { RouteReplay(it, tools, ::awaitGate, { r -> gateState = r; _state.value = r }, ::emit, clock) }
+    private val retainedReplay = routes.takeUnless { tools.community }?.let { RouteReplay(it, tools, ::awaitGate, { r -> gateState = r; _state.value = r }, ::emit, clock) }
     private val replay: RouteReplay? get() = if (tools.community) null else retainedReplay
     /** 自身工具的当次同意:复用等用户回答的那条路,同一次工具调用里等,不分成两步。 */
     private val askPort = object : AskPort {
@@ -265,7 +262,7 @@ class AgentLoop(
     private var earlierGoals: List<String> = emptyList()
     /** 本次运行的结局;判过结局后路线计数要用([noteOutcome])。 */
     @Volatile private var lastEnd: TaskState? = null
-    private val review = AnswerReview(tools, if (model is com.wangzan101.mika.core.access.HybridModel) verifier?.hybrid(model) else verifier, ::emit, ::now)
+    private val review = AnswerReview(tools, verifier, ::emit, ::now)
     /** 本任务每一步存下的画面编号(步 → 编号),回答的来源按它附上画面。 */
     private val media = mutableMapOf<Int, MutableList<Int>>()
     /** 本任务的回答已因核对没对上退回过一次;再没对上就标成未确认交出,不再退回。 */
@@ -275,14 +272,14 @@ class AgentLoop(
 
     /** 新入口:同一对话里的插话和控制经 [inbox] 进入;旧入口继续使用相同的执行路径。 */
     suspend fun run(spec: RunSpec, inbox: RunInbox): TaskState {
-        suspend fun start() = runInternal(spec.goal, if (tools.community && tools.hybridBoundary == null) emptyList() else spec.priorTurns, inbox, spec.provenance, spec.threadId, spec.tokenBudget)
+        suspend fun start() = runInternal(spec.goal, if (tools.community) emptyList() else spec.priorTurns, inbox, spec.provenance, spec.threadId, spec.tokenBudget)
         // App 在整个运行外层装好共享 tally,子任务也沿用;直接走核心入口时由这里保证 RunSpec 的预算生效。
         if (spec.tokenBudget == null || currentCoroutineContext()[RunUsageTally] != null) return start()
         return withContext(RunUsageTally(spec.tokenBudget)) { start() }
     }
 
     suspend fun run(task: String, priorTurns: List<Turn> = emptyList()): TaskState =
-        runInternal(task, if (tools.community && tools.hybridBoundary == null) emptyList() else priorTurns, null, RunProvenance(), "local")
+        runInternal(task, if (tools.community) emptyList() else priorTurns, null, RunProvenance(), "local")
 
     private suspend fun runInternal(
         task: String, priorTurns: List<Turn>, inbox: RunInbox?, runProvenance: RunProvenance, threadId: String,
@@ -388,7 +385,6 @@ class AgentLoop(
         // 用户发来的屏幕:这一句给全(那句话、截图、详情),之前几轮里的收成一行;下面都用换好的这句
         val shots = UserScreenTurns(userScreens, zone, tools.seesImages, canAskVision = !tools.seesImages && tools.vision != null && tools.definitions().any { it.name == VIEW_USER_SCREEN },
             image = { tools.modelImage(it, null) }, seen = tools::noteUserScreen,
-            beforeRender = { tools.hybridBoundary?.requireOwn(com.wangzan101.mika.core.access.HybridReason.Image) },
             imageAdmission = { tools.seesImages },
             visionAdmission = { !tools.seesImages && tools.vision != null && tools.definitions().any { it.name == VIEW_USER_SCREEN } }).also { screens = it }
         user.answerText = shots::asText
@@ -396,8 +392,6 @@ class AgentLoop(
         val task = opening?.said ?: raw
         taskText = task
         latestWords = ownWords(raw, opening)
-        val deferPrivateContext = tools.community && tools.hybridBoundary != null
-        val retainedPrior = if (deferPrivateContext) rawPrior.toList() else emptyList()
         val priorTurns = shots.collapse(if (tools.community) emptyList() else rawPrior)
         earlierGoals = priorTurns.map { it.userText }
         // 之前的轮次只作参考,放在本次任务之前
@@ -435,13 +429,10 @@ class AgentLoop(
         emit(RunEvent.PromptVersion(now(), PromptVersion.of(SystemPrompt.assemble(activeBasePrompt, tools.promptSections(everything, all = true)), everything)))
         var specs = emptyList<ToolSpec>()
         // 每次问模型之前:展开了新的组时,工具和系统提示词跟着换;没展开就一字不变
-        var restorePrivateContext: suspend () -> Unit = {}
-        suspend fun refreshOffer(force: Boolean = false): List<ToolSpec> {
-            restorePrivateContext()
+        suspend fun refreshOffer(): List<ToolSpec> {
             tools.captureTargets = flags.replay
-            val activeBatch = if (force) BatchRunner.spec(tools.batchable()).takeIf { flags.batchSteps } else batchSpec
-            val offer = tools.offeredNow(listOfNotNull(activeBatch)).filter(::keep)
-            if (!force && offer == specs) return specs
+            val offer = tools.offeredNow(listOfNotNull(batchSpec)).filter(::keep)
+            if (offer == specs) return specs
             specs = offer
             caller.systemPrompt = SystemPrompt.assemble(activeBasePrompt, tools.promptSections(specs))
             (tools.expanded - openGroups).forEach { emit(RunEvent.State(now(), "tools_opened", it)) }
@@ -481,47 +472,13 @@ class AgentLoop(
                 // 之前几轮读到的东西查得到时说一句(只在有记过运行的轮次、提供了 history_read 时)
                 if (tools.definitions().any { it.name == HISTORY_READ }) Feedback.format("history_hint", "turns" to prior) else prior
             },
-            memory = listOfNotNull(ProfileContext.render(if (deferPrivateContext) emptyList() else profileSnapshot), block?.message).takeIf { it.isNotEmpty() }?.joinToString("\n\n"),
+            memory = listOfNotNull(ProfileContext.render(profileSnapshot), block?.message).takeIf { it.isNotEmpty() }?.joinToString("\n\n"),
             channel = if (knowledge != null) channelLine(matched) else null,
             knowledge = matched, knowledgeNote = toolsNote(tools.scriptsOffered()), withLinks = flags.deepLinks,
             skillsIndex = index,
             taskImages = opening?.images.orEmpty() + attachmentContent(raw), screens = opening?.details.orEmpty(),
         )
         val history = start.messages.toMutableList()
-        // Keep private inputs local until the shared state irreversibly selects Own.
-        // Insert once into the original history before ModelCaller rebuilds/compresses it.
-        var privateContextRestored = !deferPrivateContext
-        restorePrivateContext = {
-            if (!privateContextRestored && !tools.community) {
-                check(model is com.wangzan101.mika.core.access.HybridModel)
-                val prior = Conversation.context(retainedPrior)?.parts?.single() as? Part.Text
-                // Read private resources only after promotion; never build them into the node view.
-                val ownMemory = memory?.takeIf { it.reloadIfNeeded() }?.let {
-                    MemoryContext.build(it.items.value, task, retainedPrior.lastOrNull()?.userText,
-                        tools.legacy::rewrite, mode = MemoryContext.Mode.Auto)
-                }
-                val ownKnowledge = knowledge?.matchTask(task, Int.MAX_VALUE, installed).orEmpty()
-                val ownIndex = skills?.takeIf { recommendSkills }?.let { GuideRecommender.index(it, task) }
-                val restored = ctx.start("", priorTurns = prior?.text,
-                    memory = listOfNotNull(ProfileContext.render(retainedProfile), ownMemory?.message)
-                        .takeIf { it.isNotEmpty() }?.joinToString("\n\n"),
-                    channel = if (knowledge != null) channelLine(ownKnowledge) else null,
-                    knowledge = ownKnowledge, knowledgeNote = toolsNote(tools.scriptsOffered()),
-                    withLinks = flags.deepLinks, skillsIndex = ownIndex)
-                history.addAll(0, restored.messages.filter { it.author != Author.User })
-                if (ownMemory?.message != null) {
-                    usedMemory = ownMemory.usedIds
-                    memory?.markUsed(ownMemory.usedIds)
-                    emit(RunEvent.MemoryUsed(now(), ownMemory.usedIds))
-                }
-                restored.knowledge.forEach {
-                    if (flags.deepLinks && it.links.isNotEmpty()) tools.allowLinks(it.links)
-                    if (it.trial) emit(RunEvent.State(now(), "knowledge_trial_used", it.name))
-                }
-                earlierGoals = retainedPrior.map { it.userText }
-                privateContextRestored = true
-            }
-        }
         start.knowledge.filter { it.trial }.forEach { emit(RunEvent.State(now(), "knowledge_trial_used", it.name)) }
         // 链接只在 open_link 可用时给,且只放行真的给了模型的那几份
         if (flags.deepLinks) start.knowledge.forEach { if (it.links.isNotEmpty()) tools.allowLinks(it.links) }
@@ -587,7 +544,7 @@ class AgentLoop(
             refreshOffer()
             var asked = now()
             val routed = try {
-                routedOrRedirect(inbox, history, specs, track, step, { asked = it }, previewFor(step), { refreshOffer(force = true) })
+                routedOrRedirect(inbox, history, specs, track, step, { asked = it }, previewFor(step))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: Exception) {
@@ -732,7 +689,7 @@ class AgentLoop(
                         stuckAdvice(v, typed)
                     })
                 if (end != null) return end
-                if (completion.complete) return finalTurn(task, history, specs, step + 1, labels, place, recorder, facts(), inbox, { refreshOffer(force = true) }, Closeout.Completed, completion)
+                if (completion.complete) return finalTurn(task, history, specs, step + 1, labels, place, recorder, facts(), inbox, Closeout.Completed, completion)
                 continue
             }
 
@@ -841,12 +798,12 @@ class AgentLoop(
                 // 同一份知识不会重复注入
                 is KnowledgeLookup.Site -> if (visitedSites.add(lookup.host)) knowledge?.byDomain(lookup.host).let { injectKnowledge(history, it) }
             }
-            if (completion.complete) return finalTurn(task, history, specs, step + 1, labels, place, recorder, facts(), inbox, { refreshOffer(force = true) }, Closeout.Completed, completion)
-            if (noNewData) return finalTurn(task, history, specs, step + 1, labels, place, recorder, facts(), inbox, { refreshOffer(force = true) }, Closeout.NoNewData, completion)
+            if (completion.complete) return finalTurn(task, history, specs, step + 1, labels, place, recorder, facts(), inbox, Closeout.Completed, completion)
+            if (noNewData) return finalTurn(task, history, specs, step + 1, labels, place, recorder, facts(), inbox, Closeout.NoNewData, completion)
         }
         appendSteers(history, inbox)
         refreshOffer()
-        return finalTurn(task, history, specs, maxSteps + 1, labels, place, recorder, facts(), inbox, { refreshOffer(force = true) })
+        return finalTurn(task, history, specs, maxSteps + 1, labels, place, recorder, facts(), inbox)
     }
 
     /** 运行记录里按结果另记的事:报告的障碍(供评测按 barrier 类归因;参数不对被拒的不算)、看过的个人技能、存下的记忆。 */
@@ -934,11 +891,11 @@ class AgentLoop(
     /** 插话只取消正在等待的模型请求(本步不写进历史,下一步带着插话重问);工具调用进入执行入口后由它自己做完。 */
     private suspend fun routedOrRedirect(
         inbox: RunInbox?, history: List<Message>, specs: List<ToolSpec>, track: StepTrack, step: Int, restarted: (Long) -> Unit,
-        onText: ((String) -> Unit)?, promotedOffer: suspend () -> List<ToolSpec>,
+        onText: ((String) -> Unit)?,
     ): Pair<ModelReply, ChatModel>? {
-        if (inbox == null) return caller.routed(history, specs, track, step, restarted, onText, promotedOffer)
+        if (inbox == null) return caller.routed(history, specs, track, step, restarted, onText)
         return coroutineScope {
-            val pending = async { caller.routed(history, specs, track, step, restarted, onText, promotedOffer) }
+            val pending = async { caller.routed(history, specs, track, step, restarted, onText) }
             select<Pair<ModelReply, ChatModel>?> {
                 pending.onAwait { it }
                 inbox.redirects.onReceive {
@@ -1080,7 +1037,7 @@ class AgentLoop(
      */
     private suspend fun finalTurn(
         task: String, history: MutableList<Message>, specs: List<ToolSpec>, step: Int, labels: Map<String, String>, place: Place?, recorder: ActionRecorder,
-        facts: ReviewFacts, inbox: RunInbox?, promotedOffer: suspend () -> List<ToolSpec>,
+        facts: ReviewFacts, inbox: RunInbox?,
         closeout: Closeout = Closeout.StepLimit, completion: CompletionPlan? = null,
     ): TaskState {
         TurnPolicy.closeout(closeout, completion?.metric?.state()).let { history += ctx.notice(it.source, it.text) }
@@ -1090,8 +1047,7 @@ class AgentLoop(
             _state.value = TaskState.Running(step, "")
             val asked = now()
             val reply = try {
-                caller.ask(history, TurnPolicy.finalTools(specs, tools::verb), step, onText = previewFor(step),
-                    promotedOffer = { TurnPolicy.finalTools(promotedOffer(), tools::verb) })
+                caller.ask(history, TurnPolicy.finalTools(specs, tools::verb), step, onText = previewFor(step))
             } catch (e: CancellationException) {
                 throw e
             } catch (e: ModelError.TaskBudgetExceeded) {

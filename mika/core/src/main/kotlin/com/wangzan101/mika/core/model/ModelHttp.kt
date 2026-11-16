@@ -14,6 +14,12 @@ import okhttp3.Request
  * 映射本身从各适配器原样搬来,适配器改成调这里,避免两份各改各的。
  */
 object ModelHttp {
+    fun keyError(status: Int, retryAfter: String?, body: String): ModelError? = when (keyFailure(status, body)) {
+        KeyFailure.invalid -> ModelError.Auth()
+        KeyFailure.exhausted -> ModelError.QuotaExceeded()
+        KeyFailure.rate_limited -> ModelError.RateLimited(HttpSupport.retryAfterMs(retryAfter, body))
+        KeyFailure.other -> null
+    }
     class Reply(val status: Int, val retryAfter: String?, val body: String) {
         val ok: Boolean get() = status in 200..299
     }
@@ -24,7 +30,7 @@ object ModelHttp {
 
     /** OpenAI 兼容接口(对话、转写同一套)的错误映射。[model] 是请求的模型名。 */
     fun openAiError(status: Int, retryAfter: String?, body: String, model: String): ModelError =
-        ModelAccessErrors.of(status, body, model) ?: reasoningEffortRejected(status, body) ?: when {
+        (if (status in 500..599) ModelError.Server(status) else null) ?: ModelAccessErrors.of(status, body, model) ?: reasoningEffortRejected(status, body) ?: keyError(status, retryAfter, body) ?: when {
             status == 401 -> ModelError.Auth()
             status == 402 || body.contains("insufficient_quota") -> ModelError.QuotaExceeded()
             status == 429 -> ModelError.RateLimited(HttpSupport.retryAfterMs(retryAfter, body))
@@ -70,11 +76,13 @@ object ModelHttp {
 
     /** Gemini 原生接口的错误映射。 */
     fun geminiError(status: Int, retryAfter: String?, body: String, model: String): ModelError {
+        if (status in 500..599) return ModelError.Server(status)
         val err = try { json.parseToJsonElement(body).jsonObject["error"] as? JsonObject } catch (e: Exception) { null }
         val st = (err?.get("status") as? JsonPrimitive)?.contentOrNull.orEmpty()
         val msg = (err?.get("message") as? JsonPrimitive)?.contentOrNull ?: body
         val lower = msg.lowercase()
         ModelAccessErrors.of(status, body, model)?.let { return it }
+        keyError(status, retryAfter, body)?.let { return it }
         return when {
             status == 401 || status == 403 -> ModelError.Auth()
             // 这个模型额度为零的 429 上面已认成用不了;其余 429 按可重试限流处理(其限流与额度文案混用,无法可靠区分)

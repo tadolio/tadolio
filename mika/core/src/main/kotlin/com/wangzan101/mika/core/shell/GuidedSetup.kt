@@ -6,7 +6,7 @@ import java.util.Locale
 /** Local setup decisions. No model, task text or network input is accepted. */
 object GuidedSetup {
     enum class Route { AccessibilityFirst, PairingFirst }
-    enum class Step { Accessibility, Developer, Wireless, Pair, Helper, Notifications, Battery, Done }
+    enum class Step { Accessibility, Developer, Wireless, Pair, Helper, Notifications, Battery, Done, Unrestrict, CodeIntro }
     data class State(
         val developer: Boolean = false,
         val accessibility: Boolean = false,
@@ -14,20 +14,25 @@ object GuidedSetup {
         val helper: Boolean = false,
         val notifications: Boolean = false,
         val battery: Boolean = false,
+        val restricted: Boolean = false,
+        val codeIntroDone: Boolean = false,
+        val helperWaitExpired: Boolean = false,
+        val notificationsSkipped: Boolean = false,
     )
 
-    // Always try accessibility first. PairingFirst remains an explicit restricted-settings fallback.
-    fun route(accessibility: Boolean, sdk: Int): Route =
-        Route.AccessibilityFirst
+    // Pairing is selected explicitly after the unblock screen offers the alternative.
+    fun route(accessibility: Boolean, sdk: Int, pairingSelected: Boolean = false): Route =
+        if (pairingSelected) Route.PairingFirst else Route.AccessibilityFirst
 
     fun step(s: State, route: Route): Step = when {
-        !s.accessibility && (route == Route.AccessibilityFirst || s.helper) -> Step.Accessibility
+        s.helper && !s.accessibility -> if (s.helperWaitExpired) Step.Accessibility else Step.Helper
+        !s.accessibility && route == Route.AccessibilityFirst -> if (s.restricted) Step.Unrestrict else Step.Accessibility
+        !s.helper && route == Route.PairingFirst && !s.codeIntroDone -> Step.CodeIntro
+        !s.helper && route == Route.PairingFirst && !s.notifications -> Step.Notifications
         !s.helper && !s.developer -> Step.Developer
         !s.helper && !s.wireless -> Step.Wireless
         !s.helper -> Step.Pair
-        !s.accessibility -> Step.Accessibility
-        !s.notifications -> Step.Notifications
-        !s.battery -> Step.Battery
+        !s.notifications && !s.notificationsSkipped -> Step.Notifications
         else -> Step.Done
     }
 
@@ -81,12 +86,14 @@ object GuidedSetup {
         val manual = action(step, nodes, true, manufacturer = manufacturer) == Action.Manual
         if (!manual && !clickFailed) return emptyList()
         val appNames = setOf("hivo", "Tadolio")
-        val consent = setOf("allow", "允许", "允許", "zulassen")
+        val consent = setOf("allow", "always allow", "允许", "始终允许", "允許", "一律允許", "zulassen")
         return nodes.indices.mapNotNull { i ->
             val n = nodes[i]
             val label = n.text.trim().lowercase(Locale.ROOT)
             val known = when (step) {
                 Step.Battery -> label in appNames || label in consent
+                Step.Wireless -> label in consent || action(step, listOf(n.copy(clickable = true)), true,
+                    manufacturer = manufacturer) is Action.Click
                 Step.Notifications -> n.checked == false && (nodes.count { it.checked != null } == 1 ||
                     label in setOf("allow notifications", "\u5141\u8bb8\u901a\u77e5", "\u5141\u8a31\u901a\u77e5"))
                 else -> action(step, listOf(n.copy(clickable = true)), true,
@@ -102,7 +109,7 @@ object GuidedSetup {
         "输入密码", "输入 pin 码", "确认您的 pin 码", "確認您的 pin 碼", "输入锁屏密码", "輸入密碼")
 
     /** Progress only: never interpolate a screen label, pairing code, device ID or user input. */
-    fun share(step: Step, done: Set<Step>): String = Step.entries.filter { it != Step.Done }.joinToString("\n") {
+    fun share(step: Step, done: Set<Step>): String = Step.entries.filter { it !in setOf(Step.Done, Step.Battery) }.joinToString("\n") {
         "${it.ordinal + 1} ${it.name} ${if (it in done) "✓" else if (it == step) "✗" else "…"}"
     }
 }

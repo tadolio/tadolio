@@ -13,6 +13,5 @@
     <string name="community_cloud_miner">クラウドマイナー（%1$s）</string>
     <string name="community_local_source">コミュニティノードモード</string>
     <string name="community_cloud_privacy">一部のマイナーはクラウドでオープンソースモデルを実行し、内容はそのプラットフォームを経由します。</string>
-    <string name="community_privacy_app_blocked">コミュニティモードでは、内容がランダムなマイナーに渡らないよう、プライバシーに関わるアプリを制限します。この操作には自分のモデルを使ってください。</string>
     <string name="community_calls_unavailable">AI calls are unavailable with community compute. Select your own key or account to use calls.</string>
 </resources>

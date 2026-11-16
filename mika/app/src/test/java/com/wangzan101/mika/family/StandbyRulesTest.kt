@@ -29,12 +29,10 @@ class StandbyRulesTest {
         assertNotNull(second.reserve("third", day.plusDays(1), 2))
         assertFalse(first.hashes.toString().contains("same"))
     }
-    @Test fun hybridAlwaysUsesIndependentOwnAndCommunityNeedsConsent() {
-        assertEquals(StandbyRules.Route.Own, StandbyRules.route(false,false,false))
-        assertEquals(StandbyRules.Route.Own, StandbyRules.route(true,true,false))
-        assertEquals(StandbyRules.Route.Own, StandbyRules.route(true,true,true))
-        assertEquals(StandbyRules.Route.Local, StandbyRules.route(false,true,false))
-        assertEquals(StandbyRules.Route.Community, StandbyRules.route(false,true,true))
+    @Test fun ownAndCommunityConsentKeepTheirRoutes() {
+        assertEquals(StandbyRules.Route.Own, StandbyRules.route(false,false))
+        assertEquals(StandbyRules.Route.Local, StandbyRules.route(true,false))
+        assertEquals(StandbyRules.Route.Community, StandbyRules.route(true,true))
     }
     @Test fun suspiciousSmsFamilySharingIsPrivateByDefault() {
         val policy = com.wangzan101.mika.core.action.FamilyPolicy()

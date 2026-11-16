@@ -11,8 +11,6 @@ class OperatorFormTest {
         assertEquals(MinerState.PLATFORM_PAUSED,MinerState.admission("passed",false,true))
         val en=com.wangzan101.mika.i18n.ResFileTexts.english.strings
         val zh=com.wangzan101.mika.i18n.ResFileTexts.chinese.strings
-        assertTrue(en.getValue("hybrid_requires_own").contains("model platform"))
-        assertTrue(zh.getValue("hybrid_requires_own").contains("模型平台"))
         assertEquals("你的服务商现在不在线",zh.getValue("phone_operator_offline"))
         assertEquals("这次先用随机社区算力",zh.getValue("phone_operator_once"))
     }

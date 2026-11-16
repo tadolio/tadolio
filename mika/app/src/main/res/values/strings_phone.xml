@@ -111,8 +111,8 @@
     <string name="phone_degraded">Phone control isn’t ready, so Tadolio can’t use apps this time; web and files work as usual.</string>
     <string name="phone_degraded_no_sandbox">Phone control isn’t ready, so Tadolio can’t use apps this time; web tasks work as usual.</string>
     <string name="phone_channel">Pairing</string>
-    <string name="phone_notify_enter_title">Enter pairing code</string>
-    <string name="phone_notify_enter_text">Type the 6 digits shown on screen here — no need to leave the pairing window</string>
+    <string name="phone_notify_enter_title">Enter the 6-digit code here</string>
+    <string name="phone_notify_enter_text">Tap “Enter code” below. If you don\'t see it, pull this notification open.</string>
     <string name="phone_notify_action">Enter code</string>
     <string name="phone_notify_input">6 digits</string>
     <string name="phone_notify_working">Pairing…</string>
@@ -120,8 +120,8 @@
     <string name="phone_notify_done_text">Phone control is set up. You can go back to Tadolio now</string>
     <string name="phone_notify_problem">Go back to Tadolio to see how to fix it</string>
     <string name="phone_notify_window_found">Pairing window found</string>
-    <string name="phone_notify_retry_code">Wrong or expired code: in the pairing window, tap “Pair device with pairing code” again to get a new code, then enter it again</string>
-    <string name="phone_notify_retry_window">The pairing window closed or the code expired: tap “Pair device with pairing code” again to get a new code, then enter it again</string>
+    <string name="phone_notify_retry_code">Wrong or expired code. Tap it again for a new one.</string>
+    <string name="phone_notify_retry_window">The pairing window closed. Tap it again and re-enter.</string>
     <string name="phone_notify_code_invalid">Enter 6 digits, then try again</string>
     <string name="phone_guide_1">Tap “Pair device with pairing code”</string>
     <string name="phone_guide_2">Tadolio’s notification pops up at the top of the screen; if not, swipe down to open the notification shade</string>

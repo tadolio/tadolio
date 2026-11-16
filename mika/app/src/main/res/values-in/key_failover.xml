@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="key_add_backup">Tambah Key cadangan</string>
+    <string name="key_remove">Hapus</string>
+    <string name="key_move_up">Naik</string>
+    <string name="key_available">Tersedia</string>
+    <string name="key_invalid">Tidak valid</string>
+    <string name="key_exhausted">Kuota habis</string>
+    <string name="key_rate_limited">Dibatasi</string>
+    <string name="key_active">Menggunakan Key %1$d</string>
+    <string name="keys_all_invalid">Semua %1$d Key tidak valid</string>
+    <string name="keys_all_exhausted">Kuota semua Key habis</string>
+    <string name="keys_all_limited">Semua Key dibatasi</string>
+    <string name="keys_all_unavailable">Semua Key perlu diperiksa</string>
+    <string name="model_backup">Model cadangan</string>
+    <string name="model_backup_none">Tidak ada</string>
+    <string name="model_backup_notice">Key %1$s tidak tersedia. Beralih ke model cadangan %2$s.</string>
+</resources>

@@ -1,23 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
 <resources>
-    <string name="welcome_title">Привет, я Tadolio</string>
-    <string name="welcome_lead">Ваш личный помощник в телефоне.\nСкажите, что нужно сделать, и я выполню это в фоне.</string>
-    <string name="welcome_note">Прежде чем начать: настройте модель и включите управление телефоном. Это займёт около 3 минут.</string>
-    <string name="welcome_start">Начать</string>
-    <string name="welcome_apps">Работа с приложениями</string>
-    <string name="welcome_apps_body">Нажимает, вводит текст и прокручивает на фоновом экране, не занимая ваш</string>
-    <string name="welcome_web">Поиск в интернете</string>
-    <string name="welcome_web_body">Встроенный браузер, чтобы читать страницы, сравнивать цены и искать нужное</string>
-    <string name="welcome_files">Работа с файлами</string>
-    <string name="welcome_files_body">Таблицы, PDF и данные: вычисления и порядок наводятся в отдельной среде</string>
-    <string name="welcome_schedule">Дела по расписанию</string>
-    <string name="welcome_schedule_body">Каждый день, каждую неделю или автоматически при выполнении условия</string>
     <string name="back">Назад</string>
     <string name="hide">Скрыть</string>
     <string name="show">Показать</string>
     <string name="model_setup_title">Настройка модели</string>
-    <string name="model_setup_lead">Tadolio думает с помощью вашего собственного сервиса моделей. Сначала подключите провайдера, затем выберите модель для каждой роли.</string>
-    <string name="model_setup_onboarding_note">Обязательна только основная модель; две другие можно настроить позже.</string>
     <string name="model_kind">Тип API</string>
     <string name="model_base_url">Базовый URL</string>
     <string name="model_provider_name">Название</string>

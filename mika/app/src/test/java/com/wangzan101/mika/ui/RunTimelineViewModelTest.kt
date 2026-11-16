@@ -40,26 +40,6 @@ class RunTimelineViewModelTest {
 
     private fun ready(runId: String) = RunTimelineViewModel(store, runId).load() as TimelineUi.Ready
 
-    @Test fun hybridUpgradeSurvivesReloadWithOnlyStepAndCategory() {
-        val id = run("fixture") { event(RunEvent.State(clock, "hybrid_upgrade", "3:SensitiveContent")) }
-        val label = ready(id).header.hybridUpgrade!!
-        assertTrue(label.contains("3"))
-        assertTrue(label.contains("验证码"))
-        assertFalse(label.contains("SensitiveContent"))
-        assertNull(ready(run("old record") {}).header.hybridUpgrade)
-    }
-
-    @Test fun hybridUpgradeCategoriesAreLocalizedAndMalformedMetadataIsIgnored() {
-        for (reason in com.wangzan101.mika.core.access.HybridReason.entries) {
-            val label = RunTimelineViewModel.hybridUpgradeLabel("1:${reason.name}")!!
-            assertTrue(label.contains("1"))
-            assertFalse(label.contains(reason.name))
-        }
-        for (detail in listOf("0:RemoteTask", "-1:Image", "oops", "1:screen text", "1:Image:extra")) {
-            assertNull(RunTimelineViewModel.hybridUpgradeLabel(detail))
-        }
-    }
-
     /** 任务还在跑、还没有结束事件时算「进行中」:页面据此每秒重读,跑完就停。 */
     @Test fun anUnfinishedRunOfALiveTaskReadsAsRunning() {
         val h = store.open("打开设置")

@@ -63,8 +63,7 @@ class WechatRuntime(
     private val app get() = context.applicationContext as MikaApp
     private fun tasksAllowed() = WechatTaskPolicy.allowed(
         com.wangzan101.mika.settings.ProviderStore.get(context).configFor(com.wangzan101.mika.core.model.ModelRole.Main)?.kind == com.wangzan101.mika.settings.ProviderConfig.Kind.Community ||
-            com.wangzan101.mika.settings.CommunitySimulation.mode(context) == com.wangzan101.mika.core.run.ComputeMode.Community,
-        hybrid = com.wangzan101.mika.settings.ProviderStore.get(context).hybridSelected.value)
+            com.wangzan101.mika.settings.CommunitySimulation.mode(context) == com.wangzan101.mika.core.run.ComputeMode.Community)
     private val gateway = ChannelGateway(owners,
         { threadId -> app.taskState.run(threadId)?.activeAsk },
         object : ChannelGateway.Route {

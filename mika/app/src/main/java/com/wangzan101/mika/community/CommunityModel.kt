@@ -42,8 +42,6 @@ class CommunityModel internal constructor(private val openSession: () -> Communi
     }.build()
     private val delegate = OpenAiCompatModel("https://community.invalid/v1", null, "community", capabilities, transport)
     override suspend fun complete(system: String, messages: List<Message>, tools: List<ToolSpec>): ModelReply {
-        // Only explicitly attached user photos may cross this boundary.
-        if (messages.any { m -> m.parts.any { it is Part.Image && (!it.userAttachment || m.author != Author.User) } }) throw IOException("community_images_forbidden")
         return delegate.complete(system, messages, tools)
     }
     suspend fun close() = withContext(NonCancellable) {

@@ -111,8 +111,6 @@
     <string name="phone_degraded">휴대전화 제어가 준비되지 않아 이번에는 Tadolio가 앱을 사용할 수 없어요. 웹과 파일은 평소처럼 돼요.</string>
     <string name="phone_degraded_no_sandbox">휴대전화 제어가 준비되지 않아 이번에는 Tadolio가 앱을 사용할 수 없어요. 웹은 평소처럼 돼요.</string>
     <string name="phone_channel">페어링</string>
-    <string name="phone_notify_enter_title">페어링 코드 입력</string>
-    <string name="phone_notify_enter_text">화면에 표시된 6자리를 여기에 입력하세요. 페어링 창을 떠날 필요는 없어요</string>
     <string name="phone_notify_action">코드 입력</string>
     <string name="phone_notify_input">6자리</string>
     <string name="phone_notify_working">페어링 중…</string>
@@ -120,8 +118,6 @@
     <string name="phone_notify_done_text">휴대전화 제어가 설정됐어요. 이제 Tadolio로 돌아가도 돼요</string>
     <string name="phone_notify_problem">Tadolio로 돌아가서 해결 방법을 확인하세요</string>
     <string name="phone_notify_window_found">페어링 창을 찾았어요</string>
-    <string name="phone_notify_retry_code">코드가 틀렸거나 만료됐어요. 페어링 창에서 “페어링 코드로 기기 페어링”을 다시 눌러 새 코드를 받은 뒤 다시 입력하세요</string>
-    <string name="phone_notify_retry_window">페어링 창이 닫혔거나 코드가 만료됐어요. “페어링 코드로 기기 페어링”을 다시 눌러 새 코드를 받은 뒤 다시 입력하세요</string>
     <string name="phone_notify_code_invalid">6자리를 입력한 뒤 다시 시도하세요</string>
     <string name="phone_guide_1">“페어링 코드로 기기 페어링”을 누르세요</string>
     <string name="phone_guide_2">Tadolio의 알림이 화면 위쪽에 나타나요. 나타나지 않으면 아래로 쓸어 알림 창을 여세요</string>

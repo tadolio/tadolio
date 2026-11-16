@@ -80,7 +80,9 @@ private fun AllowanceRow(
         LaunchedEffect(provider.baseUrl, source, revision, refresh) {
             val result = try {
                 withContext(Dispatchers.IO) {
-                    store.allowanceKey(provider, revision)?.takeIf { it.isNotBlank() }?.let { allowanceClient.query(source, it) }
+                    if (store.matchesAllowanceConnection(provider, revision)) store.withProviderKey(provider.id) { key ->
+                        key?.takeIf { it.isNotBlank() }?.let { allowanceClient.query(source, it) }
+                    } else null
                 }
             } catch (error: ModelError) {
                 Log.w("MikaAllowance", "查询服务商额度失败（${source.name}，${error.javaClass.simpleName}）")

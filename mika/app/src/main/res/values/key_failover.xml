@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="key_add_backup">Add backup Key</string>
+    <string name="key_remove">Remove</string>
+    <string name="key_move_up">Move up</string>
+    <string name="key_available">Available</string>
+    <string name="key_invalid">Invalid</string>
+    <string name="key_exhausted">Quota exhausted</string>
+    <string name="key_rate_limited">Rate limited</string>
+    <string name="key_active">Using Key %1$d</string>
+    <string name="keys_all_invalid">All %1$d Keys are invalid</string>
+    <string name="keys_all_exhausted">All Keys have exhausted their quota</string>
+    <string name="keys_all_limited">All Keys are rate limited</string>
+    <string name="keys_all_unavailable">All Keys need attention</string>
+    <string name="model_backup">Backup model</string>
+    <string name="model_backup_none">None</string>
+    <string name="model_backup_notice">%1$s Keys are unavailable. Switched to backup model %2$s.</string>
+</resources>

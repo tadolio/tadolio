@@ -63,7 +63,7 @@ class StandbyService : NotificationListenerService() {
             if (!StandbyRules.candidate(sms.text)) return stage("skip: local prefilter says not a candidate")
             val store = ProviderStore.get(this)
             val cfg = store.configFor(ModelRole.Main)
-            val route = StandbyRules.route(store.hybridSelected.value, cfg?.kind == ProviderConfig.Kind.Community, prefs.consent())
+            val route = StandbyRules.route(cfg?.kind == ProviderConfig.Kind.Community, prefs.consent())
             val cached = prefs.cached(sms.text)
             if (cached == null && !prefs.reserve(sms.text)) return stage("skip: daily budget or duplicate reservation")
             stage(if (cached != null) "replay cached verdict" else "judging with route $route")
@@ -75,8 +75,7 @@ class StandbyService : NotificationListenerService() {
                 ScamResult(ScamVerdict.Suspicious, getString(R.string.standby_local_reason), getString(R.string.standby_advice))
             } else {
                 val model = when (route) {
-                    StandbyRules.Route.Own -> if (store.hybridSelected.value) store.freezeHybridModels(ModelSession.fresh()).own.main
-                        else store.modelFor(ModelRole.Main)
+                    StandbyRules.Route.Own -> store.modelFor(ModelRole.Main)
                     StandbyRules.Route.Community -> CommunityModel(CommunityClients.get(this), requireNotNull(cfg).model).also { communityModel = it }
                     else -> null
                 } ?: error("no_model")

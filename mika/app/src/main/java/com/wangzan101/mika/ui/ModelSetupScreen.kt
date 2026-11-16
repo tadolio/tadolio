@@ -84,7 +84,6 @@ import com.wangzan101.mika.ui.components.ListRow
 import com.wangzan101.mika.ui.components.RowChevron
 import com.wangzan101.mika.ui.components.MikaButton
 import com.wangzan101.mika.ui.components.PageBackground
-import com.wangzan101.mika.ui.components.ProgressDots
 import com.wangzan101.mika.ui.components.SelectChip
 import com.wangzan101.mika.ui.components.TagTone
 import com.wangzan101.mika.ui.components.TileTone
@@ -125,7 +124,7 @@ fun ModelSetupScreen(
     var allModels by rememberSaveable { mutableStateOf(false) }
     // 账号登录的面板:在添加表单和服务商详情里都能打开,登录中关掉也不打断登录
     var signInSheet by rememberSaveable { mutableStateOf<SignInKind?>(null) }
-    var conversationChoice by rememberSaveable { mutableStateOf<OnboardingAnswer?>(null) }
+    var conversationChoice by rememberSaveable { mutableStateOf<Boolean?>(null) }
     val conversationEntry = onboarding && conversationChoice == null && !ui.formOpen && openProvider == null && picking == null
 
     LaunchedEffect(onboarding, ui.canNext) {
@@ -149,46 +148,24 @@ fun ModelSetupScreen(
     val provider = openProvider?.let { id -> ui.providers.firstOrNull { it.id == id } }
     val role = picking
     when {
-        conversationEntry -> OnboardingConversation(stringResource(R.string.onboarding_model_question), onReply = { answer ->
-            when (val choice = onboardingAnswer(answer)) {
-                OnboardingAnswer.ApiKey -> { conversationChoice = choice; vm.openForm() }
-                OnboardingAnswer.Account -> conversationChoice = choice
-                OnboardingAnswer.Community -> if (com.wangzan101.mika.about.HivoConfig.communityEnabled) conversationChoice = choice
-                else -> Unit
-            }
-        }) {
-            if (com.wangzan101.mika.about.HivoConfig.communityEnabled) MikaButton(
-                stringResource(R.string.onboarding_community), { conversationChoice = OnboardingAnswer.Community }, Modifier.fillMaxWidth())
-            MikaButton(stringResource(R.string.onboarding_account), { conversationChoice = OnboardingAnswer.Account }, Modifier.fillMaxWidth())
-            MikaButton(stringResource(R.string.onboarding_key), { conversationChoice = OnboardingAnswer.ApiKey; vm.openForm() }, Modifier.fillMaxWidth())
-        }
-        onboarding && conversationChoice == OnboardingAnswer.Account && provider == null && role == null && !ui.formOpen -> {
-            BackHandler { conversationChoice = null }
-            OnboardingConversation(stringResource(R.string.onboarding_account_question), onReply = { answer ->
-                signInSheet = when (answer.trim().lowercase(java.util.Locale.ROOT)) {
-                    "chatgpt" -> SignInKind.ChatGpt
-                    "grok" -> SignInKind.Xai
-                    "openrouter" -> SignInKind.OpenRouter
-                    else -> null
-                }
-            }) {
+        conversationEntry -> SetupPage(
+            title = stringResource(R.string.t60_model_title), body = stringResource(R.string.t60_model_body),
+            content = {
                 for (kind in listOf(SignInKind.ChatGpt, SignInKind.Xai, SignInKind.OpenRouter)) {
-                    MikaButton(when (kind) {
-                        SignInKind.ChatGpt -> "ChatGPT"
-                        SignInKind.Xai -> "Grok"
-                        SignInKind.OpenRouter -> "OpenRouter"
-                    }, { signInSheet = kind }, Modifier.fillMaxWidth())
+                    androidx.compose.material3.OutlinedButton({ signInSheet = kind }, Modifier.fillMaxWidth()) {
+                        Text(stringResource(when (kind) {
+                            SignInKind.ChatGpt -> R.string.t60_signin_chatgpt
+                            SignInKind.Xai -> R.string.t60_signin_grok
+                            SignInKind.OpenRouter -> R.string.t60_signin_openrouter
+                        }))
+                    }
                 }
-                TextButton({ conversationChoice = null }) { Text(stringResource(R.string.back), fontSize = 22.sp) }
-            }
-        }
-        onboarding && conversationChoice == OnboardingAnswer.Community -> {
-            BackHandler { conversationChoice = null }
-            OnboardingConversation(stringResource(R.string.onboarding_community), onReply = {}) {
-                CommunityControls(store, onboarding = true)
-                TextButton({ conversationChoice = null }) { Text(stringResource(R.string.back), fontSize = 22.sp) }
-            }
-        }
+                androidx.compose.material3.OutlinedButton({ conversationChoice = true; vm.openForm() }, Modifier.fillMaxWidth()) {
+                    Text(stringResource(R.string.onboarding_key))
+                }
+            },
+            links = { TextButton(onBack) { Text(stringResource(R.string.back)) } },
+        )
         provider != null -> {
             LaunchedEffect(provider.id) { vm.ensureListed() }
             val accountKind = when {
@@ -197,6 +174,7 @@ fun ModelSetupScreen(
                 else -> null
             }
             val actions = ProviderDetailActions(
+                keyControls = { ProviderKeyControls(store, provider.id) },
                 refresh = { vm.refresh(provider.id) }, changeKey = { vm.changeKey(provider.id, it) },
                 remove = { vm.removeProvider(provider.id); openProvider = null; allModels = false },
                 use = { r, model -> vm.pick(r, provider.id, model) },
@@ -248,6 +226,7 @@ fun ModelSetupScreen(
             ModelSetupContent(
                 ui, onboarding,
                 ModelSetupActions(
+                    backupContent = { BackupModelControl(store, ui) },
                     selectPreset = vm::selectPreset, setKind = vm::setKind, setBaseUrl = vm::setBaseUrl, setApiKey = vm::setApiKey,
                     setModel = vm::setModel, setManual = vm::setManual, setName = vm::setName,
                     testAndSave = vm::testAndSave, saveUntested = vm::saveWithoutTest,
@@ -289,6 +268,7 @@ fun ModelSetupScreen(
 
 /** 主页面上的全部动作。 */
 class ModelSetupActions(
+    val backupContent: (@Composable () -> Unit)? = null,
     val communityContent: (@Composable () -> Unit)? = null,
     val selectPreset: (String) -> Unit = {},
     val setKind: (ProviderConfig.Kind) -> Unit = {},
@@ -331,20 +311,12 @@ fun ModelSetupContent(ui: ModelSetupUi, onboarding: Boolean, actions: ModelSetup
         Column(Modifier.fillMaxSize().windowInsetsPadding(WindowInsets.navigationBars).windowInsetsPadding(WindowInsets.ime)) {
             TopBar(if (onboarding) ModelSetupCopy.TITLE else ModelsCopy.TITLE, MikaIcons.Back, onBack, stringResource(R.string.back))
             Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 16.dp)) {
-                if (onboarding) {
-                    Text(
-                        ModelSetupCopy.LEAD, Modifier.padding(top = 4.dp, bottom = 12.dp),
-                        fontSize = 14.5.sp, lineHeight = 23.sp, color = c.ink2,
-                    )
-                }
-                actions.communityContent?.invoke()
+                if (!onboarding) actions.communityContent?.invoke()
                 // 上手时先连服务商再选模型;设置里先看用途
                 if (onboarding) {
                     ProvidersSection(ui, actions)
-                    RolesSection(ui, onPick, actions.setReasoningEffort, null)
-                    FooterNote(ModelSetupCopy.ONBOARDING_NOTE)
                 } else {
-                    RolesSection(ui, onPick, actions.setReasoningEffort, actions.openSpeech, actions.setModelContext)
+                    RolesSection(ui, onPick, actions.setReasoningEffort, actions.openSpeech, actions.setModelContext, actions.backupContent)
                     ProvidersSection(ui, actions)
                     actions.openUsage?.let { openUsage ->
                         GroupCard {
@@ -354,13 +326,7 @@ fun ModelSetupContent(ui: ModelSetupUi, onboarding: Boolean, actions: ModelSetup
                 }
                 Spacer(Modifier.height(16.dp))
             }
-            // 看键盘实际占的高度;isImeVisible 在系统第一次报告前默认是 true,会把按钮误藏
-            if (onboarding && WindowInsets.ime.getBottom(LocalDensity.current) == 0) {
-                Column(Modifier.fillMaxWidth().padding(start = 16.dp, end = 16.dp, top = 8.dp, bottom = 12.dp)) {
-                    ProgressDots(Onboarding.DOTS, Onboarding.dot(OnboardingStep.Model), Modifier.padding(bottom = 14.dp))
-                    MikaButton(ModelSetupCopy.NEXT, actions.next, Modifier.fillMaxWidth().testTag("setup-next"), enabled = ui.canNext)
-                }
-            }
+
         }
     }
 }
@@ -586,6 +552,7 @@ internal object SignInPage {
 @Composable
 private fun RolesSection(ui: ModelSetupUi, onPick: (ModelRole) -> Unit, onReasoning: (ModelRole, String?) -> Unit,
     onSpeech: (() -> Unit)?, onContext: ((String, ModelContextSettings) -> Boolean)? = null,
+    onBackup: (@Composable () -> Unit)? = null,
 ) {
     GroupLabel(ModelsCopy.ROLES)
     GroupCard {
@@ -593,6 +560,7 @@ private fun RolesSection(ui: ModelSetupUi, onPick: (ModelRole) -> Unit, onReason
             RoleCard(ModelsCopy.roleIcon(role), ModelsCopy.roleLabel(role), ModelsCopy.roleLine(ui, role), first = i == 0, tag = "role-${role.name.lowercase()}") {
                 onPick(role)
             }
+            if (role == ModelRole.Main) onBackup?.invoke()
             if (ui.roles[role] == RoleChoice.SameAsMain) {
                 ReasoningControl(ui, role) { onReasoning(role, it) }
             } else {
@@ -701,8 +669,6 @@ internal val ModelIdStyle = MikaType.Body.copy(fontSize = 15.sp, fontWeight = Fo
 /** 配置模型页(上手时)和添加服务商表单的文字(纯函数,便于测试)。用途的说法在 [ModelsCopy]。 */
 object ModelSetupCopy {
     val TITLE: String get() = tr(R.string.model_setup_title)
-    val LEAD: String get() = tr(R.string.model_setup_lead)
-    val ONBOARDING_NOTE: String get() = tr(R.string.model_setup_onboarding_note)
     val CANCEL: String get() = tr(R.string.cancel)
     val KIND: String get() = tr(R.string.model_kind)
     val BASE_URL: String get() = tr(R.string.model_base_url)

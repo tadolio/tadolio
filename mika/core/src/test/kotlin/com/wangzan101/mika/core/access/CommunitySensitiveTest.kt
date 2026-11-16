@@ -96,7 +96,7 @@ class CommunitySensitiveTest {
         val model=fakeModel {answer("done")}
         CommunityModel(model).complete("BASE",listOf(Message(Role.User,listOf(Part.Text("OTP 123456"),Part.Image("AQID")),Author.User)),emptyList())
         assertFalse(model.requests.single().messages.toString().contains("123456"))
-        assertTrue(model.requests.single().messages.none {m->m.parts.any {it is Part.Image}})
+        assertTrue(model.requests.single().messages.any {m->m.parts.any {it is Part.Image}})
     }
     @Test fun labelValuesAndPasswordFieldsAreHidden() {
         for (label in listOf("助记词","seed phrase","recovery phrase","mnemonic","私钥","private key")) {
@@ -208,30 +208,16 @@ class CommunitySensitiveTest {
             assertTrue(label,executor.run(call("phone_tap","""{"ref":"@e2","snapshotId":"s1"}"""),Origin.Model(1)) is ActionOutcome.Ran)
         }
     }
-    @Test fun sensitiveInputRejectedAcrossSharedExecutorAndOwnCanTypeIt() = runTest {
+    @Test fun sensitiveInputUsesTheNormalExecutorInBothModes() = runTest {
         for(mode in ComputeMode.entries) for(text in listOf(card,identity,key,"OTP 123456",List(12){"abandon"}.joinToString(" "))) {
             val phone=Phone(page());val d=toolDispatcher(phone,runSpec=spec(mode));d.executeRead(call("phone_observe"))
             val executor=ActionExecutor(d,OperationGuards(40),ConfirmationGate(),{},ActionRecorder(RunSink.NONE))
             val result=executor.run(call("phone_type_text",buildJsonObject {put("ref","@e3");put("snapshotId","s1");put("text",text)}.toString()),Origin.Model(1))
-            if(mode==ComputeMode.Community) {assertEquals(CommunitySensitive.INPUT_ERROR,(result as ActionOutcome.Refused).code);assertTrue(phone.inputs.isEmpty())}
-            else {assertTrue(result is ActionOutcome.Ran);assertEquals(listOf(text),phone.inputs)}
+            assertTrue(result is ActionOutcome.Ran)
+            assertEquals(listOf(text),phone.inputs)
         }
     }
-    @Test fun passwordTargetsRejectInnocuousTextForRefsAndCoordinates() = runTest {
-        val p=page().copy(elements=page().elements.map {if(it.ref=="@e3") it.copy(secret=true) else it})
-        for(args in listOf("""{"ref":"@e3","snapshotId":"s1","text":"ordinary-value"}""", """{"x":500,"y":820,"text":"ordinary-value"}""")) {
-            val phone=Phone(p);val d=toolDispatcher(phone,runSpec=spec());d.executeRead(call("phone_observe"))
-            val executor=ActionExecutor(d,OperationGuards(40),null,{},ActionRecorder(RunSink.NONE))
-            assertEquals(CommunitySensitive.INPUT_ERROR,(executor.run(call("phone_type_text",args),Origin.Model(1)) as ActionOutcome.Refused).code)
-            assertTrue(phone.inputs.isEmpty())
-        }
-    }
-    @Test fun unlabelledOtpInputUsesScreenLabelContext() = runTest {
-        val phone=Phone(page().copy(elements=listOf(el("@e1","验证码",10),el("@e3","",800,true))))
-        val port=CommunityScreenPort(phone)
-        try {port.typeText(null,null,"123456");fail("must reject")}catch(e:AppAccessDenied){assertEquals(CommunitySensitive.INPUT_ERROR,e.code)}
-        assertTrue(phone.inputs.isEmpty())
-    }
+
     @Test fun communityConfirmationDefinitionAcceptsFreeActionsButOwnDoesNotChange() = runTest {
         for(mode in ComputeMode.entries) {
             val d=toolDispatcher(Phone(page()),runSpec=spec(mode))

@@ -12,7 +12,7 @@ internal class CommunityMessages(private val userNotice: () -> Unit) {
             var changed = false
             val parts = message.parts.mapNotNull { p ->
                 when (p) {
-                    is Part.Image -> p.takeIf { it.userAttachment && message.author == Author.User }
+                    is Part.Image -> p
                     is Part.Text -> p.copy(text = CommunitySensitive.payload(p.text)).also { changed = changed || it != p }
                     is Part.ToolResult -> p.copy(content = CommunitySensitive.payload(p.content)).also { changed = changed || it != p }
                     is Part.ToolCall -> p.copy(argsJson = CommunitySensitive.payload(p.argsJson), opaque = null)

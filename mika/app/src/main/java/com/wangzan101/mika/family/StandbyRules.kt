@@ -34,8 +34,8 @@ internal object StandbyRules {
         .digest(text.trim().replace(Regex("\\s+"), " ").toByteArray(Charsets.UTF_8))
         .joinToString("") { "%02x".format(it) }
     enum class Route { Own, Community, Local }
-    fun route(hybrid: Boolean, community: Boolean, consent: Boolean) = when {
-        hybrid || !community -> Route.Own
+    fun route(community: Boolean, consent: Boolean) = when {
+        !community -> Route.Own
         consent -> Route.Community
         else -> Route.Local
     }

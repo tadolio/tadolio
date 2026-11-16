@@ -111,8 +111,6 @@
     <string name="phone_degraded">スマホの操作の準備ができていないため、今回 Tadolio はアプリを使えません。ウェブとファイルはいつもどおり使えます。</string>
     <string name="phone_degraded_no_sandbox">スマホの操作の準備ができていないため、今回 Tadolio はアプリを使えません。ウェブはいつもどおり使えます。</string>
     <string name="phone_channel">ペア設定</string>
-    <string name="phone_notify_enter_title">ペア設定コードを入力</string>
-    <string name="phone_notify_enter_text">画面に表示されている 6 桁をここに入力してください。ペア設定のウィンドウから離れる必要はありません</string>
     <string name="phone_notify_action">コードを入力</string>
     <string name="phone_notify_input">6 桁</string>
     <string name="phone_notify_working">ペア設定中…</string>
@@ -120,8 +118,6 @@
     <string name="phone_notify_done_text">スマホの操作を設定しました。Tadolio に戻って大丈夫です</string>
     <string name="phone_notify_problem">Tadolio に戻って、対処のしかたを確認してください</string>
     <string name="phone_notify_window_found">ペア設定のウィンドウが見つかりました</string>
-    <string name="phone_notify_retry_code">コードが違うか、期限切れです。ペア設定のウィンドウで「ペア設定コードによるデバイスのペア設定」をもう一度タップして新しいコードを表示し、入力し直してください</string>
-    <string name="phone_notify_retry_window">ペア設定のウィンドウが閉じたか、コードの期限が切れました。「ペア設定コードによるデバイスのペア設定」をもう一度タップして新しいコードを表示し、入力し直してください</string>
     <string name="phone_notify_code_invalid">6 桁で入力して、もう一度お試しください</string>
     <string name="phone_guide_1">「ペア設定コードによるデバイスのペア設定」をタップ</string>
     <string name="phone_guide_2">Tadolio の通知が画面上部にポップアップします。出ない場合は、下にスワイプして通知シェードを開きます</string>

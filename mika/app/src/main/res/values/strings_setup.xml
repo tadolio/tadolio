@@ -1,24 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Modified by Tadolio contributors (2026) -->
 <resources>
-    <string name="welcome_title">Hi, I’m Tadolio</string>
-    <string name="welcome_lead">Your personal assistant on your phone.\nTell me what to do and I’ll get it done in the background.</string>
-    <string name="welcome_note">Before you start: set up a model and turn on phone control. About 3 minutes.</string>
-    <string name="welcome_start">Get started</string>
-    <string name="welcome_apps">Use apps</string>
-    <string name="welcome_apps_body">Taps, types and scrolls on a background screen, leaving yours free</string>
-    <string name="welcome_web">Browse the web</string>
-    <string name="welcome_web_body">Built-in browser to read pages, compare prices and look things up</string>
-    <string name="welcome_files">Work with files</string>
-    <string name="welcome_files_body">Spreadsheets, PDFs and data, computed and organized in a separate environment</string>
-    <string name="welcome_schedule">Do it on schedule</string>
-    <string name="welcome_schedule_body">Daily, weekly, or automatically when a condition is met</string>
     <string name="back">Back</string>
     <string name="hide">Hide</string>
     <string name="show">Show</string>
     <string name="model_setup_title">Set up a model</string>
-    <string name="model_setup_lead">Tadolio thinks with your own model service. Connect a model platform first, then pick a model for each job.</string>
-    <string name="model_setup_onboarding_note">Only the main model is required; the other two can wait.</string>
     <string name="model_kind">API type</string>
     <string name="model_base_url">Base URL</string>
     <string name="model_provider_name">Name</string>

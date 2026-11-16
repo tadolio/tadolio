@@ -136,7 +136,7 @@ class CallRuntime(private val app: MikaApp) {
 
     init {
         scope.launch {
-            combine(providers.configs, providers.roles, providers.hybridSelected) { _, _, _ -> !communityMode() }
+            combine(providers.configs, providers.roles) { _, _ -> !communityMode() }
                 .distinctUntilChanged().collect { allowed ->
                     _available.value = allowed
                     if (!allowed) {

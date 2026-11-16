@@ -424,6 +424,7 @@ fun ChatScreen(
                     null -> Color.Unspecified
                 },
             )
+            DeferredSetupPrompts(ui)
         }
 
         Composer(

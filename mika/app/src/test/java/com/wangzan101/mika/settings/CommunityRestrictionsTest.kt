@@ -31,7 +31,7 @@ class CommunityRestrictionsTest {
         val source = File("src/main/java/com/wangzan101/mika/calls/CallRuntime.kt").readText()
         assertTrue(source.contains("communityMode() -> COMMUNITY_UNAVAILABLE"))
         assertTrue(source.contains("if (communityMode()) throw CallProblem(COMMUNITY_UNAVAILABLE)"))
-        assertTrue(source.contains("combine(providers.configs, providers.roles, providers.hybridSelected)"))
+        assertTrue(source.contains("combine(providers.configs, providers.roles)"))
         assertTrue(source.contains("cancelWork(COMMUNITY_UNAVAILABLE)"))
         assertTrue(source.contains("finishLockedDial(it, COMMUNITY_UNAVAILABLE)"))
         assertTrue(source.contains("if (communityMode()) return@onMain fail(COMMUNITY_UNAVAILABLE)"))

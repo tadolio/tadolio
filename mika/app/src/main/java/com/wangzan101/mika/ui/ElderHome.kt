@@ -105,6 +105,7 @@ internal fun ElderHome(vm: ChatViewModel, check: Prerequisites.Check, settings: 
         if (voice == null) Text(missing, color = Color.Black, fontSize = 22.sp)
         note?.let { Text(it, color = Color(0xff8b0000), fontSize = 22.sp) }
         ElderTaskInput(text, { text = it }, { if (vm.send(text, check)) text = "" })
+        DeferredSetupPrompts(ui)
         if (phoneSetupNeeded && ui.exchanges.isNotEmpty()) PhoneSetupLine(openPhoneSetup)
         ui.blocked?.let { TextButton(settings) { Text(stringResource(R.string.chat_go_settings), fontSize = 22.sp) } }
         ui.exchanges.lastOrNull()?.takeIf { it.status !is ExchangeStatus.Done && it.status !is ExchangeStatus.Failed && it.status !is ExchangeStatus.Cancelled }?.let { Text(ChatCopy.progressLine(it), color = Color.Black, fontSize = 24.sp) }

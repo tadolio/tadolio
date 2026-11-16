@@ -122,8 +122,6 @@ fun toolDispatcher(
     /** 以 root 跑命令(已 root 的手机上用户打开了「允许 Mika 执行 root 命令」才给);为空时 root 工具不登记。 */
     root: RootPort? = null,
     webSearch: com.wangzan101.mika.core.search.WebSearch? = null,
-    /** Shared trusted per-run state; not selectable through tool arguments. */
-    hybridBoundary: com.wangzan101.mika.core.access.HybridScreenBoundary? = null,
     number: com.wangzan101.mika.core.number.NumberPort? = null,
     coins: com.wangzan101.mika.core.coins.CoinsPort? = number?.coins,
     posts: com.wangzan101.mika.core.post.PostPort? = number?.posts,
@@ -136,26 +134,26 @@ fun toolDispatcher(
     taskMemory: com.wangzan101.mika.core.memory.TaskMemoryStore? = null,
     bindInviter: (suspend (String) -> Unit)? = number?.let { it::bindInviter },
 ): ToolDispatcher {
-    require(hybridBoundary == null || runSpec.computeMode == com.wangzan101.mika.core.run.ComputeMode.Community) { "hybrid_boundary_requires_community_assembly" }
     val community = runSpec.computeMode == com.wangzan101.mika.core.run.ComputeMode.Community
-    val communityScreen = if (community) com.wangzan101.mika.core.uistate.CommunityScreenPort(screen, hybridBoundary) else null
-    val guardedScreen = communityScreen ?: screen
-    val retainOwn = !community || hybridBoundary != null
+    val retainOwn = !community
+    val guardedScreen = screen
     val screenshotStore = sandbox?.takeIf {
         it.status() !is com.wangzan101.mika.core.cap.sandbox.SandboxStatus.Unsupported &&
             !runSpec.readOnly && runSpec.provenance.origin != com.wangzan101.mika.core.run.RunOrigin.Child &&
             (runSpec.capabilities == null || "sandbox" in runSpec.capabilities)
     }?.let { com.wangzan101.mika.core.cap.sandbox.WorkspaceScreenshots(it, workspace) }
-    val config = ToolConfig(visionEnabled && retainOwn, skills.takeUnless { !retainOwn }, recordFrames && retainOwn,
-        vision.takeUnless { !retainOwn }, inlineScreen, adaptiveVision && retainOwn,
+    // Compatibility, not privacy: miners do not declare image support and most of their models are text-only,
+    // so community runs read the screen as text. Photos the user attaches still go through.
+    val config = ToolConfig(visionEnabled && !community, skills.takeUnless { !retainOwn }, recordFrames,
+        vision, inlineScreen, adaptiveVision,
         memory.takeUnless { !retainOwn }, profile.takeUnless { !retainOwn }, utterances, conversationId,
-        imageOps.takeUnless { !retainOwn }, scheduleTrigger.takeUnless { !retainOwn }, scheduleAdmin.takeUnless { !retainOwn },
-        runSpec, childHost.takeUnless { !retainOwn }, userScreens.takeUnless { !retainOwn },
+        imageOps, scheduleTrigger.takeUnless { !retainOwn }, scheduleAdmin.takeUnless { !retainOwn },
+        runSpec, childHost.takeUnless { !retainOwn }, userScreens,
         personalSkills.takeUnless { !retainOwn }, selfConfig.takeUnless { !retainOwn }, runRecords.takeUnless { !retainOwn },
         webSearch = webSearch.takeUnless { !retainOwn },
         self = self.takeUnless { !retainOwn }, selfOperate = selfOperate.takeUnless { !retainOwn },
         saveScreenshot = screenshotStore?.let { store -> { path, png -> store.save(path, png) } },
-        taskMemory = taskMemory.takeUnless { !retainOwn }, communityPhone = communityScreen, hybridBoundary = hybridBoundary, ownNumber = number.takeUnless { !retainOwn }, bindInviter = bindInviter, posts = posts, coins = coins, governance = number?.governance)
+        taskMemory = taskMemory.takeUnless { !retainOwn }, ownNumber = number.takeUnless { !retainOwn }, bindInviter = bindInviter, posts = posts, coins = coins, governance = number?.governance)
     val providers: List<CapabilityProvider> = listOf(
         object : CapabilityProvider {
             override val id = PHONE

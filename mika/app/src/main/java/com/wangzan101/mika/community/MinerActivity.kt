@@ -1,6 +1,8 @@
 // Modified by Tadolio contributors (2026)
 package com.wangzan101.mika.community
 
+import com.wangzan101.mika.core.model.KeyFailure
+import com.wangzan101.mika.ui.keyStatusText
 import android.Manifest
 import android.content.ClipboardManager
 import android.content.Intent
@@ -83,7 +85,10 @@ class MinerActivity : ComponentActivity() {
         val default = MinerPlatforms.all.first()
         var base by remember { mutableStateOf(value("base").ifBlank { default.base }) }
         var other by remember { mutableStateOf(MinerPlatforms.find(base) == null) }
-        var key by remember { mutableStateOf("") }
+        var keyRows by remember(base) { mutableStateOf(
+            (if (base == value("base")) store.keys(saved) else emptyList()).map { it to "" }.ifEmpty { listOf("" to "") }) }
+        var keyStatuses by remember { mutableStateOf(store.keyStatuses(saved)) }
+        var activeKey by remember { mutableIntStateOf(store.activeKey) }
         var model by remember { mutableStateOf(value("model").ifBlank { MinerPlatforms.find(base)?.model.orEmpty() }) }
         var limit by remember { mutableStateOf((if(operator && value("limit").isBlank()) "20000000" else MinerPolicy.initialLimit(value("limit"))).toLongOrNull()) }
         var wifi by remember { mutableStateOf(saved["wifi"]?.jsonPrimitive?.booleanOrNull ?: MinerPolicy.DEFAULT_WIFI_ONLY) }
@@ -137,6 +142,8 @@ class MinerActivity : ComponentActivity() {
             while (true) {
                 enabled = store.enabled
                 state = store.state()
+                keyStatuses = store.keyStatuses()
+                activeKey = store.activeKey
                 used = store.used()
                 pending = store.pending()
                 confirmed = store.confirmed()
@@ -146,14 +153,15 @@ class MinerActivity : ComponentActivity() {
             }
         }
         val statusPage = enabled || state == MinerState.KEY_BAD
-        val apiKey = MinerPlatforms.effectiveKey(key, base, value("base"), value("key"))
+        val apiKeys = keyRows.map { (saved, draft) -> draft.trim().ifEmpty { saved } }
+        val apiKey = apiKeys.firstOrNull().orEmpty()
         val presetPrice = MinerPlatforms.price(base, model)
         val manual = MinerPricing.estimate(1, inputPrice.toDoubleOrNull(), outputPrice.toDoubleOrNull()) != null && currency.matches(Regex("[A-Z]{3}"))
         val priceInput = if (manual) inputPrice.toDoubleOrNull() else publicQuote?.input ?: presetPrice?.input
         val priceOutput = if (manual) outputPrice.toDoubleOrNull() else publicQuote?.output ?: presetPrice?.output
         val priceCurrency = if (manual) currency else if (publicQuote != null) "USD" else presetPrice?.currency.orEmpty()
         val prices = MinerPricing.estimate(limit, priceInput, priceOutput)
-        val valid = (!operator || OperatorForm.valid(cardName,intro,contact,share.toIntOrNull(),maxUsers.toIntOrNull(),declared)) && MinerPolicy.canEnable(base, model, apiKey, limit, minBattery.toIntOrNull(), number)
+        val valid = apiKeys.size in 1..5 && apiKeys.all { it.isNotBlank() } && apiKeys.distinct().size == apiKeys.size && (!operator || OperatorForm.valid(cardName,intro,contact,share.toIntOrNull(),maxUsers.toIntOrNull(),declared)) && MinerPolicy.canEnable(base, model, apiKey, limit, minBattery.toIntOrNull(), number)
         val editable = !statusPage && !busy
 
         @Composable fun ProviderCardFields() {
@@ -207,7 +215,7 @@ class MinerActivity : ComponentActivity() {
                                 error = null
                                 scope.launch {
                                     try {
-                                        val result = withContext(Dispatchers.IO) { MinerKeyValidator().validate(base, model, apiKey) }
+                                        val result = withContext(Dispatchers.IO) { MinerKeyValidator().validate(base, model, apiKeys) }
                                         if (result != MinerKeyValidator.Result.Valid) { error = result.message; return@launch }
                                         saved = withContext(Dispatchers.IO) {
                                             store.update { current ->
@@ -221,6 +229,7 @@ class MinerActivity : ComponentActivity() {
                                                     }
                                                     put("base", base.trimEnd('/'))
                                                     put("key", apiKey)
+                                                    putJsonArray("keys") { apiKeys.forEach { add(it) } }
                                                     put("model", model)
                                                     put("limit", limit!!)
                                                     put("minBattery", minBattery.toInt())
@@ -234,7 +243,8 @@ class MinerActivity : ComponentActivity() {
                                                 }
                                             }.also { store.autoStart = autoStart }
                                         }
-                                        key = ""
+                                        store.resetKeys(keyRows.filter { it.second.isNotBlank() }.map { it.second.trim() })
+                                        keyRows = apiKeys.map { it to "" }
                                         store.phase = MinerState.CONNECTING
                                         store.pauseReason = null
                                         state = MinerState.CONNECTING
@@ -269,6 +279,13 @@ class MinerActivity : ComponentActivity() {
                                 Text("●", color = color)
                                 Text(stringResource(state.message), style = MaterialTheme.typography.titleLarge)
                             }
+                            Text(stringResource(R.string.key_active, activeKey))
+                            if (state == MinerState.KEY_BAD) Text(stringResource(when {
+                                keyStatuses.all { it == KeyFailure.invalid } -> R.string.keys_all_invalid
+                                keyStatuses.all { it == KeyFailure.exhausted } -> R.string.keys_all_exhausted
+                                keyStatuses.all { it == KeyFailure.rate_limited } -> R.string.keys_all_limited
+                                else -> R.string.keys_all_unavailable
+                            }, keyStatuses.size))
                             Text(stringResource(R.string.miner_cloud, platformName) + " · " + model, style = MaterialTheme.typography.bodySmall)
                         }
                     }
@@ -318,19 +335,19 @@ class MinerActivity : ComponentActivity() {
                     FlowRow(maxItemsInEachRow = 3, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                         MinerPlatforms.all.forEach { item ->
                             FilterChip(selected = platform == item, onClick = {
-                                other = false; base = item.base; model = item.model; key = ""; error = null
+                                other = false; base = item.base; model = item.model; keyRows = listOf("" to ""); error = null
                                 inputPrice = ""; outputPrice = ""
                             }, enabled = editable, modifier = Modifier.weight(1f), label = {
                                 Text(if (item.id == "siliconflow") stringResource(R.string.miner_siliconflow_name) else item.name, style = MaterialTheme.typography.labelMedium)
                             })
                         }
                         FilterChip(selected = other, onClick = {
-                            if (!other) { other = true; base = ""; model = ""; key = ""; inputPrice = ""; outputPrice = ""; error = null }
+                            if (!other) { other = true; base = ""; model = ""; keyRows = listOf("" to ""); inputPrice = ""; outputPrice = ""; error = null }
                         }, enabled = editable, modifier = Modifier.weight(1f), label = { Text(stringResource(R.string.miner_platform_other), style = MaterialTheme.typography.labelMedium) })
                     }
                     if (other) {
                         Text(stringResource(R.string.miner_other_hint), style = MaterialTheme.typography.bodySmall)
-                        MinerField(base, { base = it.trim(); key = ""; inputPrice = ""; outputPrice = ""; error = null }, R.string.miner_base, editable)
+                        MinerField(base, { base = it.trim(); keyRows = listOf("" to ""); inputPrice = ""; outputPrice = ""; error = null }, R.string.miner_base, editable)
                         MinerField(model, { model = it.trim(); inputPrice = ""; outputPrice = "" }, R.string.miner_model, editable)
                     } else platform?.let { item ->
                         MinerLinkedHint(stringResource(item.description), stringResource(R.string.miner_get_key)) {
@@ -338,13 +355,19 @@ class MinerActivity : ComponentActivity() {
                         }
                     }
                     MinerStep(2, R.string.miner_step_key)
-                    OutlinedTextField(key, { key = it; error = null }, placeholder = { Text(stringResource(if (apiKey.isNotBlank()) R.string.miner_key_saved else R.string.miner_key)) }, enabled = editable, singleLine = true, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth(), trailingIcon = {
-                        TextButton(enabled = editable, onClick = {
-                            val clip = getSystemService(ClipboardManager::class.java).primaryClip
-                            key = if (clip != null && clip.itemCount > 0) clip.getItemAt(0).coerceToText(this@MinerActivity).toString() else ""
-                            error = null
-                        }) { Text(stringResource(R.string.miner_paste)) }
-                    })
+                    keyRows.forEachIndexed { index, (stored, draft) ->
+                        OutlinedTextField(draft, { value -> keyRows = keyRows.toMutableList().also { it[index] = stored to value }; error = null },
+                            placeholder = { Text(if (stored.isBlank()) stringResource(R.string.miner_key) else "\u2022\u2022\u2022\u2022" + stored.takeLast(4)) },
+                            enabled = editable, singleLine = true, visualTransformation = PasswordVisualTransformation(), modifier = Modifier.fillMaxWidth())
+                        Row {
+                            Text(stringResource(keyStatusText(if (draft.isNotBlank()) KeyFailure.other else keyStatuses.getOrElse(index) { KeyFailure.other })), Modifier.weight(1f))
+                            TextButton(enabled = editable && index > 0, onClick = {
+                                keyRows = keyRows.toMutableList().also { it.add(index - 1, it.removeAt(index)) }
+                            }) { Text(stringResource(R.string.key_move_up)) }
+                            TextButton(enabled = editable, onClick = { keyRows = keyRows.filterIndexed { i, _ -> i != index } }) { Text(stringResource(R.string.key_remove)) }
+                        }
+                    }
+                    TextButton(enabled = editable && keyRows.size < 5, onClick = { keyRows = keyRows + ("" to "") }) { Text(stringResource(R.string.key_add_backup)) }
                     Text(stringResource(R.string.miner_api_only), style = MaterialTheme.typography.bodySmall)
                     MinerStep(3, R.string.miner_step_limit)
                     MinerLimitPicker(limit, { limit = it }, chinese, editable, operator)

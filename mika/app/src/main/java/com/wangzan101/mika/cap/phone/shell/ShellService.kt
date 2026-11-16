@@ -473,7 +473,7 @@ class ShellService(
         val candidates = activitiesFor(intent, null) ?: return START_ERROR
         if (candidates.isEmpty()) return START_UNRESOLVED
         try {
-            val onMain = tasksOn(Display.DEFAULT_DISPLAY).flatMap(::packagesOf).toSet()
+            val onMain = visibleTasksOn(Display.DEFAULT_DISPLAY).flatMap(::packagesOf).toSet()
             if (ShellLinks.inUse(candidates.map { it.first }.distinct(), onMain)) return START_IN_USE_ON_MAIN
             if (onOtherOwnDisplay(candidates.map { it.first }.distinct(), displayId)) return START_IN_USE_BY_OTHER
         } catch (t: Throwable) {
@@ -547,7 +547,7 @@ class ShellService(
         val candidates = activitiesFor(intent, intent.type) ?: return START_ERROR
         if (candidates.isEmpty()) return START_UNRESOLVED
         try {
-            val onMain = tasksOn(Display.DEFAULT_DISPLAY).flatMap(::packagesOf).toSet()
+            val onMain = visibleTasksOn(Display.DEFAULT_DISPLAY).flatMap(::packagesOf).toSet()
             if (ShellLinks.inUse(candidates.map { it.first }.distinct(), onMain)) return START_IN_USE_ON_MAIN
             if (onOtherOwnDisplay(candidates.map { it.first }.distinct(), displayId)) return START_IN_USE_BY_OTHER
         } catch (t: Throwable) {
@@ -628,6 +628,12 @@ class ShellService(
     }
 
     /** 该包在主屏有可见任务,或者就是主屏最上面的任务。[userId] 不为空时只看那份用户里的(见 [sameCopy])。 */
+    /** Tasks the user can currently see on [displayId]; background tasks in Recents are not "in use". */
+    private fun visibleTasksOn(displayId: Int): List<Any> {
+        val visibleField = runCatching { TASK_INFO.getField("isVisible") }.getOrNull()
+        return tasksOn(displayId).withIndex().filter { (index, task) -> visibleField?.getBoolean(task) ?: (index == 0) }.map { it.value }
+    }
+
     private fun inUseOnMainScreen(packageName: String, userId: Int? = null): Boolean {
         val visibleField = runCatching { TASK_INFO.getField("isVisible") }.getOrNull()
         return tasksOn(Display.DEFAULT_DISPLAY).withIndex().any { (index, task) ->

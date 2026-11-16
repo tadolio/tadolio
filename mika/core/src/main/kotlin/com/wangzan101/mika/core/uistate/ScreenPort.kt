@@ -92,8 +92,6 @@ data class ScreenSnapshot(
     val windows: List<UiWindowTree> = emptyList(),
     /** 上一个动作过后才开到用户主屏上、读这一屏前刚挪回来的 App(见 [OpenedElsewhere]);没有为 null。 */
     val opened: OpenedElsewhere? = null,
-    /** Set only by the trusted read boundary; contains no screen content. */
-    val communityHidden: Boolean = false,
     /** 画面不可用但不是已证实的防截屏;见上方 [captureError] 说明。 */
     val captureError: String? = null,
 )
@@ -174,8 +172,6 @@ sealed interface ActionResult {
         val coveredBy: String? = null,
         val chooser: LaunchChoice? = null,
         val opened: OpenedElsewhere? = null,
-    /** Set only by the trusted read boundary; contains no screen content. */
-    val communityHidden: Boolean = false,
         val inProfile: String? = null,
         val profileUser: Int? = null,
         val requestedUser: Int? = null,

@@ -104,21 +104,6 @@ class ActionExecutor(
         }
     }
 
-    private suspend fun checkCommunityInput(name: String, args: JsonObject) {
-        if (!tools.community) return
-        if (tools.verb(name) == Verb.TypeText || tools.verb(name) == Verb.Interact) {
-            val text = (args["text"] as? JsonPrimitive)?.contentOrNull ?: return
-            val screen = tools.interfaces.peek()
-            val field = screen?.let { com.wangzan101.mika.core.action.ClassifiedRisk.target(if (args["x"] != null) Verb.Tap else Verb.TypeText, args, it) }
-            if (field?.secret == true) tools.promoteHybrid(com.wangzan101.mika.core.access.HybridReason.PasswordField)
-            tools.hybridBoundary?.beforeInput(text, screen?.elements?.joinToString("\n") { it.name }.orEmpty())
-            if (!tools.community) return
-            if (field?.secret == true) throw com.wangzan101.mika.core.access.AppAccessDenied(com.wangzan101.mika.core.access.CommunitySensitive.INPUT_ERROR, null)
-            val context = screen?.elements?.joinToString("\n") { it.name }.orEmpty()
-            com.wangzan101.mika.core.access.CommunitySensitive.requireInput(text, context)
-        }
-    }
-
     private suspend fun aimed(
         given: Part.ToolCall, origin: Origin, followUp: FollowUp, reads: GuardScope?, givenArgs: JsonObject, offScreen: Boolean, verb: Verb?,
     ): ActionOutcome {
@@ -126,8 +111,6 @@ class ActionExecutor(
         var call = given
         var args = givenArgs
         var note: JsonObject? = null
-        checkCommunityInput(call.name, args)
-        tools.checkCommunityWrite(call.name)
         tools.interfaces.checkAppAccess(tools.declared(call.name))
         when (val d = tools.interfaces.described(tools.declared(call.name), args)) {
             is Described.Failed -> return ran(Step(call, args, origin, emptyList(), writing = false, offScreen, verb, null, followUp, reads, preset = d.result))

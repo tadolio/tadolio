@@ -49,6 +49,7 @@ object TriggerRuntime {
         if (replaceExisting) check(store.edit(definition)) { tr(R.string.trigger_deleted) }
         else store.upsert(definition)
         engine(context, store).rearm(System.currentTimeMillis())
+        if (definition.onNotification == null && definition.onPost == null) com.wangzan101.mika.settings.DeferredSetup(context).needBattery()
         if (definition.onNotification != null || definition.onPost != null) return Scheduled(true)
         val granted = canScheduleExactly(context)
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)

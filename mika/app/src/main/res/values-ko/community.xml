@@ -13,6 +13,5 @@
     <string name="community_cloud_miner">클라우드 채굴자 (%1$s)</string>
     <string name="community_local_source">커뮤니티 노드 모드</string>
     <string name="community_cloud_privacy">일부 채굴자는 클라우드에서 오픈 소스 모델을 실행하며, 내용은 해당 플랫폼을 거칩니다.</string>
-    <string name="community_privacy_app_blocked">커뮤니티 모드에서는 내용이 무작위 채굴자에게 전달되지 않도록 개인정보 앱을 차단합니다. 이 작업에는 자신의 모델을 사용하세요.</string>
     <string name="community_calls_unavailable">AI calls are unavailable with community compute. Select your own key or account to use calls.</string>
 </resources>

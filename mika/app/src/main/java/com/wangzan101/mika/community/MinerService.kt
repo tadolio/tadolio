@@ -24,6 +24,7 @@ class MinerService: Service() {
         override fun onCapabilitiesChanged(n:Network,c:NetworkCapabilities){changed()}
     }
     private fun allowed():Boolean = runCatching {
+        store.refreshKeyState()
         val cfg=store.read();val cm=getSystemService(ConnectivityManager::class.java)
         val caps=cm.getNetworkCapabilities(cm.activeNetwork)
         val battery=registerReceiver(null,IntentFilter(Intent.ACTION_BATTERY_CHANGED))

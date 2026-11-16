@@ -111,8 +111,6 @@
     <string name="phone_degraded">Управление телефоном не готово, поэтому в этот раз Tadolio не может работать с приложениями; сайты и файлы работают как обычно.</string>
     <string name="phone_degraded_no_sandbox">Управление телефоном не готово, поэтому в этот раз Tadolio не может работать с приложениями; сайты работают как обычно.</string>
     <string name="phone_channel">Сопряжение</string>
-    <string name="phone_notify_enter_title">Введите код подключения</string>
-    <string name="phone_notify_enter_text">Введите здесь 6 цифр с экрана; окно сопряжения закрывать не нужно</string>
     <string name="phone_notify_action">Ввести код</string>
     <string name="phone_notify_input">6 цифр</string>
     <string name="phone_notify_working">Сопряжение…</string>
@@ -120,8 +118,6 @@
     <string name="phone_notify_done_text">Управление телефоном настроено. Теперь можно вернуться в Tadolio</string>
     <string name="phone_notify_problem">Вернитесь в Tadolio, чтобы узнать, как это исправить</string>
     <string name="phone_notify_window_found">Окно сопряжения найдено</string>
-    <string name="phone_notify_retry_code">Неверный или просроченный код: в окне сопряжения снова нажмите «Подключение устройства с помощью кода подключения», чтобы получить новый код, и введите его ещё раз</string>
-    <string name="phone_notify_retry_window">Окно сопряжения закрылось или код просрочен: снова нажмите «Подключение устройства с помощью кода подключения», чтобы получить новый код, и введите его ещё раз</string>
     <string name="phone_notify_code_invalid">Введите 6 цифр и повторите</string>
     <string name="phone_guide_1">Нажмите «Подключение устройства с помощью кода подключения»</string>
     <string name="phone_guide_2">Уведомление Tadolio появится вверху экрана; если его нет, потяните вниз, чтобы открыть шторку уведомлений</string>

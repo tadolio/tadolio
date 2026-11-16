@@ -15,7 +15,7 @@ It operates apps on a background virtual screen while you keep using your phone.
 
 ## Safety and privacy
 
-Payments, outward messages and other irreversible actions ask for your approval each time. Community mode uses an allowlist for sensitive apps.
+Payments, outward messages and other irreversible actions ask for your approval each time. Free compute comes from community members. They can see your task and screen. This includes screens from chat, banking and other apps you ask it to open. If you prefer, use your own model.
 Community traffic uses encrypted channels. Miners can see model inputs, and cloud miners also send them through their model provider.
 Follow Android's setup steps for accessibility, notifications and background operation.
 

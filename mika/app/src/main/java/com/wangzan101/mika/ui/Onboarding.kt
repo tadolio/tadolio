@@ -2,6 +2,7 @@
 package com.wangzan101.mika.ui
 
 import android.content.Context
+import com.wangzan101.mika.settings.chooseCommunity
 
 /** 首次上手的两步；Phone 保留以兼容已保存的页面状态。 */
 enum class OnboardingStep { Welcome, Model, Phone }
@@ -38,8 +39,13 @@ object Onboarding {
 }
 
 /** 上手流程里「配置模型」做完没有;存在本机。 */
-class OnboardingState(context: Context) {
-    private val prefs = context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+class OnboardingState(private val prefs: android.content.SharedPreferences) {
+    constructor(context: Context) : this(context.applicationContext.getSharedPreferences(PREFS, Context.MODE_PRIVATE))
+
+    fun startCommunity(store: com.wangzan101.mika.settings.ProviderStore) {
+        store.chooseCommunity()
+        markModelSetupDone()
+    }
 
     fun modelSetupDone(): Boolean = prefs.getBoolean(MODEL_DONE, false)
 

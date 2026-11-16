@@ -104,7 +104,7 @@ class SystemStatusMonitor(context: Context, private val shell: BuiltinShellContr
      * 系统会不会拦着不让打开无障碍。按能力判断:安卓 13 起有「受限制的设置」这项权限,读得到且已允许就不拦;
      * 读不到(系统没有这项或不让读)时当作可能会拦,只是多给一个入口。
      */
-    private fun restrictedSettings(): Boolean {
+    fun restrictedSettings(): Boolean {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return false
         val mode = runCatching {
             app.getSystemService(AppOpsManager::class.java).unsafeCheckOpNoThrow(OP_RESTRICTED_SETTINGS, Process.myUid(), app.packageName)

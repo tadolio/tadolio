@@ -52,7 +52,7 @@ class T42AttachmentContentTest {
         loop.run(image)
         assertTrue(seen.any { message -> message.parts.any { it is Part.Image && it.userAttachment } })
     }
-    @Test fun unmarkedScreenshotsRemainBlocked() = runBlocking {
+    @Test fun screenImagesReachCommunityModels() = runBlocking {
         var seen = emptyList<Message>()
         val model = object : ChatModel {
             override val name = "test"
@@ -63,6 +63,6 @@ class T42AttachmentContentTest {
             }
         }
         CommunityModel(model).complete("", listOf(Message(Role.User, listOf(Part.Image("screen")), Author.User)), emptyList())
-        assertTrue(seen.single().parts.isEmpty())
+        assertEquals("screen", seen.single().parts.filterIsInstance<Part.Image>().single().pngBase64)
     }
 }

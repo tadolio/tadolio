@@ -122,7 +122,6 @@ class AndroidScreen(
     private val beforeOpen: (packageName: String, user: Int?) -> Unit = { _, _ -> },
     /** 启动被拒、没开出来:撤回 [beforeOpen] 提前做的。 */
     private val notOpened: (packageName: String, user: Int?) -> Unit = { _, _ -> },
-    private val computeMode: com.wangzan101.mika.core.run.ComputeMode = com.wangzan101.mika.core.run.ComputeMode.Own,
     override val appAccess: com.wangzan101.mika.core.access.AppAccessPolicy = com.wangzan101.mika.core.access.AppAccessPolicy.ALLOW,
     /** 并行任务时:按占用登记,本任务此刻能不能占这个包([user] 那份;null 为本来那份)。只查不占。 */
     private val appFree: (packageName: String, user: Int?) -> Boolean = { _, _ -> true },
@@ -133,7 +132,6 @@ class AndroidScreen(
     private val awaitApp: suspend (packageName: String, user: Int?, timeoutMs: Long, free: suspend () -> Boolean) -> AppWait =
         { _, _, _, _ -> AppWait.Unsupported },
     /** Optional raw capture hook; production wiring must share its state with actions and approvals. */
-    private val hybridBoundary: com.wangzan101.mika.core.access.HybridScreenBoundary? = null,
 ) : ScreenPort {
     /** 屏还没建时为 -1;只在确认屏已建好之后用。 */
     private val displayId get() = display.current?.displayId ?: -1
@@ -175,8 +173,6 @@ class AndroidScreen(
         packages.ifEmpty { listOfNotNull(foregroundTaskPackage()) }
     }
 
-    private val community get() = hybridBoundary?.community
-        ?: (computeMode == com.wangzan101.mika.core.run.ComputeMode.Community)
     /** Include every visible window, especially IME, notification shade and permission dialogs.
      * A missing owner is unknown, never inferred from the last launch target. */
     override suspend fun foregroundPackages(): List<String?> = withContext(Dispatchers.IO) {
@@ -185,18 +181,7 @@ class AndroidScreen(
         val task = foregroundTaskPackage()
         if (owners.isEmpty()) listOf(task) else owners + listOfNotNull(task)
     }
-    private fun communityWriteNow() {
-        if (!community) return
-        val owners = if (hasDisplay) windows().map { it.root?.packageName?.toString() } + listOfNotNull(foregroundTaskPackage()) else emptyList()
-        com.wangzan101.mika.core.access.CommunityPolicy.requireForeground(owners, state = appAccess.current())
-    }
-    private suspend fun communityWrite(allowEmpty: Boolean = false) {
-        if (community) com.wangzan101.mika.core.access.CommunityPolicy.requireForeground(foregroundPackages(), allowEmpty, appAccess.current())
-    }
-    private fun communityTarget(pkg: String?) {
-        if (community) com.wangzan101.mika.core.access.CommunityPolicy.requireTarget(pkg, appAccess.current())
-    }
-    private fun read() = ScreenReader.read(windows(), screenWidth, screenHeight, community = community)
+    private fun read() = ScreenReader.read(windows(), screenWidth, screenHeight)
     private fun treeHash() = ScreenReader.hash(windows())
 
     /** 显式使用系统命令或事件工具时按需建屏;普通任务等到第一次打开 App 才建。 */
@@ -212,11 +197,8 @@ class AndroidScreen(
     private suspend fun capture(register: Boolean): ScreenSnapshot = withContext(Dispatchers.IO) {
         if (!hasDisplay) return@withContext ScreenSnapshot(snapshotId(), null, emptyList(), screenWidth, screenHeight, hasWindow = false)
         // 上一个动作过了一会儿才开到用户主屏上的:先挪回来再读(只在模型要读的这一屏上做,不在判效果的那一眼里做)
-        val ownersBefore = if (community || hybridBoundary != null) foregroundPackages() else emptyList()
-        hybridBoundary?.beforeRead(ownersBefore)
-        val late = if (register && !community) lateSpill() else null
-        val ownership = hybridBoundary?.takeIf { it.community }?.let { com.wangzan101.mika.core.access.HybridNodeOwnership() }
-        val r = if (ownership != null) ScreenReader.read(windows(), screenWidth, screenHeight, ownership = ownership) else read()
+        val late = if (register) lateSpill() else null
+        val r = read()
         val after = treeHash()
         val foreground = if (r.topPackage == null) foregroundTaskPackage() else null
         val snap = NodeSnapshot(snapshotId(), r.entries)
@@ -227,7 +209,6 @@ class AndroidScreen(
             width = screenWidth,
             height = screenHeight,
             changedDuringRead = after != r.hash,
-            communityHidden = hybridBoundary == null && community && !r.trustedOwnership,
             hasWindow = r.anyAppWindow,
             unreadableApp = foreground,
             windows = r.windows,
@@ -237,16 +218,8 @@ class AndroidScreen(
             captureError = if ((r.anyAppWindow || foreground != null) && frameServable() && frameBlack() == true)
                 ScreenDiagnosis.DISPLAY_CAPTURE_UNAVAILABLE else null,
         )
-        val safe = if (hybridBoundary != null) {
-            hybridBoundary.captured(captured, ownersBefore, foregroundPackages(), ownership?.trusted ?: true)
-        } else if (community) {
-            val ownersAfter = foregroundPackages()
-            val reasons = com.wangzan101.mika.core.access.CommunityPolicy.hiddenReasons(captured, ownersBefore, ownersAfter, appAccess.current())
-            CommunityDiagnostics.hidden(reasons, ownersBefore, ownersAfter, r.windows.map { "${it.type}:${it.packageName}" })
-            com.wangzan101.mika.core.access.CommunityPolicy.sanitize(captured, ownersBefore, ownersAfter, appAccess.current())
-        } else captured
-        if (register && !safe.communityHidden) ids.put(snap)
-        safe
+        if (register) ids.put(snap)
+        captured
     }
 
     /**
@@ -277,7 +250,7 @@ class AndroidScreen(
 
     override suspend fun screenshotPng(): ByteArray? = withContext(Dispatchers.IO) {
         // 黑图没有可用画面信息,也不能凭它区分安全窗口和合成失败;不要交给模型或 OCR。
-        if (community || !frameServable() || frameBlack() == true) return@withContext null
+        if (!frameServable() || frameBlack() == true) return@withContext null
         display.current?.latestFramePng()
     }
 
@@ -310,7 +283,6 @@ class AndroidScreen(
      * (规则见 [StillFrameRead])。局部在动(动图头像、光标)不影响字的位置,照用,不再整个丢掉。
      */
     override suspend fun readVisibleText(): List<VisibleTextLine>? = withContext(Dispatchers.IO) {
-        if (community) return@withContext null
         if (!hasDisplay || !frameServable() || frameBlack() == true) return@withContext null
         StillFrameRead.read(SystemClock::uptimeMillis, { delay(it) }, ::frameSignature) {
             display.current?.latestFrameBitmap()?.let { PhoneOcr.read(it) }
@@ -318,19 +290,16 @@ class AndroidScreen(
     }
 
     override suspend fun frameGrid(): FrameGrid? = withContext(Dispatchers.IO) {
-        if (community) return@withContext null
         if (!frameServable()) return@withContext null
         val bmp = display.current?.frames?.value ?: return@withContext null
         runCatching { FrameGrid.sample(bmp.width, bmp.height, bmp::getPixel) }.getOrNull()
     }
 
     override suspend fun isProtected(): Boolean = withContext(Dispatchers.IO) {
-        if (community) return@withContext true
         hasDisplay && read().hasAppWindow && frameBlack() == true
     }
 
     override suspend fun checkScreen(): ScreenCheck? = withContext(Dispatchers.IO) {
-        if (community) return@withContext null
         if (!hasDisplay) return@withContext ScreenDiagnosis.classify(
             ScreenFacts(currentApp = null, hasWindow = false, readableElements = 0, changing = false, blackFrames = emptyList(), texts = emptyList(), passwordField = false),
         )
@@ -413,7 +382,6 @@ class AndroidScreen(
             node.children.any { containsText(it, text) }
 
     override suspend fun nextEvent(kind: String, packageName: String?, timeoutMs: Long): ScreenEvent? = withContext(Dispatchers.IO) {
-        if (community) return@withContext null
         if (kind == "notification") return@withContext withTimeoutOrNull(timeoutMs) {
             a11y.notificationEvents().first { packageName == null || it.packageName == packageName }
         }
@@ -431,7 +399,6 @@ class AndroidScreen(
     }
 
     override suspend fun watchEvents(kind: String, packageName: String?, durationMs: Long, maxEvents: Int): List<ScreenEvent> = withContext(Dispatchers.IO) {
-        if (community) return@withContext emptyList()
         if (kind != "notification" && !hasDisplay) return@withContext emptyList()
         val collected = mutableListOf<ScreenEvent>()
         val stream = if (kind == "notification") a11y.notificationEvents().filter { packageName == null || it.packageName == packageName }
@@ -450,7 +417,6 @@ class AndroidScreen(
     }
 
     override suspend fun systemCommand(command: String): SystemCommandResult? = withContext(Dispatchers.IO) {
-        if (community) throw com.wangzan101.mika.core.access.AppAccessDenied(com.wangzan101.mika.core.access.CommunityPolicy.ERROR, null)
         if (!hasDisplay) return@withContext null
         val result = shell.runSystemCommand(displayId, command)
         SystemCommandResult(result.getInt("exitCode", -1), result.getString("output").orEmpty())
@@ -459,7 +425,6 @@ class AndroidScreen(
     // ---------- 动作 ----------
 
     override suspend fun tapRef(ref: String, snapshotId: String): ActionResult = withContext(Dispatchers.IO) {
-        communityWrite()
         if (!hasDisplay) return@withContext NO_APP_OPEN
         val (node, relocatedTo) = resolve(ref, snapshotId) ?: return@withContext ActionResult.Failed("ref_expired")
         val target = ancestorOrSelf(node) { isClickableTarget(it) }
@@ -479,13 +444,11 @@ class AndroidScreen(
     }
 
     override suspend fun tapXY(x: Int, y: Int): ActionResult = withContext(Dispatchers.IO) {
-        communityWrite()
         if (!hasDisplay) return@withContext NO_APP_OPEN
         verified(fallback = { clock -> clickNodeAt(x, y, clock) }) { tapAt(x, y) }
     }
 
     override suspend fun doubleTapRef(ref: String, snapshotId: String): ActionResult = withContext(Dispatchers.IO) {
-        communityWrite()
         if (!hasDisplay) return@withContext NO_APP_OPEN
         val target = resolve(ref, snapshotId) ?: return@withContext ActionResult.Failed("ref_expired")
         val rect = android.graphics.Rect().also { target.first.getBoundsInScreen(it) }
@@ -493,7 +456,6 @@ class AndroidScreen(
     }
 
     override suspend fun doubleTapXY(x: Int, y: Int): ActionResult = withContext(Dispatchers.IO) {
-        communityWrite()
         if (!hasDisplay) return@withContext NO_APP_OPEN
         verified { doubleTapAt(pacing.near(x, y)) }
     }
@@ -505,13 +467,11 @@ class AndroidScreen(
     }
 
     override suspend fun swipe(x1: Int, y1: Int, x2: Int, y2: Int, durationMs: Long): ActionResult = withContext(Dispatchers.IO) {
-        communityWrite()
         if (!hasDisplay) return@withContext NO_APP_OPEN
         verified { drag(listOf(x1 to y1, x2 to y2), durationMs, bow = true) }
     }
 
     override suspend fun gesture(paths: List<List<Pair<Int, Int>>>, durationMs: Long): ActionResult = withContext(Dispatchers.IO) {
-        communityWrite()
         if (!hasDisplay) return@withContext NO_APP_OPEN
         if (paths.isEmpty() || paths.size > 2 || paths.any { it.size < 2 || it.size > 32 }) return@withContext ActionResult.Failed("invalid_gesture")
         verified {
@@ -523,7 +483,6 @@ class AndroidScreen(
     }
 
     override suspend fun scroll(ref: String?, snapshotId: String?, down: Boolean): ActionResult = withContext(Dispatchers.IO) {
-        communityWrite()
         if (!hasDisplay) return@withContext NO_APP_OPEN
         var relocatedTo: String? = null
         val start = if (ref != null && snapshotId != null) {
@@ -550,7 +509,6 @@ class AndroidScreen(
      * 弹着输入法、输入框拿着焦点、上面盖着别的窗口(弹框、浮层)、没有够大的可滚动内容时不滚。
      */
     override suspend fun idleScroll(fraction: Double): Boolean = withContext(Dispatchers.IO) {
-        communityWrite()
         if (!hasDisplay || imeBox() != null || focusedEditable() != null) return@withContext false
         if (ScreenReader.contentWindows(windows()).count { it.type == AccessibilityWindowInfo.TYPE_APPLICATION } > 1) return@withContext false
         val area = read().entries.filter { it.element.scrollable }
@@ -567,19 +525,16 @@ class AndroidScreen(
     }
 
     override suspend fun back(): ActionResult = withContext(Dispatchers.IO) {
-        communityWrite()
         if (!hasDisplay) return@withContext NO_APP_OPEN
         verified { shell.injectKey(displayId, KeyEvent.KEYCODE_BACK) }
     }
 
     override suspend fun pressKey(keyCode: Int): ActionResult = withContext(Dispatchers.IO) {
-        communityWrite()
         if (!hasDisplay) return@withContext NO_APP_OPEN
         verified { shell.injectKey(displayId, keyCode) }
     }
 
     override suspend fun typeText(ref: String?, snapshotId: String?, text: String): ActionResult = withContext(Dispatchers.IO) {
-        communityWrite()
         if (!hasDisplay) return@withContext NO_APP_OPEN
         val found = when (val f = findField(ref, snapshotId)) {
             is Field.Found -> f
@@ -681,7 +636,6 @@ class AndroidScreen(
     }
 
     override suspend fun clearText(ref: String?, snapshotId: String?): ActionResult = withContext(Dispatchers.IO) {
-        communityWrite()
         if (!hasDisplay) return@withContext NO_APP_OPEN
         val found = when (val f = findField(ref, snapshotId, tapToFocus = false)) {
             is Field.Found -> f
@@ -720,7 +674,6 @@ class AndroidScreen(
      * 点了就换到别的 App(点到了链接、按钮)时不打字。
      */
     override suspend fun typeAt(x: Int, y: Int, text: String): ActionResult = withContext(Dispatchers.IO) {
-        communityWrite()
         if (!hasDisplay) return@withContext NO_APP_OPEN
         val hit = pointHit(x, y)
         val anchor = hit?.contextPasteAnchor()
@@ -825,7 +778,6 @@ class AndroidScreen(
 
     /** 清空这一点上的输入框,做法同 [typeAt]。 */
     override suspend fun clearAt(x: Int, y: Int): ActionResult = withContext(Dispatchers.IO) {
-        communityWrite()
         if (!hasDisplay) return@withContext NO_APP_OPEN
         val hit = pointHit(x, y)
         val target = hit?.node?.takeIf(ScreenReader::canSetText) ?: hit?.contextPasteAnchor()
@@ -1127,7 +1079,6 @@ class AndroidScreen(
 
     /** [openApp] / [openAppCopy] 的共同部分;[user] 为空是本来那份。 */
     private suspend fun open(packageName: String, user: Int?, cold: Boolean): ActionResult = withContext(Dispatchers.IO) {
-        communityTarget(packageName); communityWrite(allowEmpty = true)
         // 同一个 App 不能同时在两块屏上:系统会把整个任务挪过来,等于从另一个任务手里抢走它。装了两份的,两份各算各的
         if (checkOtherTasks) {
             if (onOtherDisplay(packageName, user)) return@withContext IN_USE_BY_OTHER
@@ -1170,7 +1121,6 @@ class AndroidScreen(
      * 认系统问打开哪一个。这个 App 不收文字分享为 cannot_share。只打开分享页,发不发由模型在那一页上点。
      */
     override suspend fun shareText(packageName: String, text: String): ActionResult = withContext(Dispatchers.IO) {
-        communityTarget(packageName); communityWrite(allowEmpty = true)
         if (checkOtherTasks) {
             val other = runCatching { shell.displayOfPackage(packageName) }.getOrDefault(-1)
             if (other >= 0 && other != display.current?.displayId) return@withContext IN_USE_BY_OTHER
@@ -1198,7 +1148,6 @@ class AndroidScreen(
      * 之后和 [openApp] 一样等它到 Mika 屏的最上面;第一次用时建屏。
      */
     suspend fun openOwnPage(intent: Intent): ActionResult = withContext(Dispatchers.IO) {
-        communityTarget(a11y.packageName)
         val before = if (hasDisplay) topWindowPackage().takeIf { it != chooserPackage } else null
         val id = display.get().displayId
         val startedAt = System.nanoTime()
@@ -1348,7 +1297,6 @@ class AndroidScreen(
     override suspend fun openLink(action: String?, uri: String?, packageName: String?): ActionResult = withContext(Dispatchers.IO) {
         // 指定了 App 的由应用访问边界看过;没指定的,名单非空时在这里挑一个没被禁用的接手
         val pinned = packageName ?: allowedLinkHandler(action, uri)
-        communityTarget(pinned); communityWrite(allowEmpty = true)
         val id = display.get().displayId
         val expected = pinned ?: settingsPackage.takeIf { action != null }
         if (checkOtherTasks && expected != null && !reserve(expected)) return@withContext IN_USE_BY_OTHER
@@ -1461,7 +1409,6 @@ class AndroidScreen(
         val handler = SystemIntents.choose(allowedHandlers, default)
             ?: return@withContext SystemActionResult(ActionResult.Failed(SystemActionResult.NOT_SUPPORTED))
         val pkg = handler.packageName
-        communityTarget(pkg); communityWrite(allowEmpty = true)
         intent.component = android.content.ComponentName(pkg, handler.className)
         if (checkOtherTasks && !action.silent && !reserve(pkg)) return@withContext SystemActionResult(IN_USE_BY_OTHER, pkg)
         val alarms = a11y.getSystemService(AlarmManager::class.java)
@@ -1529,7 +1476,6 @@ class AndroidScreen(
     // ---------- 滚轮 ----------
 
     override suspend fun setWheel(ref: String, snapshotId: String, value: String): WheelOutcome = withContext(Dispatchers.IO) {
-        communityWrite()
         if (!hasDisplay) return@withContext WheelOutcome(false, null, null, 0, "none", error = "no_app_open")
         val (node, _) = resolve(ref, snapshotId) ?: return@withContext WheelOutcome(false, null, null, 0, "none", error = "ref_expired")
         val driver = WheelDriver(
@@ -1555,7 +1501,6 @@ class AndroidScreen(
      * 不是为 null。只认系统包:别的 App 的窗口提到这个名字不算。
      */
     private fun chooserOf(packageName: String, before: String?): LaunchChoice? {
-        if (community) return null // System chooser text must never become a tool result.
         val w = ScreenReader.contentWindows(windows()).firstOrNull { it.root != null } ?: return null
         val pkg = w.root?.packageName?.toString() ?: return null
         if (pkg == packageName || pkg == before || !isSystemPackage(pkg)) return null
@@ -1624,7 +1569,6 @@ class AndroidScreen(
         retryWhenUnchanged: Boolean = true,
         action: suspend () -> Boolean,
     ): ActionResult {
-        communityWrite()
         lateSpill()?.let { return ActionResult.Failed("opened_elsewhere", hintLateSpill(it.opened)) }
         val beforeTree = treeHash()
         val beforeFrame = frameSignature()
@@ -1710,7 +1654,6 @@ class AndroidScreen(
 
     /** 动作之前:请内置助手盯着主屏,记下此刻两块屏最上面的任务;没有屏、接管中或助手不支持时为 null(不盯)。 */
     private fun armSpillWatch(): Watch? {
-        if (community) return null // Do not inspect or import tasks from the user's main display.
         if (!hasDisplay || handedOver()) return null
         val since = SystemClock.uptimeMillis()
         watchUserTaps(since + SPILL_WINDOW_MS)
@@ -1777,7 +1720,6 @@ class AndroidScreen(
      * 用户在主屏上选完、处理完之后要说的,先说这个。
      */
     private suspend fun lateSpill(): Spill? {
-        if (community) return null
         pendingReport?.let { pendingReport = null; return it }
         val w = watch ?: return null
         val spill = takeSpill(w)
@@ -2278,7 +2220,6 @@ class AndroidScreen(
 
     /** 优先对节点(或最近的可点祖先)发点击;不行再在其中心做手势,最后注入触摸。 */
     private suspend fun click(node: AccessibilityNodeInfo): Boolean {
-        communityWrite()
         val target = ancestorOrSelf(node) { isClickableTarget(it) }
         if (target != null && target.performAction(AccessibilityNodeInfo.ACTION_CLICK)) return true
         val rect = android.graphics.Rect().also { node.getBoundsInScreen(it) }
@@ -2289,7 +2230,6 @@ class AndroidScreen(
 
     /** 在这一点上点一下:先停一会儿再落指,按住随机的一小会儿。无障碍手势不行时由内置助手注入触摸。 */
     private suspend fun touch(at: Pair<Int, Int>): Boolean {
-        communityWrite()
         val (x, y) = at
         delay(pacing.approach())
         val press = pacing.press()
@@ -2303,7 +2243,6 @@ class AndroidScreen(
      * 助手注不了时退回无障碍手势沿同一条弧线走(系统按路径匀速走,只少了快慢)。不加节奏时和以前一样:无障碍手势按给定时长匀速走折线。
      */
     private suspend fun drag(points: List<Pair<Int, Int>>, durationMs: Long, bow: Boolean): Boolean {
-        communityWrite()
         if (!pacing.paced) return a11y.gesture(displayId, pathOf(points), durationMs)
         delay(pacing.approach())
         val stroke = pacing.stroke(points.map { it.first.toDouble() to it.second.toDouble() }, durationMs, bow, screenWidth to screenHeight)
@@ -2312,7 +2251,6 @@ class AndroidScreen(
     }
 
     private fun injectStroke(points: List<GesturePacing.Point>): Boolean {
-        communityWriteNow()
         return runCatching {
         shell.injectStroke(
             displayId,
@@ -2339,8 +2277,6 @@ class AndroidScreen(
      * 其余结果用 [AsciiTextKeys] 三态表示。选择失败时不发删除或粘贴,避免只删一个字符或在光标处插入。
      */
     private fun inputText(node: AccessibilityNodeInfo, text: String): Int? {
-        communityWriteNow()
-        communityInput(node, text)
         if (!node.refresh() || !visibleInputTarget(node)) return AsciiTextKeys.NOT_SENT
         val before = node.text?.toString().orEmpty()
         fun selectAll(): Boolean {
@@ -2392,16 +2328,7 @@ class AndroidScreen(
         }
     }
 
-    private fun communityInput(node: AccessibilityNodeInfo, text: String) {
-        if (!community || text.isEmpty()) return
-        if (node.isPassword) throw com.wangzan101.mika.core.access.AppAccessDenied(com.wangzan101.mika.core.access.CommunitySensitive.INPUT_ERROR, null)
-        com.wangzan101.mika.core.access.CommunitySensitive.requireInput(text,
-            listOfNotNull(node.contentDescription, node.hintText, node.viewIdResourceName).joinToString("\n"))
-    }
-
     private fun setText(node: AccessibilityNodeInfo, text: String): Boolean {
-        communityWriteNow()
-        communityInput(node, text)
         if (!node.refresh() || !visibleInputTarget(node)) return false
         val args = Bundle().apply { putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, text) }
         return node.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)

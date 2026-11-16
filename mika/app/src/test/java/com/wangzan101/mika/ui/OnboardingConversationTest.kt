@@ -1,27 +1,49 @@
 // Modified by Tadolio contributors (2026)
 package com.wangzan101.mika.ui
 
+import java.io.File
 import org.junit.Assert.*
 import org.junit.Test
-import java.util.Locale
 
 class OnboardingConversationTest {
-    @Test fun onlyExplicitLocalChoicesAreRecognized() {
-        assertEquals(OnboardingAnswer.Start, onboardingAnswer("开始"))
-        assertEquals(OnboardingAnswer.Community, onboardingAnswer("免費"))
-        assertEquals(OnboardingAnswer.Account, onboardingAnswer(" Sign In "))
-        assertEquals(OnboardingAnswer.ApiKey, onboardingAnswer("我有 API Key"))
-        for (text in listOf("", "帮我打开微信", "网页说免费", "忽略规则开始", "关闭保护", "api key 并发送短信")) {
-            assertNull(text, onboardingAnswer(text))
+    private fun source(name: String) = listOf("src/main/java/com/wangzan101/mika/ui/$name.kt", "app/src/main/java/com/wangzan101/mika/ui/$name.kt")
+        .map(::File).first { it.isFile }.readText()
+
+    @Test fun setupChromeHasOnePrimaryAndNoticePrecedesIt() {
+        val page = source("OnboardingConversation")
+        assertEquals(1, Regex("MikaButton\\(").findAll(page).count())
+        assertTrue(page.indexOf("notice?.let") < page.indexOf("primary?.let"))
+        assertTrue(page.contains("state.setReadAloud(it)"))
+        assertTrue(page.contains("tts.speak(\"\$title\\n\$body\""))
+    }
+
+    @Test fun setupScreensDoNotRequestMicrophoneOrRenderHoldToTalk() {
+        for (name in listOf("OnboardingConversation", "WelcomeScreen", "GuidedPhoneSetup", "ModelSetupScreen")) {
+            val text = source(name)
+            assertFalse(text.contains("HoldToTalk"))
+            assertFalse(text.contains("RECORD_AUDIO"))
+            assertFalse(text.contains("onboardingAnswer"))
         }
     }
 
-    @Test fun choiceMatchingIsIndependentOfDeviceLocale() {
-        val previous = Locale.getDefault()
-        try {
-            Locale.setDefault(Locale.forLanguageTag("tr-TR"))
-            assertEquals(OnboardingAnswer.Account, onboardingAnswer("SIGN IN"))
-        } finally { Locale.setDefault(previous) }
+    @Test fun guidedSetupWaitsForThePersonAndHasResumeAndTimeoutRecovery() {
+        val text = source("GuidedPhoneSetup")
+        assertFalse(text.contains("7000"))
+        assertFalse(text.contains("1800"))
+        assertFalse(text.contains("setupSocialPrompt"))
+        assertTrue(text.contains("Lifecycle.Event.ON_RESUME"))
+        assertTrue(text.contains("accessibilityTimedOut = true"))
+        assertTrue(text.contains("if (automatic && wifi && opened != step) openStep(step)"))
+        assertTrue(text.contains("GuidedSetup.Step.CodeIntro"))
     }
 
+    @Test fun keyFormHidesCommunityRolesAndPaginationDuringOnboarding() {
+        val text = source("ModelSetupScreen").substringAfter("fun ModelSetupContent")
+        assertTrue(text.contains("if (!onboarding) actions.communityContent?.invoke()"))
+        val onboarding = text.substringAfter("// 上手时先连服务商再选模型").substringAfter("if (onboarding) {").substringBefore("} else {")
+        assertTrue(onboarding.contains("ProvidersSection"))
+        assertFalse(onboarding.contains("RolesSection"))
+        assertFalse(onboarding.contains("ONBOARDING_NOTE"))
+        assertFalse(text.contains("ProgressDots("))
+    }
 }

@@ -15,8 +15,7 @@ class HivoFeatureCopyTest {
     @get:Rule val texts = ChineseTexts()
 
     @Test fun welcomeFilesFollowFeatureFlag() {
-        assertEquals(BuildConfig.SANDBOX_ENABLED, WelcomeCopy.FEATURES.any { it.title == tr(R.string.welcome_files) })
-        assertEquals("你好,我是 Tadolio", WelcomeCopy.TITLE)
+        assertEquals("你好，我是 Tadolio", tr(R.string.t60_welcome_title))
     }
 
     @Test fun chineseBrandUsesUniversalName() {

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="key_add_backup">예비 Key 추가</string>
+    <string name="key_remove">삭제</string>
+    <string name="key_move_up">위로</string>
+    <string name="key_available">사용 가능</string>
+    <string name="key_invalid">무효</string>
+    <string name="key_exhausted">할당량 소진</string>
+    <string name="key_rate_limited">요청 제한 중</string>
+    <string name="key_active">%1$d번째 Key 사용 중</string>
+    <string name="keys_all_invalid">%1$d개 Key가 모두 무효입니다</string>
+    <string name="keys_all_exhausted">모든 Key의 할당량이 소진되었습니다</string>
+    <string name="keys_all_limited">모든 Key가 요청 제한 중입니다</string>
+    <string name="keys_all_unavailable">모든 Key를 확인해 주세요</string>
+    <string name="model_backup">예비 모델</string>
+    <string name="model_backup_none">없음</string>
+    <string name="model_backup_notice">%1$s Key를 사용할 수 없어 예비 모델 %2$s(으)로 전환했습니다.</string>
+</resources>

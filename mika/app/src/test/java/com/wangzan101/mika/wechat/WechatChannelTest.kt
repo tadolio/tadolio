@@ -56,9 +56,7 @@ class WechatChannelTest {
         assertTrue(received.isEmpty())
         assertEquals(1, store.pending().size)
         assertTrue(WechatTaskPolicy.allowed(false))
-        assertTrue(WechatTaskPolicy.allowed(true, hybrid = true))
-        assertTrue(WechatTaskPolicy.allowed(false, hybrid = true))
-        assertEquals(false, WechatTaskPolicy.allowed(true, hybrid = false))
+        assertEquals(false, WechatTaskPolicy.allowed(true))
     }
 
     @Test fun communityBlocksPendingImagesAndImageExportBeforeReadingFiles() = runTest {

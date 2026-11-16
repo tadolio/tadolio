@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="key_add_backup">Добавить запасной Key</string>
+    <string name="key_remove">Удалить</string>
+    <string name="key_move_up">Вверх</string>
+    <string name="key_available">Доступен</string>
+    <string name="key_invalid">Недействителен</string>
+    <string name="key_exhausted">Квота исчерпана</string>
+    <string name="key_rate_limited">Ограничение запросов</string>
+    <string name="key_active">Используется Key %1$d</string>
+    <string name="keys_all_invalid">Все %1$d Key недействительны</string>
+    <string name="keys_all_exhausted">Квота всех Key исчерпана</string>
+    <string name="keys_all_limited">Все Key ограничены по частоте запросов</string>
+    <string name="keys_all_unavailable">Все Key требуют внимания</string>
+    <string name="model_backup">Запасная модель</string>
+    <string name="model_backup_none">Нет</string>
+    <string name="model_backup_notice">Key платформы %1$s недоступны. Включена запасная модель %2$s.</string>
+</resources>

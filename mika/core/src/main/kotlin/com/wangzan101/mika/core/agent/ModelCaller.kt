@@ -1,8 +1,6 @@
 // Modified by Tadolio contributors (2026)
 package com.wangzan101.mika.core.agent
 
-import com.wangzan101.mika.core.access.HybridRequestChanged
-import com.wangzan101.mika.core.access.HybridModel
 import com.wangzan101.mika.core.trace.RunTrace
 import com.wangzan101.mika.core.action.ConfirmDecision
 import com.wangzan101.mika.core.model.ChatModel
@@ -52,7 +50,6 @@ internal class ModelCaller(
         compressors.getOrPut(m) { ContextCompressor(tools.index, structured = flags.structuredCompaction,
             diffScreens = tools.inlineScreen, triggerOverride = m.capabilities.compactionTriggerTokens) }
     private val compactions = java.util.IdentityHashMap<ChatModel, CompactionState>()
-    private val promotedModels: MutableSet<ChatModel> = java.util.Collections.newSetFromMap(java.util.IdentityHashMap())
     /** 本任务里已为重试等过的时间(对着 [RetryPolicy.taskWaitBudgetMs])。 */
     private var taskRetryWaitMs = 0L
 
@@ -75,7 +72,6 @@ internal class ModelCaller(
         communityMessages.clear()
         systemPrompt = prompt
         compactions.clear()
-        promotedModels.clear()
         taskRetryWaitMs = 0
         compressors.values.forEach { it.forget() }
         lightReplies.clear()
@@ -110,16 +106,14 @@ internal class ModelCaller(
     suspend fun routed(
         history: List<Message>, specs: List<ToolSpec>, track: StepTrack, step: Int, restarted: (Long) -> Unit,
         onText: ((String) -> Unit)? = null,
-        promotedOffer: (suspend () -> List<ToolSpec>)? = null,
     ): Pair<ModelReply, ChatModel> {
-        val r = router?.takeIf { routing } ?: return ask(history, specs, step, onText = onText, promotedOffer = promotedOffer) to model
+        val r = router?.takeIf { routing } ?: return ask(history, specs, step, onText = onText) to model
         val picked = r.pick(track.context(step, history.any { m -> m.parts.any { it is Part.Image } }))
-        if (!r.isLight(picked)) return ask(history, specs, step, onText = onText, promotedOffer = promotedOffer) to model
+        if (!r.isLight(picked)) return ask(history, specs, step, onText = onText) to model
         // 轻量模型的上下文可能更小:它报超长、它那次折叠多少,都不连累主模型(压缩状态按模型分开记)
         val asked = now()
         val light = try {
-            preflight(history, specs, picked)
-            complete(viewFor(history, picked), offerAfterPreflight(specs, picked, promotedOffer), picked, RetryPolicy.NONE, step, onText, promotedOffer)
+            complete(viewFor(history, picked), specs, picked, RetryPolicy.NONE, step, onText)
         } catch (e: CancellationException) {
             throw e
         } catch (e: ModelError.TaskBudgetExceeded) {
@@ -145,47 +139,23 @@ internal class ModelCaller(
         emit(RunEvent.State(now(), "light_to_main", first?.name ?: if (light == null) "light_error" else "no_tool"))
         onText?.invoke("")
         restarted(now())
-        return ask(history, specs, step, onText = onText, promotedOffer = promotedOffer) to model
+        return ask(history, specs, step, onText = onText) to model
     }
 
     private val communityMessages = com.wangzan101.mika.core.access.CommunityMessages {
         emit(RunEvent.State(now(), "community_sensitive_redacted", com.wangzan101.mika.core.access.CommunitySensitive.NOTICE))
     }
-    private fun outgoing(messages: List<Message>, using: ChatModel): List<Message> =
-        if (using is HybridModel || !tools.community) messages else communityMessages.outgoing(messages)
-
-    private suspend fun preflight(history: List<Message>, specs: List<ToolSpec>, using: ChatModel) {
-        // A light/explicit auxiliary caller must share the main run's irreversible routing state.
-        if (model is HybridModel) require(using is HybridModel && using.compute === model.compute) {
-            "hybrid_requires_shared_model_state"
-        }
-        (using as? HybridModel)?.let { hybrid ->
-            hybrid.preflight(systemPrompt, history, specs)
-            if (hybrid.compute.upgrade != null && promotedModels.add(using)) {
-                // Rebuild the Own view from full local history, not a cached community fold.
-                compressors.remove(using)?.forget()
-                compactions.remove(using)
-                anchors.clear()
-                lastOverhead.remove(using)
-            }
-        }
-    }
+    private fun outgoing(messages: List<Message>): List<Message> =
+        if (!tools.community) messages else communityMessages.outgoing(messages)
 
     private fun needsMain(call: Part.ToolCall): Boolean =
         ModelRouter.mainOnly(call.name, tools.verb(call.name)) ||
             (!autonomous && ConfirmDecision.mayBeIrreversible(tools, call.name, parseArgs(call.argsJson)))
 
     /** 问 [using](默认主模型):发出的是给它看的那份历史([viewFor])压缩后的副本。 */
-    suspend fun ask(history: List<Message>, specs: List<ToolSpec>, step: Int, using: ChatModel = model, onText: ((String) -> Unit)? = null,
-        promotedOffer: (suspend () -> List<ToolSpec>)? = null): ModelReply {
-        preflight(history, specs, using)
-        val offer = offerAfterPreflight(specs, using, promotedOffer)
-        return complete(viewFor(history, using), offer, using, retry, step, onText, promotedOffer)
+    suspend fun ask(history: List<Message>, specs: List<ToolSpec>, step: Int, using: ChatModel = model, onText: ((String) -> Unit)? = null): ModelReply {
+        return complete(viewFor(history, using), specs, using, retry, step, onText)
     }
-
-    /** Rebuild declarations only after trusted promotion. The caller retains per-turn restrictions. */
-    private suspend fun offerAfterPreflight(specs: List<ToolSpec>, using: ChatModel, promotedOffer: (suspend () -> List<ToolSpec>)?): List<ToolSpec> =
-        if (using is HybridModel && using in promotedModels) promotedOffer?.invoke() ?: specs else specs
 
     /**
      * 发给 [to] 的历史:别的模型给出的回复去掉思考内容和调用上的私有数据(这些只能原样回给产生它的那个模型)。
@@ -208,11 +178,10 @@ internal class ModelCaller(
     }
 
     private suspend fun complete(history: List<Message>, specs: List<ToolSpec>, using: ChatModel, policy: RetryPolicy, step: Int,
-        onText: ((String) -> Unit)? = null, promotedOffer: (suspend () -> List<ToolSpec>)? = null): ModelReply {
+        onText: ((String) -> Unit)? = null): ModelReply {
         var retries = 0
         lastRetryWaitMs = 0
         val began = now()
-        val preparedOwn = using in promotedModels
         val overhead = TokenEstimate.of(systemPrompt) + specs.sumOf { TokenEstimate.of(it.name + it.description + it.parametersJsonSchema) }
         val contextTokens = using.capabilities.contextTokens
         val compressor = compressorFor(using)
@@ -235,14 +204,9 @@ internal class ModelCaller(
                 if (tools.inlineScreen) tools.setVisibleObservations(visibleReads(sent.messages))
                 // 这一次之前花掉的(失败的请求、退避)都算重试等待
                 lastRetryWaitMs = now() - began
-                suspend fun send(): ModelReply = if (using is HybridModel)
-                    using.completePrepared(systemPrompt, sent.messages, specs, preparedOwn).also { result ->
-                        result.parts.filterIsInstance<Part.Text>().joinToString("") { it.text }
-                            .takeIf(String::isNotEmpty)?.let { onText?.invoke(it) }
-                    }
-                    else if (onText == null) using.complete(systemPrompt, outgoing(sent.messages, using), specs)
-                    else if (using is StreamingChatModel) using.completeStreaming(systemPrompt, outgoing(sent.messages, using), specs, onText)
-                    else using.complete(systemPrompt, outgoing(sent.messages, using), specs).also { result ->
+                suspend fun send(): ModelReply = if (onText == null) using.complete(systemPrompt, outgoing(sent.messages), specs)
+                    else if (using is StreamingChatModel) using.completeStreaming(systemPrompt, outgoing(sent.messages), specs, onText)
+                    else using.complete(systemPrompt, outgoing(sent.messages), specs).also { result ->
                         result.parts.filterIsInstance<Part.Text>().joinToString("") { it.text }
                             .takeIf(String::isNotEmpty)?.let(onText)
                     }
@@ -259,10 +223,6 @@ internal class ModelCaller(
                     lastOverhead[using] = overhead
                     r.usage?.let { compressor.calibrate(sent.estimate + overhead, it.inputTokens) }
                 }
-            } catch (e: HybridRequestChanged) {
-                // No transport occurred. Rebuild from the uncompressed local view under Own limits.
-                preflight(history, specs, using)
-                return complete(history, offerAfterPreflight(specs, using, promotedOffer), using, policy, step, onText, promotedOffer)
             } catch (e: ModelError.ContextTooLong) {
                 onText?.invoke("")
                 val (after, again) = CompactionPolicy.overflow(compaction, overflowRetried) {

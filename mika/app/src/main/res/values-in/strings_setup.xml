@@ -1,23 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
 <resources>
-    <string name="welcome_title">Hai, saya Tadolio</string>
-    <string name="welcome_lead">Asisten pribadi di ponsel Anda.\nBilang saja apa yang harus dikerjakan, dan saya selesaikan di latar belakang.</string>
-    <string name="welcome_note">Sebelum mulai: atur model dan aktifkan kontrol ponsel. Sekitar 3 menit.</string>
-    <string name="welcome_start">Mulai</string>
-    <string name="welcome_apps">Pakai aplikasi</string>
-    <string name="welcome_apps_body">Mengetuk, mengetik, dan menggulir di layar latar belakang, sehingga layar Anda tetap bebas</string>
-    <string name="welcome_web">Jelajahi web</string>
-    <string name="welcome_web_body">Browser bawaan untuk membaca halaman, membandingkan harga, dan mencari informasi</string>
-    <string name="welcome_files">Olah berkas</string>
-    <string name="welcome_files_body">Spreadsheet, PDF, dan data, dihitung dan dirapikan di lingkungan terpisah</string>
-    <string name="welcome_schedule">Kerjakan sesuai jadwal</string>
-    <string name="welcome_schedule_body">Harian, mingguan, atau otomatis saat suatu kondisi terpenuhi</string>
     <string name="back">Kembali</string>
     <string name="hide">Sembunyikan</string>
     <string name="show">Tampilkan</string>
     <string name="model_setup_title">Atur model</string>
-    <string name="model_setup_lead">Tadolio berpikir dengan layanan model Anda sendiri. Hubungkan penyedia dulu, lalu pilih model untuk setiap tugas.</string>
-    <string name="model_setup_onboarding_note">Hanya model utama yang wajib; dua lainnya bisa menyusul.</string>
     <string name="model_kind">Jenis API</string>
     <string name="model_base_url">URL dasar</string>
     <string name="model_provider_name">Nama</string>

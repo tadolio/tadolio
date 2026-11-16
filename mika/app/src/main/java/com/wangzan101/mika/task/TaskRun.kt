@@ -190,21 +190,13 @@ class TaskRun(
     private val communityModel by communityModelDelegate
     val computeMode: com.wangzan101.mika.core.run.ComputeMode = if (communityConfig != null)
         com.wangzan101.mika.core.run.ComputeMode.Community else com.wangzan101.mika.settings.CommunitySimulation.mode(service)
-    // Only locally persisted selection can opt this production task into Hybrid.
-    private val hybridSelected = communityConfig != null &&
-        env.lightModelFactory === TaskEnvironment.defaultLightModelFactory &&
-        env.visionModelFactory === TaskEnvironment.defaultVisionModelFactory &&
-        ProviderStore.get(service).hybridSelected.value
-    private val pureCommunity get() = community && !hybridSelected
     private val elderMode = com.wangzan101.mika.family.ElderStore.get(service).enabled.value
     private val familyClient = if (com.wangzan101.mika.about.HivoConfig.communityEnabled) com.wangzan101.mika.family.FamilyClient.get(service) else null
     private val familyPolicy = familyClient?.policy()
     private val familyPair = if (familyPolicy?.active == true) familyClient?.elderPair() else null
     private var elderOperations = 0
     private fun elderModel(model: ChatModel): ChatModel = if (!elderMode) model else com.wangzan101.mika.family.ElderModel(model, service.getString(R.string.elder_prompt))
-    private val community get() = computeMode == com.wangzan101.mika.core.run.ComputeMode.Community &&
-        selectedModels?.hybridBoundary?.community != false
-    @Volatile private var communityBlocked = false
+    private val community get() = computeMode == com.wangzan101.mika.core.run.ComputeMode.Community
     @Volatile private var communitySensitiveRedacted = false
     internal var provenance = RunProvenance()
     internal var triggerWindowKey: String? = null
@@ -261,7 +253,6 @@ class TaskRun(
     private var pointsStartedAt = System.currentTimeMillis()
     private var pointsEndedAt: Long? = null
     private var pointsSource: String? = null
-    private var hybridOwnSource: String? = null
     private val inbox = RunInbox()
 
     private val _runId = Mirrored<String?>(null, service.taskState._runId)
@@ -317,8 +308,8 @@ class TaskRun(
             tr(R.string.community_cloud_miner, it)
         } ?: tr(R.string.community_local_source) else ""
         val visible = if (community && s is TaskState.Running) s.copy(
-            note = source + " · " + (if (communitySensitiveRedacted) com.wangzan101.mika.core.access.CommunitySensitive.NOTICE else if (communityBlocked) tr(R.string.community_privacy_app_blocked) else s.note.removePrefix("社区节点模式 · ").removePrefix(tr(R.string.community_local_source) + " · ").removePrefix(source + " · ")),
-            narration = if (communityBlocked) tr(R.string.community_privacy_app_blocked) else s.narration) else s
+            note = source + " · " + (if (communitySensitiveRedacted) com.wangzan101.mika.core.access.CommunitySensitive.NOTICE else s.note.removePrefix("社区节点模式 · ").removePrefix(tr(R.string.community_local_source) + " · ").removePrefix(source + " · ")),
+            narration = s.narration) else s
         _tagged.value = conversationId to visible
         _state.value = visible
     }
@@ -505,10 +496,6 @@ class TaskRun(
     private val liveEvents = object : RunSink {
         override fun event(e: RunEvent) {
             when (e) {
-                is RunEvent.ToolResult -> if (community && e.resultJson.contains(com.wangzan101.mika.core.access.CommunityPolicy.ERROR)) {
-                    communityBlocked = true
-                    publish(_state.value)
-                }
                 is RunEvent.State -> if (community && e.name == "community_sensitive_redacted") {
                     communitySensitiveRedacted = true
                     publish(_state.value)
@@ -624,44 +611,37 @@ class TaskRun(
             wakeHandoff?.release()
             wakeHandoff = null
             // Resolve trusted production roles before any factory can change settings.
-            val hybridFrozen = if (hybridSelected) ProviderStore.get(service).freezeHybridModels(session).also {
-                check(it.communityConfig == communityConfig) { "hybrid_community_selection_changed" }
-            } else null
+            var backupNoticeRecord: RunSink = RunSink.NONE
+            val backupNotice: (String, String) -> Unit = { provider, model ->
+                val event = RunEvent.Activity(System.currentTimeMillis(), currentStep, "notice", tr(R.string.model_backup_notice, provider, model), source = "system")
+                backupNoticeRecord.event(event)
+                liveEvents.event(event)
+            }
             val frozen = if (communityConfig == null && env.modelFactory === TaskEnvironment.defaultModelFactory &&
                 env.lightModelFactory === TaskEnvironment.defaultLightModelFactory &&
                 env.visionModelFactory === TaskEnvironment.defaultVisionModelFactory && !community) {
-                ProviderStore.get(service).freezeModels(session)
+                ProviderStore.get(service).freezeModels(session, backupNotice)
             } else null
             if (frozen != null && com.wangzan101.mika.about.HivoConfig.pointsEnabled) {
                 pointsSource = frozen.mainConfig?.kind?.let(com.wangzan101.mika.points.PointsMapping::source)
             }
-            val models = (if (hybridFrozen != null) {
-                TaskModels.fromFrozen(hybridFrozen.own, ::elderModel, communityModel,
-                    remote = provenance.origin == RunOrigin.Mcp || provenance.origin == RunOrigin.Channel,
-                    step = { currentStep }, appAccess = (service.application as MikaApp).appAccess)
-            } else if (frozen != null) TaskModels.fromFrozen(frozen, ::elderModel) else {
+            val models = (if (frozen != null) TaskModels.fromFrozen(frozen, ::elderModel) else {
                 val rawModel = (if (communityConfig != null) communityModel else env.modelFactory(service, session))
                     ?: return TaskState.Failed(tr(R.string.fail_no_main_model), FailKind.Environment)
                 val selectedLight = if (communityConfig != null) communityModel else env.lightModelFactory(service, session)
                 TaskModels(elderModel(rawModel), selectedLight,
-                    vision = if (community) null else env.visionModelFactory(service, session),
+                    vision = if (communityConfig != null) communityModel else env.visionModelFactory(service, session),
                     distinctLight = !community && selectedLight != null &&
                         !ProviderStore.get(service).roles.value.sameModel(ModelRole.Main, ModelRole.Light),
                     community = community)
             })?.also { selectedModels = it }
                 ?: return TaskState.Failed(tr(R.string.fail_no_main_model), FailKind.Environment)
-            if (hybridFrozen != null) hybridOwnSource = hybridFrozen.own.mainConfig?.kind
-                ?.let(com.wangzan101.mika.points.PointsMapping::source)
             val model = models.main
-            if (com.wangzan101.mika.core.agent.AttachmentContent.hasImages(goal)) {
-                models.hybridBoundary?.requireOwn(com.wangzan101.mika.core.access.HybridReason.Image)
-            }
             if (com.wangzan101.mika.core.agent.AttachmentContent.hasImages(goal) && !model.capabilities.vision) {
                 return TaskState.Failed(tr(R.string.t42_no_vision), FailKind.Environment)
             }
             // 用户在浏览器页上对着一页问的:那一页借给这个任务当当前网页标签(见 PageLoans);开跑时页面还开着才借得到
-            val pageLoan = if (!pureCommunity && provenance.origin == RunOrigin.Ui) withContext(Dispatchers.Main) { UserBrowser.existing()?.claim(conversationId, key) } else null
-            if (pageLoan != null) models.hybridBoundary?.requireOwn()
+            val pageLoan = if (!community && provenance.origin == RunOrigin.Ui) withContext(Dispatchers.Main) { UserBrowser.existing()?.claim(conversationId, key) } else null
             val light = models.light
             // 同一模型分成两个实例并不会更便宜或更快;禁止它给批量/收尾工具反而只会增加改派和逐步操作。
             // 这只跳过逐步分工,轻量角色仍可用于意图判断、标题和收尾等辅助调用。
@@ -670,9 +650,9 @@ class TaskRun(
 
             val (knowledge, skills) = withContext(Dispatchers.IO) {
                 // 用户对某个 App/站点的补充放在私有目录 personal/apps、personal/sites 下
-                val userNotes = if (pureCommunity) emptyMap() else KnowledgeStore.loadNotes(File(service.filesDir, "personal"))
+                val userNotes = if (community) emptyMap() else KnowledgeStore.loadNotes(File(service.filesDir, "personal"))
                 // 自学的 App 知识里改名前写下的工具名换成现在的
-                val learnedNotes = if (pureCommunity) emptyMap() else legacyNames().let { legacy -> memoryRuntime.appKnowledge().notes().mapValues { it.value.copy(text = legacy.rewrite(it.value.text)) } }
+                val learnedNotes = if (community) emptyMap() else legacyNames().let { legacy -> memoryRuntime.appKnowledge().notes().mapValues { it.value.copy(text = legacy.rewrite(it.value.text)) } }
                 KnowledgeStore(KnowledgeStore.loadBundled(), userNotes, learnedNotes) to GuideCatalog.loadBundled()
             }
             val appAccess = (service.application as MikaApp).appAccess
@@ -780,8 +760,7 @@ class TaskRun(
                     // 启动前就静上,开头几秒也没声;启动被拒就还原
                     beforeOpen = muter::beforeOpen,
                     notOpened = muter::notOpened,
-                    appAccess = appAccess, computeMode = computeMode,
-                    hybridBoundary = models.hybridBoundary,
+                    appAccess = appAccess,
                 )
                 val side0 = PhoneSide(shell, a11y, screen, agentDisplay, muter)
                 phone = side0
@@ -853,9 +832,9 @@ class TaskRun(
                     }
                 }.onFailure { Log.w(TAG, "run record unavailable, running without it", it) }.getOrNull()
             } ?: RunSink.NONE
+            backupNoticeRecord = recordSink
             val sink = object : RunSink {
                 override fun event(e: RunEvent) {
-                    recordHybridUpgrade(recordSink)
                     recordSink.event(e)
                 }
                 override fun media(mediaId: Int, png: ByteArray) = recordSink.media(mediaId, png)
@@ -864,10 +843,10 @@ class TaskRun(
                 resources.acquire(Dispatchers.IO, traces.store::finish) { traces.start(traceTicket, run.runId) }
             }
             // 装了哪些 App:每个任务读一次,读不到就当没有;参考资料用
-            val apps = try { phoneScreen.listApps().let { list -> if (pureCommunity) list.filter { com.wangzan101.mika.core.access.CommunityPolicy.allowed(it.first, appAccess.current()) } else list } } catch (e: CancellationException) { throw e } catch (e: Exception) { emptyList() }
-            val speed = FeatureFlags.get(service).speedFlags().let { if (pureCommunity || notificationAppName != null) it.copy(replay = false, lightSteps = false, adaptiveVision = false) else it }
+            val apps = try { phoneScreen.listApps() } catch (e: CancellationException) { throw e } catch (e: Exception) { emptyList() }
+            val speed = FeatureFlags.get(service).speedFlags().let { if (community || notificationAppName != null) it.copy(replay = false, lightSteps = false, adaptiveVision = false) else it }
             // 记忆与个人技能:进程内同一份;总开关关着就不给记忆(不检索、不注入、不提取、没有记忆工具)
-            val switches = if (pureCommunity) MemorySwitches(false, false, false) else memoryRuntime.settings().switches.value.let { sw ->
+            val switches = if (community) MemorySwitches(false, false, false) else memoryRuntime.settings().switches.value.let { sw ->
                 sw.copy(learnSkills = env.evalHooks.learnSkills ?: sw.learnSkills, autoRemember = env.evalHooks.rememberMemory ?: sw.autoRemember)
             }
             val memory = if (switches.useMemory) withContext(Dispatchers.IO) { memoryRuntime.store() } else null
@@ -878,7 +857,7 @@ class TaskRun(
             // 用户本次说的话:记忆的引文、按用户要求写下技能的引文都据此核对(只在内存里,任务开始清空)
             val utterances = UserUtterances()
             // 改名前沉淀的个人技能:里面的旧工具名载入时换成现在的
-            val catalog = if (pureCommunity) skills else GuideCatalog.withPersonal(skills, memoryRuntime.skills(), legacyNames()::rewrite)
+            val catalog = if (community) skills else GuideCatalog.withPersonal(skills, memoryRuntime.skills(), legacyNames()::rewrite)
             // 内置浏览器:每个任务自己的后台网页显示、标签池和脚本引擎,第一次打开网址时才建(只用手机的任务不建);
             // 系统里没有 WebView 时不提供网页工具
             val webInstalled = runCatching { WebViewCompat.getCurrentWebViewPackage(service) != null && (!community || androidx.webkit.WebViewFeature.isFeatureSupported(androidx.webkit.WebViewFeature.MULTI_PROFILE)) }.getOrDefault(false)
@@ -932,14 +911,14 @@ class TaskRun(
                 }
             }
             // 这个对话里用户发来的屏幕(跟着对话存在工作区里)
-            val userScreens = if (pureCommunity) null else (service.application as MikaApp).userScreens.source(conversationId)
+            val userScreens = (service.application as MikaApp).userScreens.source(conversationId)
             val stepLimit = if (conditionCheck) null else FeatureFlags.get(service).taskStepLimit()
             val runSpec = RunSpec(RunId(key), goal, conversationId,
-                if (pureCommunity) emptyList() else priorTurns,
+                if (community) emptyList() else priorTurns,
                 provenance, if (conditionCheck) setOf("web", "sandbox") else null, readOnly = conditionCheck || notificationAppName != null,
                 stepBudget = stepLimit, tokenBudget = tokenBudget, computeMode = computeMode, allowReadOnlyNavigation = notificationAppName == null)
             // 外部 MCP server 只在主任务接;子任务/条件检查/评测不接,避免绕过父任务审批、影响评测可复现
-            if (!conditionCheck && notificationAppName == null && !pureCommunity) {
+            if (!conditionCheck && notificationAppName == null && !community) {
                 // 连上的当场归 resources:收尾(含取消、失败、连到一半被停)关作用域时一起关,stdio server 的进程和沙箱租约跟着放掉
                 mcpConnections = (service.application as MikaApp).mcpServers.connectionsFor(
                     resources,
@@ -957,10 +936,10 @@ class TaskRun(
             }
             val runApproval = approvalControl.start(
                 remote = provenance.origin == RunOrigin.Mcp || provenance.origin == RunOrigin.Channel,
-                community = computeMode == com.wangzan101.mika.core.run.ComputeMode.Community, hybridBoundary = models.hybridBoundary,
+                community = computeMode == com.wangzan101.mika.core.run.ComputeMode.Community,
             ).also { approval = it }
             val effectiveApproval = if (familyPair == null) runApproval else com.wangzan101.mika.family.FamilyRunApproval(familyClient!!, familyPair.id, key, familyPolicy!!, runApproval)
-            val childRunner = if (familyPair == null && !pureCommunity && provenance.origin == RunOrigin.Ui && web != null) ChildAgentRunner(
+            val childRunner = if (familyPair == null && !community && provenance.origin == RunOrigin.Ui && web != null) ChildAgentRunner(
                 create = { childSpec ->
                     val childTools = toolDispatcher(accessedPhone, model.capabilities.vision,
                         web = web, webPacing = { PagePacing.human() }, webPlacePace = { PlacePace.of(catalog.sitePace(it)) },
@@ -968,7 +947,7 @@ class TaskRun(
                         appPacing = { pace.appPacing() }, appPace = { PlacePace.of(catalog.appPace(it)) }, appIdleScroll = { IdleScroll(Random.Default) },
                         sandbox = sandbox, workspace = { conversationId }, runSpec = childSpec,
                         conversationId = conversationId, inlineScreen = speed.inlineScreen,
-                        adaptiveVision = speed.adaptiveVision, hybridBoundary = models.hybridBoundary)
+                        adaptiveVision = speed.adaptiveVision)
                     AgentLoop(model, childTools, SystemPrompt.identity(), maxSteps = childSpec.stepBudget ?: AgentLoop.UNLIMITED_STEPS,
                         // 子任务跟着询问 / 自主;询问时它也过关卡,子任务里花钱的一步一律不做
                         confirmations = runApproval.gate(), approvals = effectiveApproval, autonomous = runApproval.startedAutonomous,
@@ -979,21 +958,21 @@ class TaskRun(
             ).also { children = it } else null
             // 自身端口:只给手机上、有用户的 UI 主任务;子任务、条件检查、定时、渠道、MCP 都没有。
             // 状态只读工具一直给;操作类工具等用户打开「允许 Mika 操作自己的界面」。
-            val selfPort = if (provenance.origin == RunOrigin.Ui && !conditionCheck && !pureCommunity && notificationAppName == null) {
+            val selfPort = if (provenance.origin == RunOrigin.Ui && !conditionCheck && !community && notificationAppName == null) {
                 (service.application as? MikaApp)?.let { app -> com.wangzan101.mika.self.AndroidSelfPort(app, conversationId, key) }
             } else null
-            val tools = toolDispatcher(accessedPhone, (hybridFrozen?.own?.main?.capabilities?.vision ?: model.capabilities.vision) && !pureCommunity, catalog, recordFrames = !pureCommunity, vision = vision?.let { VisionService(it, BitmapImageOps) },
+            val tools = toolDispatcher(accessedPhone, model.capabilities.vision, catalog, recordFrames = true, vision = vision?.let { VisionService(it, BitmapImageOps) },
                 phoneCalls = (service.application as MikaApp).callPort.takeIf {
                     !community && notificationAppName == null && !conditionCheck && (service.application as MikaApp).calls.settings.state.value.enabled
                 },
                 // 设置里允许 Mika 改自己时,才把 settings_list、settings_set 发给模型
-                selfConfig = if (!pureCommunity && FeatureFlags.get(service).selfConfig()) {
+                selfConfig = if (!community && FeatureFlags.get(service).selfConfig()) {
                     com.wangzan101.mika.settings.SelfConfigImpl(FeatureFlags.get(service), service,
                         localTask = provenance.origin == RunOrigin.Ui && familyPair == null && computeMode == com.wangzan101.mika.core.run.ComputeMode.Own)
                 } else null,
                 posts = com.wangzan101.mika.number.NumberClient.get(service).posts,
                 coins = com.wangzan101.mika.number.NumberClient.get(service).coins,
-                number = if (!conditionCheck && notificationAppName == null && !pureCommunity) {
+                number = if (!conditionCheck && notificationAppName == null && !community) {
                     com.wangzan101.mika.number.NumberAgentPort(com.wangzan101.mika.number.NumberClient.get(service))
                 } else null,
                 bindInviter = if (provenance.origin == RunOrigin.Ui && !conditionCheck && notificationAppName == null && familyPair == null) {
@@ -1021,19 +1000,18 @@ class TaskRun(
                 onSandboxPreparing = { sandboxNote(StatusCopy.RUNTIME_PREPARING) },
                 onSandboxScript = { sandboxNote(StatusCopy.sandboxScript(sandboxOnline())) },
                 imageOps = BitmapImageOps, runSpec = runSpec,
-                hybridBoundary = models.hybridBoundary,
                 userScreens = userScreens,
                 scheduleTrigger = if (provenance.origin == RunOrigin.Ui) { trigger -> TriggerRuntime.schedule(service, trigger) } else null,
                 scheduleAdmin = if (provenance.origin == RunOrigin.Ui) LocalScheduleAdmin(service) else null,
                 childHost = childRunner,
                 // 用户要求时写下或改写个人技能(和自学收下的放在同一处,设置里立刻能看到)
-                personalSkills = if (pureCommunity) null else memoryRuntime.skills(),
+                personalSkills = if (community) null else memoryRuntime.skills(),
                 // 这个对话之前几轮的运行记录(只读;history_read 只认 runSpec 里这个对话的轮次)
-                runRecords = if (pureCommunity) null else RunStore(service).reader(),
+                runRecords = if (community) null else RunStore(service).reader(),
                 mcpServers = mcpEndpoints(),
-                webSearch = com.wangzan101.mika.settings.WebSearchSettings.get(service).service().takeIf { !pureCommunity },
+                webSearch = com.wangzan101.mika.settings.WebSearchSettings.get(service).service().takeIf { !community },
                 // 已 root 的手机上用户打开了「允许 Tadolio 执行 root 命令」才登记 root 工具(子任务、条件检查不给)
-                root = phoneServices.shellManager.root.takeIf { !pureCommunity && !conditionCheck && notificationAppName == null && it.commandsAllowed() }
+                root = phoneServices.shellManager.root.takeIf { !community && !conditionCheck && notificationAppName == null && it.commandsAllowed() }
                     ?.let { r -> RootCommands(RootShell::su, r::commandsAllowed) { a -> if (a == null) r.suGone() else r.commandsDenied(a) } },
                 self = selfPort,
                 selfOperate = selfPort?.takeIf { FeatureFlags.get(service).selfOperate() })
@@ -1098,7 +1076,7 @@ class TaskRun(
             loop = agent
             liveFeed = agent.events.subscribe(liveEvents)
             mcpExternalId?.let { mcpEvents = (service.application as MikaApp).remoteTasks.attach(it, agent.events) }
-            kit = LearnKit(switches, memory, utterances, tools, agent, catalog, knowledge, model, light, runStore, agent.flags.replay, if (pureCommunity) emptyList() else priorTurns)
+            kit = LearnKit(switches, memory, utterances, tools, agent, catalog, knowledge, model, light, runStore, agent.flags.replay, if (community) emptyList() else priorTurns)
             suspend fun <T> io(fallback: T, call: () -> T): T =
                 withContext(Dispatchers.IO) { runCatching(call).getOrDefault(fallback) }
             // 接管期间才订阅主屏的无障碍事件:平时没人订阅,服务不复制事件
@@ -1236,7 +1214,6 @@ class TaskRun(
                     }
                     record?.let { r ->
                         apps?.let { r.event(RunEvent.State(System.currentTimeMillis(), "apps_after_task", it.detail)) }
-                        recordHybridUpgrade(r)
                         r.event(tally.event(System.currentTimeMillis()))
                         r.close()
                         if (BuildConfig.DEBUG) runStore?.mirrorToExternal(r.runId)
@@ -1455,14 +1432,13 @@ class TaskRun(
                 pointsEndedAt ?: System.currentTimeMillis(), savedSteps, result, completed = end is TaskState.Succeeded && judged?.outcome == RunOutcome.Done) }
         }
         if (!com.wangzan101.mika.about.HivoConfig.pointsEnabled) return
-        val hybrid = (selectedModels?.main as? com.wangzan101.mika.core.access.HybridModel)?.compute
-        val source = if (hybrid != null && !hybrid.usedCommunity) hybridOwnSource else pointsSource
+        val source = pointsSource
         if (source == null) return // No selected production model (e.g. evaluation fixtures).
         val labels = ToolLabels(knownTools())
         val pointsSteps = synchronized(activityLog) {
             com.wangzan101.mika.ui.activityStepRows(activityLog, labels::label, {
                 ConfirmationNotifier.appLabel(service, it)
-            }).size
+            }, includeNotices = false).size
         }
         val mapping = com.wangzan101.mika.points.PointsMapping
         com.wangzan101.mika.points.PointsClient.get(service).enqueue(com.wangzan101.mika.points.PointsReport(
@@ -1589,16 +1565,6 @@ class TaskRun(
         } finally {
             if (_state.value == waiting) publish(before)
         }
-    }
-
-    private var hybridUpgradeRecorded = false
-
-    @Synchronized
-    private fun recordHybridUpgrade(sink: RunSink) {
-        if (hybridUpgradeRecorded) return
-        val upgrade = (selectedModels?.main as? com.wangzan101.mika.core.access.HybridModel)?.compute?.upgrade ?: return
-        sink.event(RunEvent.State(System.currentTimeMillis(), "hybrid_upgrade", "${upgrade.step}:${upgrade.reason.name}"))
-        hybridUpgradeRecorded = true
     }
 
     private fun publish(state: TaskState) {

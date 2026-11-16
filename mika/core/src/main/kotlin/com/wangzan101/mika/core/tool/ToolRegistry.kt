@@ -12,11 +12,7 @@ internal class ToolRegistry(private val ctx: ToolContext, all: List<AgentTool>, 
     private val admitted: (AgentTool) -> Boolean = { true }) {
     private val declared: Map<String, AgentTool> = all.associateBy { it.name }
     private val initialTools: Map<String, AgentTool> = all.filter { admitted(it) && it.available(ctx) }.associateBy { it.name }
-    private val promotedTools: Map<String, AgentTool> by lazy {
-        all.filter { admitted(it) && it.available(ctx) }.associateBy { it.name }
-    }
-    private val promotedRun: Boolean get() = ctx.config.hybridBoundary != null && !ctx.config.community
-    private val tools: Map<String, AgentTool> get() = if (promotedRun) promotedTools else initialTools
+    private val tools = initialTools
 
     init {
         check(declared.size == all.size) { "duplicate tool names" }
@@ -37,12 +33,7 @@ internal class ToolRegistry(private val ctx: ToolContext, all: List<AgentTool>, 
             ToolGroups.Slot(d.spec(), t.entry?.let { ToolDef(d.name, Prompts.entry(d.name), d.props, d.required).spec() }, groupOf(t))
         }
 
-    // Own and pure Community retain their original single freeze. Hybrid permits exactly one
-    // declaration change on trusted promotion, rather than reacting to arbitrary port changes.
-    private val initial: List<ToolGroups.Slot> by lazy { freeze() }
-    private val promoted: List<ToolGroups.Slot> by lazy { freeze() }
-    private val frozen: List<ToolGroups.Slot> get() =
-        if (promotedRun) promoted else initial
+    private val frozen: List<ToolGroups.Slot> by lazy { freeze() }
 
     /** 本任务提供的全部工具(每组都展开、全文)。 */
     fun definitions(): List<ToolSpec> = frozen.map { it.full }

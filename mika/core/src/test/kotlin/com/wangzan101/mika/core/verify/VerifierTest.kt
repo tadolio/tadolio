@@ -35,21 +35,6 @@ private fun evidence(
 ) = Evidence(freshOf(fresh), shot, ledgerOf(recent), listOf("第1步 phone_launch_app(com.android.settings) 生效"), protected)
 
 class VerifierTest {
-    @Test fun hybridVerifierPromotesBeforeSanitizingEvidenceAndSharesMainState() = runTest {
-        val node = FakeModel(text(PASS))
-        val own = FakeModel(text(PASS), text(PASS))
-        val compute = com.wangzan101.mika.core.access.HybridCompute(true)
-        val main = com.wangzan101.mika.core.access.HybridModel(node, own, compute) { 5 }
-        val verifier = Verifier(own, null).hybrid(main)
-        verifier.verify("weather", CRITERIA, "86%", evidence(fresh = "86%"))
-        verifier.verify("OTP 123456", CRITERIA, "86%", evidence(fresh = "OTP 123456; 86%"))
-        verifier.verify("weather", CRITERIA, "86%", evidence(fresh = "86%"))
-        assertEquals(1, node.requests.size)
-        assertEquals(2, own.requests.size)
-        assertTrue(own.requests.first().toString().contains("123456"))
-        assertEquals(com.wangzan101.mika.core.access.HybridUpgrade(5,
-            com.wangzan101.mika.core.access.HybridReason.SensitiveContent), compute.upgrade)
-    }
 
     @Test fun requestIsFreshAndToolless() = runTest {
         val m = FakeModel(text(PASS))

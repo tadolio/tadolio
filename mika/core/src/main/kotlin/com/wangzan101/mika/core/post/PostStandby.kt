@@ -58,7 +58,7 @@ class PostStandby(
             seen = (state.seen + fresh.map { it.id }).distinct().takeLast(2000)))
     }
 
-    /** Hybrid uses the owner route. Community reviews require explicit host routing. */
+    /** Community reviews require explicit host routing. */
     suspend fun review(
         now: Long,
         enabled: Boolean,

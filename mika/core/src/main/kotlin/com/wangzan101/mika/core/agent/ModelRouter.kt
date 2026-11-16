@@ -23,10 +23,6 @@ data class StepContext(
  * 轻量模型没配、不支持工具调用时恒用主模型。一步出了错误、守卫提示或画面没变,接下来 [TROUBLE_STEPS] 步强制主模型。
  */
 class ModelRouter(private val main: ChatModel, private val light: ChatModel?) {
-    /** Called once at run construction, before any routing history exists. */
-    internal fun hybrid(main: com.wangzan101.mika.core.access.HybridModel): ModelRouter =
-        ModelRouter(main, light?.let(main::auxiliary))
-
     private var forcedMain = 0
     private var disabled = false
 

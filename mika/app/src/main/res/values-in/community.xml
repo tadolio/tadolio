@@ -13,6 +13,5 @@
     <string name="community_cloud_miner">Penambang cloud (%1$s)</string>
     <string name="community_local_source">Mode node komunitas</string>
     <string name="community_cloud_privacy">Sebagian penambang menjalankan model sumber terbuka di cloud. Konten melewati platform tersebut.</string>
-    <string name="community_privacy_app_blocked">Mode komunitas memblokir aplikasi pribadi agar kontennya tidak diterima penambang acak. Gunakan model sendiri untuk tugas ini.</string>
     <string name="community_calls_unavailable">AI calls are unavailable with community compute. Select your own key or account to use calls.</string>
 </resources>

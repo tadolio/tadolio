@@ -568,7 +568,7 @@ private fun NotifyGuide() {
 
 /** 通知没弹出来时的兜底:在 App 里直接填码(找不到配对窗口时连带填端口)。 */
 @Composable
-private fun ManualCode(askPort: Boolean, onSubmit: (String, Int?) -> Unit) {
+internal fun ManualCode(askPort: Boolean, onSubmit: (String, Int?) -> Unit) {
     var open by rememberSaveable { mutableStateOf(false) }
     var code by rememberSaveable { mutableStateOf("") }
     var port by rememberSaveable { mutableStateOf("") }
@@ -694,9 +694,6 @@ fun PhoneSetupLine(onOpen: () -> Unit) {
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Text(stringResource(R.string.setup_conversation_needed), Modifier.weight(1f), fontSize = 13.sp, lineHeight = 18.sp, color = MikaTheme.colors.ink2)
-        Text(
-            stringResource(R.string.setup_conversation_continue), Modifier.clickable(onClick = onOpen).padding(4.dp).testTag("phone-setup-open"),
-            fontSize = 14.sp, fontWeight = FontWeight.SemiBold, color = MikaTheme.colors.accent,
-        )
+        MikaButton(stringResource(R.string.t60_setup), onOpen, Modifier.testTag("phone-setup-open"))
     }
 }

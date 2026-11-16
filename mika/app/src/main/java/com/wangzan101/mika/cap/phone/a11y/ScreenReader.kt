@@ -27,7 +27,6 @@ internal class ScreenRead(
     val windows: List<UiWindowTree> = emptyList(),
     /** 有应用窗口(不管根节点读不读得到)。 */
     val anyAppWindow: Boolean = hasAppWindow,
-    val trustedOwnership: Boolean = true,
 )
 
 /** 从某块屏的窗口里读出元素列表、界面指纹和诊断用的文字。 */
@@ -53,11 +52,8 @@ internal object ScreenReader {
         contentWindows(windows).filter { it.type == AccessibilityWindowInfo.TYPE_APPLICATION }
             .firstNotNullOfOrNull { it.root?.packageName?.toString() }
 
-    fun read(windows: List<AccessibilityWindowInfo>, width: Int, height: Int, community: Boolean = false,
-        ownership: com.wangzan101.mika.core.access.HybridNodeOwnership? = null,
-    ): ScreenRead {
-        require(!community || ownership == null) { "hybrid_requires_raw_reader" }
-        val content = if (community || ownership != null) windows.sortedByDescending { it.layer } else contentWindows(windows)
+    fun read(windows: List<AccessibilityWindowInfo>, width: Int, height: Int): ScreenRead {
+        val content = contentWindows(windows)
         val entries = mutableListOf<NodeEntry>()
         val texts = mutableListOf<String>()
         val seen = HashSet<String>()
@@ -65,21 +61,7 @@ internal object ScreenReader {
         var password = false
         var lastLabel: String? = null
         val rect = Rect()
-        var trustedOwnership = true
-        var expectedWindow = -1
-        var expectedPackage: String? = null
-
-        fun trustedNode(n: AccessibilityNodeInfo): Boolean {
-            val nodeWindowId = n.windowId
-            val nodePackage = n.packageName?.toString()
-            ownership?.observe(expectedWindow, expectedPackage, nodeWindowId, nodePackage)
-            val trusted = com.wangzan101.mika.core.access.CommunityPolicy.ownsNode(
-                expectedWindow, expectedPackage, nodeWindowId, nodePackage)
-            if (!trusted) trustedOwnership = false
-            return ownership != null || trusted
-        }
         fun visit(n: AccessibilityNodeInfo, depth: Int, inList: Boolean): List<UiTreeNode> {
-            if ((community || ownership != null) && !trustedNode(n)) return emptyList()
             if (depth > MAX_DEPTH) return emptyList()
             val visible = n.isVisibleToUser
             val editable = visible && canSetText(n)
@@ -98,8 +80,7 @@ internal object ScreenReader {
                 val usable = rect.width() >= MIN_SIZE && rect.height() >= MIN_SIZE
                 val interactive = n.isClickable || editable || n.isScrollable
                 if (usable && (own != null || interactive)) {
-                    val label = if ((community || ownership != null) && own == null && n.isClickable) descendantLabel(n, ::trustedNode)
-                        else labelOf(n, own)
+                    val label = labelOf(n, own)
                     val role = roleOf(n)
                     if (seen.add("$role|$label|${rect.flattenToString()}")) {
                         val id = "@e${entries.size + 1}"
@@ -143,22 +124,19 @@ internal object ScreenReader {
                 clickable = n.isClickable, editable = editable, scrollable = n.isScrollable,
                 checkable = n.isCheckable, checked = n.isChecked, selected = n.isSelected,
                 enabled = n.isEnabled, focused = n.isFocused, secret = n.isPassword,
-                wheel = if (community || ownership != null) isWheel(n, ::trustedNode) else isWheel(n),
+                wheel = isWheel(n),
                 children = children,
             ))
         }
 
         val trees = content.map { w ->
             val root = w.root
-            expectedWindow = w.id
-            expectedPackage = root?.packageName?.toString()
-            if (community && !com.wangzan101.mika.core.access.CommunityPolicy.allowed(expectedPackage)) trustedOwnership = false
             UiWindowTree(
                 id = w.id,
                 type = when (w.type) {
                     AccessibilityWindowInfo.TYPE_APPLICATION -> "application"
                     AccessibilityWindowInfo.TYPE_SYSTEM -> "system"
-                    else -> if (community) "other(${w.type})" else "other"
+                    else -> "other"
                 },
                 layer = w.layer, title = w.title?.toString(), packageName = root?.packageName?.toString(),
                 active = w.isActive, focused = w.isFocused,
@@ -174,7 +152,6 @@ internal object ScreenReader {
             anyAppWindow = content.any { it.type == AccessibilityWindowInfo.TYPE_APPLICATION },
             topPackage = topPackage(windows),
             windows = trees,
-            trustedOwnership = trustedOwnership,
         )
     }
 
@@ -195,7 +172,7 @@ internal object ScreenReader {
      * 看上去是滚轮选择器:原版的数字滚轮控件,或能滚、里面是几项在正中竖着等距排开的短值(规则见 [WheelMath.looksLikeWheel],
      * 宁可漏认)。有一项读不出字就不算。
      */
-    fun isWheel(n: AccessibilityNodeInfo, trusted: ((AccessibilityNodeInfo) -> Boolean)? = null): Boolean {
+    fun isWheel(n: AccessibilityNodeInfo): Boolean {
         if (n.className?.toString()?.endsWith("NumberPicker") == true) return true
         if (!n.isScrollable || n.childCount !in 3..12) return false
         val box = Rect().also(n::getBoundsInScreen)
@@ -203,10 +180,9 @@ internal object ScreenReader {
         val items = mutableListOf<WheelMath.Item>()
         for (i in 0 until n.childCount) {
             val c = n.getChild(i) ?: continue
-            if (trusted != null && !trusted(c)) return false
             if (!c.isVisibleToUser) continue
             val label = ownLabel(c) ?: c.takeIf { it.childCount == 1 }?.getChild(0)?.let {
-                if (trusted != null && !trusted(it)) null else ownLabel(it)
+                ownLabel(it)
             } ?: return false
             c.getBoundsInScreen(r)
             items += WheelMath.Item(label, r.centerX(), r.centerY())
@@ -316,13 +292,12 @@ internal object ScreenReader {
     }
 
     /** 没名字的可点容器用子节点的文字当名字。 */
-    private fun descendantLabel(n: AccessibilityNodeInfo, trusted: ((AccessibilityNodeInfo) -> Boolean)? = null): String {
+    private fun descendantLabel(n: AccessibilityNodeInfo): String {
         val parts = mutableListOf<String>()
         fun walk(c: AccessibilityNodeInfo, depth: Int) {
             if (depth > 6 || parts.joinToString(" ").length > AGGREGATE_MAX) return
             for (i in 0 until c.childCount) {
                 val child = c.getChild(i) ?: continue
-                if (trusted != null && !trusted(child)) continue
                 if (!child.isVisibleToUser) continue
                 ownLabel(child)?.let { if (it !in parts) parts += it }
                 walk(child, depth + 1)

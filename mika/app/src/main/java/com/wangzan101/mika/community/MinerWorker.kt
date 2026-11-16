@@ -1,6 +1,7 @@
 // Modified by Tadolio contributors (2026)
 package com.wangzan101.mika.community
 
+import com.wangzan101.mika.core.model.ModelHttp
 import android.content.Context
 import com.wangzan101.mika.about.HivoConfig
 import com.wangzan101.mika.family.FamilyClient
@@ -54,7 +55,7 @@ internal class MinerWorker(private val context: Context?, private val store: Min
     }
     fun identity(): JsonObject {
         var cfg=store.read()
-        require(MinerPolicy.validApi(cfg.str("base"),cfg.str("model"),cfg.str("key"),cfg["limit"]?.jsonPrimitive?.longOrNull,cfg["metered"]?.jsonPrimitive?.booleanOrNull==true))
+        require(MinerPolicy.validApi(cfg.str("base"),cfg.str("model"),store.keys(cfg).firstOrNull().orEmpty(),cfg["limit"]?.jsonPrimitive?.longOrNull,cfg["metered"]?.jsonPrimitive?.booleanOrNull==true))
         if(cfg["nodeId"]!=null)return cfg
         val signing=CommunityCrypto.generate();val agreement=CommunityCrypto.generate()
         fun b64(bytes:ByteArray)=Base64.getEncoder().encodeToString(bytes)
@@ -126,15 +127,18 @@ internal class MinerWorker(private val context: Context?, private val store: Min
             check(store.reserve(reservation,limit)){"miner_daily_limit"}
             val body=JsonObject(input.filterKeys{it !in setOf("model","stream","max_tokens","max_completion_tokens","n")}+
                 mapOf("model" to cfg.getValue("model"),"stream" to JsonPrimitive(false),"max_tokens" to JsonPrimitive(maxOutput),"n" to JsonPrimitive(1)))
-            val request=Request.Builder().url(cfg.str("base").trimEnd('/')+"/chat/completions")
-                .header("Authorization","Bearer ${cfg.str("key")}")
-                .post(body.toString().toRequestBody("application/json".toMediaType())).build()
-            val output=http.newCall(request).execute().use {
-                if(it.code==401||it.code==402||it.code==403){store.phase=MinerState.KEY_BAD;store.enabled=false}
-                check(it.isSuccessful){"miner_upstream_failed"}
-                val source=it.body!!.source();check(!source.request(1_400_001)){"miner_output_too_large"}
-                Json.parseToJsonElement(source.readUtf8()).jsonObject
+            val reply=store.upstream(cfg) { apiKey ->
+                val request=Request.Builder().url(cfg.str("base").trimEnd('/')+"/chat/completions")
+                    .header("Authorization","Bearer $apiKey")
+                    .post(body.toString().toRequestBody("application/json".toMediaType())).build()
+                http.newCall(request).execute().use {
+                    val source=it.body!!.source()
+                    check(!source.request(1_400_001)){"miner_output_too_large"}
+                    ModelHttp.Reply(it.code,it.header("Retry-After"),source.readUtf8())
+                }
             }
+            check(reply.ok){"miner_upstream_failed"}
+            val output=Json.parseToJsonElement(reply.body).jsonObject
             val total=output["usage"]?.jsonObject?.get("total_tokens")?.jsonPrimitive?.longOrNull
             if(total!=null)store.reconcile(reservation,total,day)
             output

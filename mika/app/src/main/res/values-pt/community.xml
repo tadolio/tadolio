@@ -13,6 +13,5 @@
     <string name="community_cloud_miner">Minerador na nuvem (%1$s)</string>
     <string name="community_local_source">Modo de nó comunitário</string>
     <string name="community_cloud_privacy">Alguns mineradores executam modelos de código aberto na nuvem. O conteúdo passa por essa plataforma.</string>
-    <string name="community_privacy_app_blocked">O modo comunitário bloqueia apps privados para impedir que o conteúdo chegue a mineradores aleatórios. Use seu próprio modelo nesta tarefa.</string>
     <string name="community_calls_unavailable">AI calls are unavailable with community compute. Select your own key or account to use calls.</string>
 </resources>

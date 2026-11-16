@@ -111,8 +111,6 @@
     <string name="phone_degraded">El control del teléfono no está listo, así que Tadolio no puede usar apps esta vez; la web y los archivos funcionan como siempre.</string>
     <string name="phone_degraded_no_sandbox">El control del teléfono no está listo, así que Tadolio no puede usar apps esta vez; las tareas web funcionan como siempre.</string>
     <string name="phone_channel">Vinculación</string>
-    <string name="phone_notify_enter_title">Introduce el código de vinculación</string>
-    <string name="phone_notify_enter_text">Escribe aquí los 6 dígitos que se ven en pantalla, sin salir de la ventana de vinculación</string>
     <string name="phone_notify_action">Introducir código</string>
     <string name="phone_notify_input">6 dígitos</string>
     <string name="phone_notify_working">Vinculando…</string>
@@ -120,8 +118,6 @@
     <string name="phone_notify_done_text">El control del teléfono está configurado. Ya puedes volver a Tadolio</string>
     <string name="phone_notify_problem">Vuelve a Tadolio para ver cómo solucionarlo</string>
     <string name="phone_notify_window_found">Ventana de vinculación encontrada</string>
-    <string name="phone_notify_retry_code">Código incorrecto o caducado: en la ventana de vinculación, vuelve a tocar “Vincular dispositivo con código de vinculación” para obtener un código nuevo e introdúcelo otra vez</string>
-    <string name="phone_notify_retry_window">La ventana de vinculación se cerró o el código caducó: vuelve a tocar “Vincular dispositivo con código de vinculación” para obtener un código nuevo e introdúcelo otra vez</string>
     <string name="phone_notify_code_invalid">Introduce 6 dígitos e inténtalo de nuevo</string>
     <string name="phone_guide_1">Toca “Vincular dispositivo con código de vinculación”</string>
     <string name="phone_guide_2">La notificación de Tadolio aparece en la parte superior de la pantalla; si no, desliza hacia abajo para abrir el panel de notificaciones</string>

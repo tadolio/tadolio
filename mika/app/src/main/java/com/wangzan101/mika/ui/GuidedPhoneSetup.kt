@@ -4,12 +4,20 @@ package com.wangzan101.mika.ui
 import android.app.KeyguardManager
 import android.content.Intent
 import android.content.pm.ApplicationInfo
-import android.net.Uri
 import android.os.Build
-import android.os.PowerManager
-import android.provider.Settings
 import android.view.Display
 import android.view.accessibility.AccessibilityNodeInfo
+import androidx.compose.foundation.layout.*
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import android.os.SystemClock
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import com.wangzan101.mika.settings.SystemStatusMonitor
+import android.net.ConnectivityManager
+import android.net.NetworkCapabilities
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.*
@@ -33,14 +41,28 @@ internal fun GuidedPhoneSetup(onFix: (Fix) -> Unit, onLegacy: () -> Unit, onComp
     val context = LocalContext.current
     val highlight = remember { SetupHighlightOverlay() }
     val phone = remember { PhoneServices.of(context) }
-    val route = remember { GuidedSetup.route(ScreenAccessibility.instance.value != null, Build.VERSION.SDK_INT) }
+    val monitor = remember { SystemStatusMonitor(context, phone.shellControl) }
+    var pairingSelected by rememberSaveable { mutableStateOf(false) }
+    val route = GuidedSetup.route(ScreenAccessibility.instance.value != null, Build.VERSION.SDK_INT, pairingSelected)
+    var codeIntroDone by rememberSaveable { mutableStateOf(false) }
+    var notificationsSkipped by rememberSaveable { mutableStateOf(false) }
+    var attempted by rememberSaveable { mutableStateOf(false) }
+    var accessibilityTimedOut by rememberSaveable { mutableStateOf(false) }
+    var unblockReturned by rememberSaveable { mutableStateOf(false) }
+    var opened by rememberSaveable { mutableStateOf<GuidedSetup.Step?>(null) }
+    var helperSince by remember { mutableStateOf<Long?>(null) }
+    var wifi by remember { mutableStateOf(true) }
+    var foreground by remember { mutableStateOf(true) }
     var state by remember { mutableStateOf(GuidedSetup.State()) }
     var stalled by remember { mutableStateOf(false) }
     var password by remember { mutableStateOf(false) }
-    var enabled by rememberSaveable { mutableStateOf(false) }
     var retry by remember { mutableIntStateOf(0) }
-    var problems by rememberSaveable { mutableStateOf(false) }
-    val step = GuidedSetup.step(state, route)
+    val step = GuidedSetup.step(state.copy(codeIntroDone = codeIntroDone,
+        notificationsSkipped = notificationsSkipped), route)
+    val permission = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (!pairingSelected) notificationsSkipped = true
+        if (granted && pairingSelected) phone.pairing.begin()
+    }
     val fix = rememberUpdatedState(onFix)
     val settings = remember {
         runCatching { SystemPickers.settingsPackage(context.packageManager)?.takeIf {
@@ -53,11 +75,14 @@ internal fun GuidedPhoneSetup(onFix: (Fix) -> Unit, onLegacy: () -> Unit, onComp
         accessibility = ScreenAccessibility.instance.value != null,
         wireless = runCatching { DeveloperSettings.wirelessDebugging(context.contentResolver) }.getOrDefault(false),
         helper = phone.shellControl.status.value == BuiltinShellStatus.Running,
-        notifications = NotificationManagerCompat.from(context).areNotificationsEnabled(),
-        battery = context.getSystemService(PowerManager::class.java).isIgnoringBatteryOptimizations(context.packageName),
+        notifications = Build.VERSION.SDK_INT < 33 || NotificationManagerCompat.from(context).areNotificationsEnabled(),
+        restricted = attempted && (monitor.restrictedSettings() || accessibilityTimedOut),
+        helperWaitExpired = helperSince?.let { SystemClock.elapsedRealtime() - it >= 10_000 } == true,
     )
     fun openStep(s: GuidedSetup.Step) {
+        opened = s
         when (s) {
+            GuidedSetup.Step.Unrestrict -> fix.value(Fix.OpenAppInfo)
             GuidedSetup.Step.Developer -> fix.value(Fix.OpenAboutPhone)
             GuidedSetup.Step.Accessibility -> {
                 fix.value(Fix.OpenAccessibility)
@@ -66,42 +91,80 @@ internal fun GuidedPhoneSetup(onFix: (Fix) -> Unit, onLegacy: () -> Unit, onComp
             }
             GuidedSetup.Step.Wireless -> fix.value(Fix.OpenWirelessDebugging)
             GuidedSetup.Step.Pair -> { phone.pairing.begin(); fix.value(Fix.OpenWirelessDebugging) }
-            GuidedSetup.Step.Notifications -> fix.value(Fix.AllowNotifications)
-            GuidedSetup.Step.Battery -> runCatching {
-                context.startActivity(Intent(Settings.ACTION_IGNORE_BATTERY_OPTIMIZATION_SETTINGS))
+            GuidedSetup.Step.Notifications -> {
+                if (Build.VERSION.SDK_INT >= 33 && context.checkSelfPermission(android.Manifest.permission.POST_NOTIFICATIONS) != android.content.pm.PackageManager.PERMISSION_GRANTED)
+                    permission.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                else fix.value(Fix.AllowNotifications)
             }
             else -> Unit
         }
+        val toast = when (s) {
+            GuidedSetup.Step.Unrestrict -> R.string.t60_unrestrict_toast
+            GuidedSetup.Step.Developer -> R.string.t60_developer_toast
+            GuidedSetup.Step.Wireless -> R.string.t60_wireless_toast
+            GuidedSetup.Step.Pair -> R.string.t60_pair_toast
+            else -> null
+        }
+        toast?.let { android.widget.Toast.makeText(context, it, android.widget.Toast.LENGTH_LONG).show() }
+    }
+    LifecycleEventEffect(Lifecycle.Event.ON_STOP) { foreground = false }
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) {
+        foreground = true
+        if (opened == GuidedSetup.Step.Accessibility) attempted = true
+        val now = sample()
+        if (opened == GuidedSetup.Step.Unrestrict && !now.accessibility) {
+            unblockReturned = now.restricted
+            if (!monitor.restrictedSettings()) accessibilityTimedOut = false
+        }
+        if (opened == GuidedSetup.Step.Notifications && !pairingSelected) notificationsSkipped = true
+        state = sample()
+        opened = null
     }
     // Live polling continues while the user is in Settings; no task/model is created.
     LaunchedEffect(Unit) {
         var hadService = ScreenAccessibility.instance.value != null
         while (true) {
             val now = sample()
+            if (now.helper && helperSince == null) helperSince = SystemClock.elapsedRealtime()
+            if (!now.helper) helperSince = null
+            val connectivity = context.getSystemService(ConnectivityManager::class.java)
+            wifi = connectivity.allNetworks.any { connectivity.getNetworkCapabilities(it)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true }
+            val previous = state
             state = now
+            if (!now.restricted) accessibilityTimedOut = false
+            if (!now.accessibility && opened == GuidedSetup.Step.Accessibility && now.restricted && foreground) state = sample()
+            if (!foreground && opened != null &&
+                ((!previous.developer && now.developer) || (!previous.wireless && now.wireless) ||
+                    (previous.restricted && !now.restricted) || (!previous.helper && now.helper))) {
+                context.startActivity(Intent(context, MainActivity::class.java)
+                    .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP))
+            }
             // Steps do not advance while Settings covers Tadolio, so come back as soon as the switch is on.
-            if (enabled && !hadService && now.accessibility) context.startActivity(Intent(context, MainActivity::class.java)
+            if (!hadService && now.accessibility) context.startActivity(Intent(context, MainActivity::class.java)
                 .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP))
             hadService = now.accessibility
             delay(800)
         }
     }
     DisposableEffect(Unit) { onDispose { highlight.clear(); phone.pairing.end() } }
-    LaunchedEffect(step, enabled, retry) {
+    LaunchedEffect(step, retry, wifi) {
         highlight.clear()
         try {
             stalled = false
             password = false
-            if (!enabled) return@LaunchedEffect
             if (step == GuidedSetup.Step.Done) {
                 context.startActivity(Intent(context, MainActivity::class.java)
                     .addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT or Intent.FLAG_ACTIVITY_SINGLE_TOP))
+                android.widget.Toast.makeText(context, R.string.t60_all_set, android.widget.Toast.LENGTH_SHORT).show()
                 onComplete()
                 return@LaunchedEffect
             }
-            // Give the local spoken explanation time before opening the system page.
-            delay(if (step == GuidedSetup.Step.Accessibility) 7000 else 1800)
-            openStep(step)
+            if (step == GuidedSetup.Step.Helper) return@LaunchedEffect
+            // System pages before Accessibility are opened only by the person's button.
+            val automatic = state.accessibility && step in setOf(GuidedSetup.Step.Developer, GuidedSetup.Step.Wireless, GuidedSetup.Step.Pair)
+            if (automatic && wifi && opened != step) openStep(step)
+            if (!automatic && retry == 0) return@LaunchedEffect
+            if (!wifi && step in setOf(GuidedSetup.Step.Wireless, GuidedSetup.Step.Pair)) return@LaunchedEffect
             var elapsed = 0
             var lastTree: List<GuidedSetup.Node>? = null
             var failedTree: List<GuidedSetup.Node>? = null
@@ -166,6 +229,11 @@ internal fun GuidedPhoneSetup(onFix: (Fix) -> Unit, onLegacy: () -> Unit, onComp
                 }
             }
             stalled = true
+            if (step == GuidedSetup.Step.Accessibility && !state.accessibility) {
+                attempted = true
+                accessibilityTimedOut = true
+                state = sample()
+            }
             // With no service we cannot know whether a credentials confirmation page is covering Settings.
             // Leave the manual page in place rather than interrupting a password entry.
             if (ScreenAccessibility.instance.value != null && !password &&
@@ -183,54 +251,137 @@ internal fun GuidedPhoneSetup(onFix: (Fix) -> Unit, onLegacy: () -> Unit, onComp
             if (state.wireless) add(GuidedSetup.Step.Wireless)
             if (state.helper) { add(GuidedSetup.Step.Pair); add(GuidedSetup.Step.Helper) }
             if (state.notifications) add(GuidedSetup.Step.Notifications)
-            if (state.battery) add(GuidedSetup.Step.Battery)
         }
     }
-    val instruction = stringResource(when (step) {
-        GuidedSetup.Step.Developer -> if (stalled || !state.accessibility) R.string.setup_conversation_developer_manual else R.string.setup_conversation_developer
-        GuidedSetup.Step.Accessibility -> R.string.setup_conversation_accessibility
-        GuidedSetup.Step.Wireless -> if (stalled || !state.accessibility) R.string.setup_conversation_wireless_manual else R.string.setup_conversation_wireless
-        GuidedSetup.Step.Pair -> if (state.accessibility && !stalled) R.string.setup_conversation_pair_auto else R.string.setup_conversation_pair_manual
-        GuidedSetup.Step.Notifications -> R.string.setup_conversation_notifications
-        GuidedSetup.Step.Battery -> R.string.setup_conversation_battery
-        GuidedSetup.Step.Done -> R.string.setup_conversation_done
-        GuidedSetup.Step.Helper -> R.string.setup_conversation_pair_auto
-    })
-    val message = when {
-        // Already paired and only the wireless switch is off (typically after a reboot): one tap, not "a few switches".
-        !enabled && step == GuidedSetup.Step.Wireless && state.accessibility && phone.shellControl.paired ->
-            stringResource(R.string.setup_conversation_intro_wireless_only)
-        !enabled -> stringResource(R.string.setup_conversation_intro)
-        password -> stringResource(R.string.setup_conversation_password)
-        stalled -> stringResource(R.string.setup_conversation_stalled) + "\n" + instruction
-        else -> instruction
+    LaunchedEffect(step, state.notifications) {
+        if (step == GuidedSetup.Step.CodeIntro && state.notifications) phone.pairing.begin()
     }
-    val firstExample = if (step == GuidedSetup.Step.Done) "\n" + ChatCopy.setupSocialPrompt() else ""
-    val shareTitle = stringResource(R.string.setup_conversation_share)
+    val automatic = state.accessibility && !stalled && step in setOf(GuidedSetup.Step.Developer, GuidedSetup.Step.Wireless, GuidedSetup.Step.Pair)
+    val needsWifi = !wifi && step in setOf(GuidedSetup.Step.Wireless, GuidedSetup.Step.Pair)
+    val titleId = when {
+        needsWifi -> R.string.t60_wifi_title
+        password -> R.string.t60_password_title
+        automatic -> R.string.t60_auto_title
+        else -> when (step) {
+            GuidedSetup.Step.Accessibility -> R.string.t60_accessibility_title
+            GuidedSetup.Step.Unrestrict -> R.string.t60_unrestrict_title
+            GuidedSetup.Step.CodeIntro -> R.string.t60_code_title
+            GuidedSetup.Step.Developer -> R.string.t60_developer_title
+            GuidedSetup.Step.Wireless -> R.string.t60_wireless_title
+            GuidedSetup.Step.Pair -> R.string.t60_pair_title
+            GuidedSetup.Step.Helper -> R.string.t60_helper_title
+            else -> R.string.t60_notifications_title
+        }
+    }
+    val bodyId = when {
+        needsWifi -> R.string.t60_wifi_body
+        password -> R.string.t60_password_body
+        automatic -> R.string.t60_auto_body
+        else -> when (step) {
+            GuidedSetup.Step.Accessibility -> R.string.t60_accessibility_body
+            GuidedSetup.Step.Unrestrict -> R.string.t60_unrestrict_body
+            GuidedSetup.Step.CodeIntro -> R.string.t60_code_body
+            GuidedSetup.Step.Developer -> R.string.t60_developer_body
+            GuidedSetup.Step.Wireless -> R.string.t60_wireless_body
+            GuidedSetup.Step.Pair -> R.string.t60_pair_body
+            GuidedSetup.Step.Helper -> R.string.t60_helper_body
+            else -> if (pairingSelected) R.string.t60_notifications_pair_body else R.string.t60_notifications_body
+        }
+    }
+    fun alternate() { pairingSelected = true; retry = 0 }
     fun proceed() {
-        if (!enabled) enabled = true
-        else if (step == GuidedSetup.Step.Done) onComplete()
-        else retry++
+        if (needsWifi) { fix.value(Fix.OpenWifi); return }
+        if (step == GuidedSetup.Step.Unrestrict && unblockReturned) { alternate(); return }
+        if (step == GuidedSetup.Step.CodeIntro) {
+            if (!state.notifications) { codeIntroDone = true; openStep(GuidedSetup.Step.Notifications); return }
+            phone.pairing.begin()
+            codeIntroDone = true
+            return
+        }
+        openStep(step)
+        retry++
     }
-    OnboardingConversation(message + firstExample, onReply = {
-        // Speech selects only local controls; it cannot assert that a permission was granted.
-        if (onboardingAnswer(it) == OnboardingAnswer.Start) proceed()
-    }) {
-        TextButton(onClick = ::proceed) {
-            Text(stringResource(if (step == GuidedSetup.Step.Done && enabled) R.string.setup_conversation_finish else if (enabled) R.string.setup_conversation_retry else R.string.setup_conversation_continue))
-        }
-        if (enabled) TextButton(onClick = {
-            context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain")
-                .putExtra(Intent.EXTRA_TEXT, GuidedSetup.share(step, done)), shareTitle))
-        }) { Text(shareTitle) }
-        if (enabled) TextButton(onClick = { problems = !problems }) {
-            Text(stringResource(R.string.setup_conversation_problems))
-        }
-        if (enabled && problems) TextButton(onClick = { enabled = false; onLegacy() }) {
-            Text(stringResource(R.string.setup_conversation_manual))
-        }
-        TextButton(onClick = { highlight.clear(); onClose() }) { Text(stringResource(R.string.setup_conversation_later)) }
+    if (step == GuidedSetup.Step.Done) return
+    val primaryId = when {
+        needsWifi -> R.string.t60_wifi_open
+        step == GuidedSetup.Step.Unrestrict -> if (unblockReturned) R.string.t60_alternate else R.string.t60_unblock
+        step == GuidedSetup.Step.CodeIntro -> R.string.t60_code_start
+        step == GuidedSetup.Step.Developer -> R.string.t60_about_open
+        step == GuidedSetup.Step.Pair -> R.string.t60_pair_open
+        step == GuidedSetup.Step.Notifications -> R.string.t60_notifications_allow
+        else -> R.string.t60_open
     }
+    val shareTitle = stringResource(R.string.t60_family)
+    val progress = GuidedSetup.share(step, done)
+    val diagnostics = "Android ${Build.VERSION.SDK_INT}\n${Build.MANUFACTURER} ${Build.MODEL}\n" +
+        "restricted=${state.restricted}, wifi=$wifi, helper=${state.helper}, accessibility=${state.accessibility}\n" + progress
+    SetupPage(
+        title = stringResource(titleId), body = stringResource(bodyId),
+        primary = if (automatic || step == GuidedSetup.Step.Helper || password) null else stringResource(primaryId),
+        onPrimary = ::proceed,
+        notice = when (step) {
+            GuidedSetup.Step.Accessibility -> stringResource(R.string.t60_accessibility_notice)
+            GuidedSetup.Step.CodeIntro -> if (state.notifications) stringResource(R.string.t60_code_preview) else null
+            else -> null
+        },
+        steps = when {
+            automatic -> stringResource(R.string.t60_auto_steps)
+            step == GuidedSetup.Step.Accessibility -> stringResource(R.string.t60_accessibility_steps)
+            step == GuidedSetup.Step.Unrestrict -> stringResource(R.string.t60_unrestrict_steps)
+            step == GuidedSetup.Step.Developer -> stringResource(when (Build.MANUFACTURER.lowercase(Locale.ROOT)) {
+                "oppo", "realme", "oneplus" -> R.string.t60_developer_oppo
+                "samsung" -> R.string.t60_developer_samsung
+                else -> R.string.t60_developer_steps
+            })
+            else -> null
+        },
+        content = {
+            val status by phone.shellControl.status.collectAsState()
+            if (step == GuidedSetup.Step.CodeIntro) {
+                val icons = listOf(com.wangzan101.mika.ui.theme.MikaIcons.Phone, com.wangzan101.mika.ui.theme.MikaIcons.Bell, com.wangzan101.mika.ui.theme.MikaIcons.Key)
+                stringResource(R.string.t60_code_steps).split(" → ").forEachIndexed { index, label ->
+                    Row(horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                        androidx.compose.material3.Icon(icons[index], null)
+                        Text(label)
+                    }
+                }
+            }
+            if (step == GuidedSetup.Step.Pair && status is BuiltinShellStatus.Failed) {
+                val failure = (status as BuiltinShellStatus.Failed).reason
+                Text(when (failure) {
+                    com.wangzan101.mika.core.shell.BuiltinShellFailure.PairingWindowClosed -> stringResource(R.string.t60_pair_closed)
+                    com.wangzan101.mika.core.shell.BuiltinShellFailure.WrongCode -> stringResource(R.string.t60_pair_error)
+                    else -> PhoneSetupCopy.failure(failure).body
+                })
+            }
+        },
+        links = {
+            if (step == GuidedSetup.Step.Unrestrict && !unblockReturned) TextButton(::alternate) { Text(stringResource(R.string.t60_alternate)) }
+            TextButton({ onClose() }) { Text(stringResource(R.string.setup_conversation_later)) }
+        },
+        detailsLabel = stringResource(R.string.t60_stuck),
+        details = { close ->
+            Text(stringResource(when (step) {
+                GuidedSetup.Step.Unrestrict -> R.string.t60_unrestrict_explanation
+                GuidedSetup.Step.CodeIntro -> R.string.t60_code_explanation
+                GuidedSetup.Step.Notifications -> R.string.t60_notifications_explanation
+                else -> R.string.t60_help_explanation
+            }))
+            TextButton({ close(); proceed() }) { Text(stringResource(R.string.setup_conversation_retry)) }
+            TextButton({ context.startActivity(Intent.createChooser(Intent(Intent.ACTION_SEND).setType("text/plain")
+                .putExtra(Intent.EXTRA_TEXT, progress), shareTitle)) }) { Text(shareTitle) }
+            TextButton({ close(); onLegacy() }) { Text(stringResource(R.string.t60_usb)) }
+            TextButton({
+                close()
+                context.getSystemService(android.content.ClipboardManager::class.java)
+                    .setPrimaryClip(android.content.ClipData.newPlainText("Tadolio", diagnostics))
+            }) { Text(stringResource(R.string.t60_copy_diagnostics)) }
+            if (step == GuidedSetup.Step.Pair) {
+                Text(stringResource(R.string.t60_manual_code_note))
+                ManualCode(askPort = true) { code, port -> phone.pairing.submit(code, port) }
+            }
+        },
+    )
 }
 
 /** Flatten at most 400 nodes, retaining the nearest clickable ancestor within this settings tree. */

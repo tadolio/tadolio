@@ -29,33 +29,45 @@ class GuidedSetupTest {
         s = s.copy(helper = true)
         assertEquals(Step.Notifications, GuidedSetup.step(s, r))
         s = s.copy(notifications = true)
-        assertEquals(Step.Battery, GuidedSetup.step(s, r))
+        assertEquals(Step.Done, GuidedSetup.step(s, r))
         assertEquals(Step.Done, GuidedSetup.step(s.copy(battery = true), r))
     }
 
-    @Test fun pairingFirstAdvancesOnlyFromObservedState() {
-        val r = Route.PairingFirst
-        var s = State()
+    @Test fun pairingFirstTeachesCodeBeforeOpeningSettingsAndRequiresNotifications() {
+        val r = GuidedSetup.route(false, 36, pairingSelected = true)
+        assertEquals(Route.PairingFirst, r)
+        var s = State(restricted = true)
+        assertEquals(Step.CodeIntro, GuidedSetup.step(s, r))
+        s = s.copy(codeIntroDone = true)
+        assertEquals(Step.Notifications, GuidedSetup.step(s, r))
+        s = s.copy(notifications = true)
         assertEquals(Step.Developer, GuidedSetup.step(s, r))
         s = s.copy(developer = true)
         assertEquals(Step.Wireless, GuidedSetup.step(s, r))
         s = s.copy(wireless = true)
         assertEquals(Step.Pair, GuidedSetup.step(s, r))
         s = s.copy(helper = true)
-        assertEquals(Step.Accessibility, GuidedSetup.step(s, r))
-        s = s.copy(accessibility = true)
-        assertEquals(Step.Notifications, GuidedSetup.step(s, r))
-        s = s.copy(notifications = true)
-        assertEquals(Step.Battery, GuidedSetup.step(s, r))
-        s = s.copy(battery = true)
-        assertEquals(Step.Done, GuidedSetup.step(s, r))
-        assertEquals(Step.Accessibility, GuidedSetup.step(s.copy(accessibility = false), r))
+        assertEquals(Step.Helper, GuidedSetup.step(s, r))
+        assertEquals(Step.Accessibility, GuidedSetup.step(s.copy(helperWaitExpired = true), r))
+        assertEquals(Step.Done, GuidedSetup.step(s.copy(accessibility = true), r))
+    }
+
+    @Test fun blockedAccessibilityOffersUnblockingBeforePairing() {
+        assertEquals(Step.Unrestrict, GuidedSetup.step(State(restricted = true), Route.AccessibilityFirst))
+        assertEquals(Step.Accessibility, GuidedSetup.step(State(), Route.AccessibilityFirst))
+        assertEquals(Step.Developer, GuidedSetup.step(State(accessibility = true, restricted = true), Route.AccessibilityFirst))
+    }
+
+    @Test fun ordinaryPathMayFinishAfterNotificationDenialButPairingStillNeedsIt() {
+        val s = State(helper = true, accessibility = true, notificationsSkipped = true)
+        assertEquals(Step.Done, GuidedSetup.step(s, Route.AccessibilityFirst))
+        assertEquals(Step.Notifications, GuidedSetup.step(State(codeIntroDone = true, notificationsSkipped = true), Route.PairingFirst))
     }
 
     @Test fun runningHelperBypassesDeveloperAndWirelessButNotConsentChecks() {
         val s = State(helper = true, accessibility = true, notifications = true, battery = true)
         assertEquals(Step.Done, GuidedSetup.step(s, Route.PairingFirst))
-        assertEquals(Step.Battery, GuidedSetup.step(s.copy(battery = false), Route.AccessibilityFirst))
+        assertEquals(Step.Done, GuidedSetup.step(s.copy(battery = false), Route.AccessibilityFirst))
         assertEquals(Step.Accessibility, GuidedSetup.step(State(developer = true), Route.AccessibilityFirst))
     }
 
@@ -93,7 +105,7 @@ class GuidedSetupTest {
         val share = GuidedSetup.share(Step.Pair, setOf(Step.Developer, Step.Wireless))
         assertTrue(share.contains("2 Developer ✓"))
         assertTrue(share.contains("4 Pair ✗"))
-        assertEquals(7, share.lines().size)
+        assertEquals(8, share.lines().size)
         assertFalse(share.contains("Done"))
     }
 

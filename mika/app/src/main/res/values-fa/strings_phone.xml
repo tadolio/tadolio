@@ -106,8 +106,6 @@
     <string name="phone_unpair_confirm">لغو جفت‌سازی</string>
     <string name="phone_degraded">کنترل گوشی آماده نیست، بنابراین این بار Tadolio نمی‌تواند از برنامه‌ها استفاده کند؛ وب و فایل‌ها طبق معمول کار می‌کنند.</string>
     <string name="phone_channel">جفت‌سازی</string>
-    <string name="phone_notify_enter_title">کد جفت‌سازی را وارد کنید</string>
-    <string name="phone_notify_enter_text">۶ رقم نمایش‌داده‌شده روی صفحه را اینجا وارد کنید؛ نیازی به خروج از پنجرهٔ جفت‌سازی نیست</string>
     <string name="phone_notify_action">وارد کردن کد</string>
     <string name="phone_notify_input">۶ رقم</string>
     <string name="phone_notify_working">در حال جفت‌سازی…</string>
@@ -115,8 +113,6 @@
     <string name="phone_notify_done_text">کنترل گوشی راه‌اندازی شد. اکنون می‌توانید به Tadolio برگردید</string>
     <string name="phone_notify_problem">برای دیدن راه رفع مشکل به Tadolio برگردید</string>
     <string name="phone_notify_window_found">پنجرهٔ جفت‌سازی پیدا شد</string>
-    <string name="phone_notify_retry_code">کد نادرست یا منقضی است: در پنجرهٔ جفت‌سازی دوباره روی «جفت‌سازی دستگاه با کد جفت‌سازی» بزنید تا کد جدید بگیرید، سپس آن را وارد کنید</string>
-    <string name="phone_notify_retry_window">پنجرهٔ جفت‌سازی بسته شد یا کد منقضی شد: دوباره روی «جفت‌سازی دستگاه با کد جفت‌سازی» بزنید تا کد جدید بگیرید، سپس آن را وارد کنید</string>
     <string name="phone_notify_code_invalid">۶ رقم وارد کنید و دوباره تلاش کنید</string>
     <string name="phone_guide_1">روی «جفت‌سازی دستگاه با کد جفت‌سازی» بزنید</string>
     <string name="phone_guide_2">اعلان Tadolio بالای صفحه ظاهر می‌شود؛ اگر نشد، برای باز کردن فهرست اعلان‌ها از بالا به پایین بکشید</string>

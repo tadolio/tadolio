@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="key_add_backup">افزودن Key پشتیبان</string>
+    <string name="key_remove">حذف</string>
+    <string name="key_move_up">انتقال به بالا</string>
+    <string name="key_available">آماده</string>
+    <string name="key_invalid">نامعتبر</string>
+    <string name="key_exhausted">سهمیه تمام شده</string>
+    <string name="key_rate_limited">محدودیت درخواست</string>
+    <string name="key_active">استفاده از Key شمارهٔ %1$d</string>
+    <string name="keys_all_invalid">هر %1$d کلید نامعتبر است</string>
+    <string name="keys_all_exhausted">سهمیهٔ همهٔ کلیدها تمام شده</string>
+    <string name="keys_all_limited">همهٔ کلیدها محدودیت درخواست دارند</string>
+    <string name="keys_all_unavailable">همهٔ کلیدها نیاز به بررسی دارند</string>
+    <string name="model_backup">مدل پشتیبان</string>
+    <string name="model_backup_none">هیچ‌کدام</string>
+    <string name="model_backup_notice">کلیدهای %1$s در دسترس نیست. به مدل پشتیبان %2$s تغییر کرد.</string>
+</resources>

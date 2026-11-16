@@ -1,7 +1,7 @@
 // Modified by Tadolio contributors (2026)
 package com.wangzan101.mika.core.access
 
-/** 应用分类用于整理列表；用户手动归为金融、社交的 App 同时列入社区隐私清单。名字按界面语言放在 app 侧资源里(values/strings_appaccess.xml)。 */
+/** 应用分类用于整理列表。名字按界面语言放在 app 侧资源里(values/strings_appaccess.xml)。 */
 enum class AppCategory {
     Finance, Social, Game, Shopping, Productivity, Media, Other, Unknown;
 }
@@ -36,8 +36,6 @@ fun interface AppAccessPolicy {
 
 class AppAccessDenied(val code: String, val packageName: String?) : RuntimeException(
     when (code) {
-        "community_sensitive_input" -> "社区模式禁止输入敏感信息；请用自己的模型来做。"
-        "community_app_not_allowed" -> CommunityPolicy.MESSAGE
         "app_blocked" ->
             "Application $packageName is disabled by the user in Application access. Do not retry it, read it again, or try to bypass this with shell or another app. " +
                 "Reconsider the plan: if another app, screen, share target or web route can still achieve the user's goal, continue there. " +
@@ -52,6 +50,6 @@ class AppAccessDenied(val code: String, val packageName: String?) : RuntimeExcep
 ) {
     companion object {
         /** 应用访问拒绝不是普通操作失败:要交给模型,不能当成任务异常。 */
-        fun isAppAccessCode(code: String): Boolean = code == "community_app_not_allowed" || code == "app_blocked" || code.startsWith("app_access_")
+        fun isAppAccessCode(code: String): Boolean = code == "app_blocked" || code.startsWith("app_access_")
     }
 }

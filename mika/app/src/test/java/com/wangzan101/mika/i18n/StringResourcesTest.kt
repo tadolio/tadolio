@@ -36,7 +36,7 @@ class StringResourcesTest {
         "post_cosign_withdraw_retry", "post_cosign_withdraw_rejected")
     private val t56Fallback = setOf("community_miner_link", "elder_home_title", "elder_home_note",
         "elder_enable_title", "elder_enable_body", "elder_enable_confirm", "elder_mode_sub")
-    private val englishFallback = en.strings.keys.filter { it.startsWith("t42_") || it.startsWith("miner_") || it.startsWith("referral_") || it.startsWith("phone_operator_") || it.startsWith("phone_miner_") || it.startsWith("operator_") || it == "hivo_operator_daily_limit" }.toSet() + cosignFallback + t56Fallback
+    private val englishFallback = en.strings.keys.filter { it.startsWith("t60_") || it.startsWith("t42_") || it.startsWith("miner_") || it.startsWith("referral_") || it.startsWith("phone_operator_") || it.startsWith("phone_miner_") || it.startsWith("operator_") || it == "hivo_operator_daily_limit" }.toSet() + cosignFallback + t56Fallback + setOf("setup_conversation_needed", "phone_notify_enter_title", "phone_notify_enter_text", "phone_notify_retry_code", "phone_notify_retry_window")
     private val zh = ResFileTexts.chinese
     private val hant = ResFileTexts.traditional
 

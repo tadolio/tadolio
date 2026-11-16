@@ -1,6 +1,10 @@
 // Modified by Tadolio contributors (2026)
 package com.wangzan101.mika.community
 
+import com.wangzan101.mika.core.model.KeyAvailability
+import com.wangzan101.mika.core.model.KeyFailure
+import com.wangzan101.mika.core.model.keyFailure
+import com.wangzan101.mika.core.model.ModelHttp
 import android.content.Context
 import android.content.SharedPreferences
 import com.wangzan101.mika.settings.KeystoreKeyCipher
@@ -30,6 +34,44 @@ internal class MinerStore(private val file:File, private val cipher:KeyCipher, p
     fun changeLimit(limit: Long) = synchronized(configLock) {
         require(limit in 1..MinerPolicy.MAX_DAILY_TOKENS)
         update { JsonObject(it + ("limit" to JsonPrimitive(limit))) }
+    }
+    private val keyAvailability = KeyAvailability(now = now, day = { java.time.Instant.ofEpochMilli(now()).atZone(java.time.ZoneId.systemDefault()).toLocalDate().toString() }, initial = runCatching {
+        Json.parseToJsonElement(prefs.getString("keyHealth", "{}")!!).jsonObject.mapValues { (_, v) ->
+            val o = v.jsonObject
+            KeyAvailability.State(KeyFailure.valueOf(o.getValue("failure").jsonPrimitive.content), o.getValue("date").jsonPrimitive.content, o.getValue("retryAt").jsonPrimitive.long)
+        }
+    }.getOrDefault(emptyMap()), changed = { states ->
+        val value = buildJsonObject { states.forEach { (id, state) -> putJsonObject(id) {
+            put("failure", state.failure.name); put("date", state.date); put("retryAt", state.retryAt)
+        } } }
+        check(prefs.edit().putString("keyHealth", value.toString()).commit())
+    })
+    private fun keyId(key: String) = java.security.MessageDigest.getInstance("SHA-256").digest(key.toByteArray())
+        .joinToString("") { "%02x".format(it) }
+    fun keys(value: JsonObject = read()): List<String> = (value["keys"] as? JsonArray)?.map { it.jsonPrimitive.content }
+        ?: value["key"]?.jsonPrimitive?.content?.takeIf { it.isNotBlank() }?.let(::listOf).orEmpty()
+    fun keyStatuses(value: JsonObject = read()) = keys(value).map { keyAvailability.status(keyId(it)) }
+    fun resetKeys(values: List<String>) = keyAvailability.reset(values.map(::keyId))
+    fun refreshKeyState() {
+        val statuses = keyStatuses()
+        if (statuses.isNotEmpty() && statuses.none { it == KeyFailure.other }) phase = MinerState.KEY_BAD
+        else if (phase == MinerState.KEY_BAD) phase = MinerState.CONNECTING
+    }
+    val activeKey: Int get() = prefs.getInt("activeKey", 1)
+    fun upstream(cfg: JsonObject, send: (String) -> ModelHttp.Reply): ModelHttp.Reply {
+        val values = keys(cfg)
+        require(values.size in 1..5 && values.all { it.isNotBlank() })
+        for ((index, key) in values.withIndex()) {
+            if (keyAvailability.status(keyId(key)) != KeyFailure.other) continue
+            check(prefs.edit().putInt("activeKey", index + 1).commit())
+            val reply = send(key)
+            if (reply.ok) return reply
+            val failure = keyFailure(reply.status, reply.body)
+            if (failure == KeyFailure.other) return reply
+            keyAvailability.fail(keyId(key), failure)
+        }
+        phase = MinerState.KEY_BAD
+        error("miner_keys_unavailable")
     }
     var phase: MinerState
         get() = runCatching { MinerState.valueOf(prefs.getString("phase", null).orEmpty()) }.getOrDefault(MinerState.CONNECTING)

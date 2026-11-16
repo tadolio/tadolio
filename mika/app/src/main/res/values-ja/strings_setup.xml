@@ -1,23 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
 <resources>
-    <string name="welcome_title">こんにちは、Tadolio です</string>
-    <string name="welcome_lead">スマホの中のあなた専用アシスタントです。\nやってほしいことを伝えてください。バックグラウンドで片付けます。</string>
-    <string name="welcome_note">はじめる前に: モデルを設定して、スマホの操作をオンにします。約 3 分かかります。</string>
-    <string name="welcome_start">はじめる</string>
-    <string name="welcome_apps">アプリを使う</string>
-    <string name="welcome_apps_body">バックグラウンドの画面でタップ、入力、スクロールをするので、あなたの画面は空いたままです</string>
-    <string name="welcome_web">ウェブを見る</string>
-    <string name="welcome_web_body">内蔵ブラウザで、ページを読んだり、価格を比べたり、調べものをしたりします</string>
-    <string name="welcome_files">ファイルを扱う</string>
-    <string name="welcome_files_body">表計算、PDF、データを、別の環境で計算して整理します</string>
-    <string name="welcome_schedule">決まった時間に実行</string>
-    <string name="welcome_schedule_body">毎日、毎週、または条件を満たしたときに自動で実行します</string>
     <string name="back">戻る</string>
     <string name="hide">非表示</string>
     <string name="show">表示</string>
     <string name="model_setup_title">モデルを設定</string>
-    <string name="model_setup_lead">Tadolio は、あなたが用意したモデルのサービスで考えます。まずプロバイダーを接続してから、仕事ごとにモデルを選びます。</string>
-    <string name="model_setup_onboarding_note">必須なのはメインモデルだけです。ほかの 2 つはあとで大丈夫です。</string>
     <string name="model_kind">API の種類</string>
     <string name="model_base_url">ベース URL</string>
     <string name="model_provider_name">名前</string>

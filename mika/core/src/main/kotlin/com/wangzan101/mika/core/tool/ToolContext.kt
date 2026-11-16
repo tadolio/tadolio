@@ -20,35 +20,32 @@ import com.wangzan101.mika.core.run.RunSpec
 
 /** 本任务的配置(模型、技能、记忆、开关);能力各自的端口与开关在能力里。 */
 internal class ToolConfig(
-    visionEnabled: Boolean,
-    skills: GuideCatalog?,
-    recordFrames: Boolean,
-    vision: VisionService?,
+    val visionEnabled: Boolean,
+    val skills: GuideCatalog?,
+    val recordFrames: Boolean,
+    val vision: VisionService?,
     val inlineScreen: Boolean,
     /** 元素优先:可读页面不把截图送给主模型,读不到时自动补图。 */
-    adaptiveVision: Boolean,
-    memory: MemoryStore?,
-    profile: ProfileStore?,
+    val adaptiveVision: Boolean,
+    val memory: MemoryStore?,
+    val profile: ProfileStore?,
     val utterances: UserUtterances?,
     val conversationId: String?,
-    imageOps: ImageOps?,
+    val imageOps: ImageOps?,
     /** 存下一个定时任务,并说明能不能准时(见 [Scheduled])。 */
-    scheduleTrigger: ((TriggerDefinition) -> Scheduled)? = null,
-    scheduleAdmin: ScheduleAdmin? = null,
+    val scheduleTrigger: ((TriggerDefinition) -> Scheduled)? = null,
+    val scheduleAdmin: ScheduleAdmin? = null,
     val runSpec: RunSpec? = null,
-    childHost: ChildRunHost? = null,
+    val childHost: ChildRunHost? = null,
     /** 这个对话里用户发来的屏幕;没有时不提供 view_user_screen。 */
-    userScreens: com.wangzan101.mika.core.userscreen.UserScreenSource? = null,
+    val userScreens: com.wangzan101.mika.core.userscreen.UserScreenSource? = null,
     /** 用户的个人技能;给了(且有技能目录、用户本次说的话)才提供 skill_save。 */
-    personalSkills: com.wangzan101.mika.core.skills.PersonalSkills? = null,
+    val personalSkills: com.wangzan101.mika.core.skills.PersonalSkills? = null,
     /** 改 Mika 自己设置的白名单入口;为空(用户没允许)时不提供 settings_list、settings_set。 */
-    selfConfig: com.wangzan101.mika.core.settings.SelfConfig? = null,
+    val selfConfig: com.wangzan101.mika.core.settings.SelfConfig? = null,
     /** 存下的运行记录;给了、而这个对话之前有记过运行的轮次时提供 history_read。 */
-    runRecords: com.wangzan101.mika.core.record.RunRecords? = null,
-    webSearch: com.wangzan101.mika.core.search.WebSearch? = null,
-    /** Trusted phone probe remains available even in a web-only community run. */
-    val communityPhone: com.wangzan101.mika.core.access.CommunityBoundary? = null,
-    val hybridBoundary: com.wangzan101.mika.core.access.HybridScreenBoundary? = null,
+    val runRecords: com.wangzan101.mika.core.record.RunRecords? = null,
+    val webSearch: com.wangzan101.mika.core.search.WebSearch? = null,
     private val ownNumber: com.wangzan101.mika.core.number.NumberPort? = null,
     /** A referral setting accepts explicit owner input and exposes no private mailbox data. */
     val bindInviter: (suspend (String) -> Unit)? = ownNumber?.let { it::bindInviter },
@@ -60,59 +57,24 @@ internal class ToolConfig(
     /** 操作 Mika 自己的界面/文件/通知/剪贴板;用户打开「允许 Mika 操作自己的界面」时才给。 */
     selfOperate: com.wangzan101.mika.core.self.SelfPort? = null,
     /** Save a captured PNG in this task's workspace; screen tools do not depend on the sandbox capability. */
-    saveScreenshot: (suspend (String, ByteArray) -> String)? = null,
+    val saveScreenshot: (suspend (String, ByteArray) -> String)? = null,
     /** 跨会话任务摘要;给了才提供 task_memory_search / task_memory_timeline / task_memory_step。 */
     taskMemory: com.wangzan101.mika.core.memory.TaskMemoryStore? = null,
 ) {
     var cosignModel: String = ""
     // Retain frozen Own resources locally; community consumers cannot observe them.
     val number: com.wangzan101.mika.core.number.NumberPort? get() = if (community) null else ownNumber
-    private val ownVisionEnabled = visionEnabled
-    val visionEnabled: Boolean get() = if (hybridBoundary != null && community) false else ownVisionEnabled
-    private val ownSkills = skills
-    val skills: GuideCatalog? get() = if (hybridBoundary != null && community) null else ownSkills
-    private val ownRecordFrames = recordFrames
-    val recordFrames: Boolean get() = if (hybridBoundary != null && community) false else ownRecordFrames
-    private val ownVision = vision
-    val vision: VisionService? get() = if (hybridBoundary != null && community) null else ownVision
-    private val ownAdaptiveVision = adaptiveVision
-    val adaptiveVision: Boolean get() = if (hybridBoundary != null && community) false else ownAdaptiveVision
-    private val ownMemory = memory
-    val memory: MemoryStore? get() = if (hybridBoundary != null && community) null else ownMemory
-    private val ownProfile = profile
-    val profile: ProfileStore? get() = if (hybridBoundary != null && community) null else ownProfile
-    private val ownImageOps = imageOps
-    val imageOps: ImageOps? get() = if (hybridBoundary != null && community) null else ownImageOps
-    private val ownScheduleTrigger = scheduleTrigger
-    val scheduleTrigger: ((TriggerDefinition) -> Scheduled)? get() = if (hybridBoundary != null && community) null else ownScheduleTrigger
-    private val ownScheduleAdmin = scheduleAdmin
-    val scheduleAdmin: ScheduleAdmin? get() = if (hybridBoundary != null && community) null else ownScheduleAdmin
-    private val ownChildHost = childHost
-    val childHost: ChildRunHost? get() = if (hybridBoundary != null && community) null else ownChildHost
-    private val ownUserScreens = userScreens
-    val userScreens: com.wangzan101.mika.core.userscreen.UserScreenSource? get() = if (hybridBoundary != null && community) null else ownUserScreens
-    private val ownPersonalSkills = personalSkills
-    val personalSkills: com.wangzan101.mika.core.skills.PersonalSkills? get() = if (hybridBoundary != null && community) null else ownPersonalSkills
-    private val ownSelfConfig = selfConfig
-    val selfConfig: com.wangzan101.mika.core.settings.SelfConfig? get() = if (hybridBoundary != null && community) null else ownSelfConfig
-    private val ownRunRecords = runRecords
-    val runRecords: com.wangzan101.mika.core.record.RunRecords? get() = if (hybridBoundary != null && community) null else ownRunRecords
 
-    private val ownWebSearch = webSearch
-    val webSearch: com.wangzan101.mika.core.search.WebSearch? get() = if (hybridBoundary != null && community) null else ownWebSearch
 
     private val ownSelf = self
     val self: com.wangzan101.mika.core.self.SelfPort? get() = if (community) null else ownSelf
     private val ownSelfOperate = selfOperate
     val selfOperate: com.wangzan101.mika.core.self.SelfPort? get() = if (community) null else ownSelfOperate
-    private val ownSaveScreenshot = saveScreenshot
-    val saveScreenshot: (suspend (String, ByteArray) -> String)? get() = if (community) null else ownSaveScreenshot
     private val ownTaskMemory = taskMemory
     val taskMemory: com.wangzan101.mika.core.memory.TaskMemoryStore? get() = if (community) null else ownTaskMemory
 
-    /** Trusted effective mode; only the shared per-run boundary can promote. */
-    val community: Boolean get() = runSpec?.computeMode == com.wangzan101.mika.core.run.ComputeMode.Community &&
-        hybridBoundary?.community != false
+    /** Compute mode frozen at task creation. */
+    val community: Boolean get() = runSpec?.computeMode == com.wangzan101.mika.core.run.ComputeMode.Community
 }
 
 /**

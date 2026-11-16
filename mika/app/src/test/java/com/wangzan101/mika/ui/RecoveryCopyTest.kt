@@ -1,3 +1,4 @@
+// Modified by Tadolio contributors (2026)
 package com.wangzan101.mika.ui
 
 import org.junit.Rule
@@ -13,6 +14,11 @@ import org.junit.Test
 
 class RecoveryCopyTest {
     @get:Rule val texts = ChineseTexts()
+
+    @Test fun batteryConsentIsManualAndHasNoAutomaticSetupNote() {
+        assertEquals("由你在系统设置里允许", RecoveryCopy.switch(RecoveryCapability.BatteryWhitelist).subtitle)
+        assertNull(RecoveryCopy.pending(RecoveryCapability.BatteryWhitelist, RecoveryConsent(), false, emptySet()))
+    }
 
     @Test
     fun pendingNoteOnlyForDefaultOnesNotYetApplied() {

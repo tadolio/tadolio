@@ -111,8 +111,6 @@
     <string name="phone_degraded">Kontrol ponsel belum siap, jadi kali ini Tadolio tidak bisa memakai aplikasi; web dan berkas tetap berfungsi seperti biasa.</string>
     <string name="phone_degraded_no_sandbox">Kontrol ponsel belum siap, jadi kali ini Tadolio tidak bisa memakai aplikasi; web tetap berfungsi seperti biasa.</string>
     <string name="phone_channel">Pemasangan</string>
-    <string name="phone_notify_enter_title">Masukkan kode pemasangan</string>
-    <string name="phone_notify_enter_text">Ketik 6 digit yang tampil di layar di sini — tidak perlu meninggalkan jendela pemasangan</string>
     <string name="phone_notify_action">Masukkan kode</string>
     <string name="phone_notify_input">6 digit</string>
     <string name="phone_notify_working">Memasangkan…</string>
@@ -120,8 +118,6 @@
     <string name="phone_notify_done_text">Kontrol ponsel sudah siap. Anda bisa kembali ke Tadolio sekarang</string>
     <string name="phone_notify_problem">Kembali ke Tadolio untuk melihat cara memperbaikinya</string>
     <string name="phone_notify_window_found">Jendela pemasangan ditemukan</string>
-    <string name="phone_notify_retry_code">Kode salah atau kedaluwarsa: di jendela pemasangan, ketuk “Pasangkan perangkat dengan kode pemasangan” lagi untuk mendapat kode baru, lalu masukkan lagi</string>
-    <string name="phone_notify_retry_window">Jendela pemasangan tertutup atau kode kedaluwarsa: ketuk “Pasangkan perangkat dengan kode pemasangan” lagi untuk mendapat kode baru, lalu masukkan lagi</string>
     <string name="phone_notify_code_invalid">Masukkan 6 digit, lalu coba lagi</string>
     <string name="phone_guide_1">Ketuk “Pasangkan perangkat dengan kode pemasangan”</string>
     <string name="phone_guide_2">Notifikasi Tadolio muncul di bagian atas layar; jika tidak, tarik ke bawah untuk membuka panel notifikasi</string>

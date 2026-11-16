@@ -41,7 +41,7 @@ internal class AnswerReview(
     private val emit: (RunEvent) -> Unit,
     private val now: () -> Long,
 ) {
-    private val verifier = if (tools.community && tools.hybridBoundary == null) verifier?.communitySafe() else verifier
+    private val verifier = if (tools.community) verifier?.communitySafe() else verifier
     /** 产品路径只整理出处，不再为收尾答复发起另一轮核查。 */
     suspend fun sourcesOnly(goal: String, answer: String, media: Map<Int, List<Int>>): List<AnswerSource> =
         AnswerSources.of(tools.evidence(fresh = false).ledger, goal, answer, media)

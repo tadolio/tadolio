@@ -1,28 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Modified by Tadolio contributors (2026) -->
 <resources>
-    <string name="setup_conversation_intro">To help operate your phone, I need a few switches enabled. I will guide you; it takes about a minute.</string>
-    <string name="setup_conversation_intro_wireless_only">Your phone restarted, so Wireless debugging is off. I will take you there; just turn it on once.</string>
-    <string name="setup_conversation_password">Please enter your screen-lock password yourself; I will wait.</string>
-    <string name="setup_conversation_stalled">This screen needs your help; open the current step again or use the detailed guide.</string>
-    <string name="setup_conversation_developer">I am opening this for you. Please wait.</string>
-    <string name="setup_conversation_accessibility">Opening the system Accessibility page. There, tap Downloaded apps (or Installed apps), tap Tadolio, and turn the switch on. I will come back by myself.</string>
-    <string name="setup_conversation_wireless">I am turning this on for you. Please wait.</string>
-    <string name="setup_conversation_pair_auto">I am connecting the phone helper for you. Please wait.</string>
-    <string name="setup_conversation_pair_manual">I could not connect automatically. Open Pair device with pairing code (Android’s name), then enter the code in the Tadolio notification.</string>
-    <string name="setup_conversation_notifications">Allow Tadolio notifications so I can tell you when I need help.</string>
-    <string name="setup_conversation_battery">Select Tadolio and allow unrestricted battery use so Android can keep it running.</string>
-    <string name="setup_conversation_done">Your phone is ready; you can start talking to Tadolio.</string>
-    <string name="setup_conversation_share">Ask my child for help</string>
     <string name="setup_conversation_continue">Start</string>
-    <string name="setup_conversation_finish">Start using Tadolio</string>
-    <string name="setup_conversation_manual">Detailed guide / USB</string>
     <string name="setup_conversation_later">Later</string>
     <string name="setup_conversation_retry">Try again</string>
-    <string name="setup_conversation_problems">Having trouble</string>
-    <string name="setup_conversation_needed">This needs a permission first. I will guide you.</string>
-    <string name="setup_conversation_developer_manual">I could not open this automatically. In Software information, tap Build number seven times. Android calls this Developer options.</string>
-    <string name="setup_conversation_wireless_manual">I could not turn this on automatically. Turn on Wireless debugging — Android’s name for the local helper connection.</string>
+    <string name="setup_conversation_needed">This one needs me to tap on your phone. One-time setup first.</string>
     <string name="setup_highlight_tap">Tap here</string>
     <string name="setup_highlight_build">Tap here 7 times</string>
     <string name="setup_accessibility_toast">Tap Downloaded apps, tap Tadolio, turn the switch on</string>

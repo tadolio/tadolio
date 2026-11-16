@@ -170,7 +170,7 @@ class RecoveryPermissions(
     suspend fun applyPending(): PermissionResult = lock.withLock {
         val shell = runner() ?: return@withLock PermissionResult.NoRunner
         var failure: PermissionResult? = null
-        for (c in store.consent.value.pending) {
+        for (c in store.consent.value.pending.filter { it != RecoveryCapability.BatteryWhitelist }) {
             val result = if (c.writesSecureSettings && holdsWriteSecure()) PermissionResult.Done
                 else run(shell, listOf(c), on = true)
             // The permission may have become available while the command was running.

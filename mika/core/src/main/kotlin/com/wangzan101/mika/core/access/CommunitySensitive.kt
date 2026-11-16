@@ -5,7 +5,6 @@ import kotlinx.serialization.json.*
 
 /** Community-only, deterministic text boundary. No logging of matches or original values. */
 object CommunitySensitive {
-    const val INPUT_ERROR = "community_sensitive_input"
     const val NOTICE = "社区模式下敏感信息已被遮挡；需要用到这些信息的事，请用自己的模型来做"
     private val otpLabel = Regex("验证码|校验码|动态码|(?<![a-z])(?:code|otp|verification)(?![a-z])", RegexOption.IGNORE_CASE)
     private val seedLabel = Regex("助记词|seed[ _-]+phrase|recovery[ _-]+phrase|mnemonic", RegexOption.IGNORE_CASE)
@@ -154,10 +153,6 @@ object CommunitySensitive {
         return safe
     }
 
-    fun sensitive(text: String, context: String = "") = redact(text, context) != text
-    fun requireInput(text: String, context: String = "") {
-        if (sensitive(text, context)) throw AppAccessDenied(INPUT_ERROR, null)
-    }
     internal fun luhn(value: String): Boolean {
         val n = value.filter(Char::isDigit)
         if (n.length !in 13..19 || n.all { it == n[0] }) return false

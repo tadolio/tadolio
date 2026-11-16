@@ -1,28 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Modified by Tadolio contributors (2026) -->
 <resources>
-    <string name="setup_conversation_intro">Agar saya bisa membantu mengoperasikan ponsel, beberapa pengaturan perlu diaktifkan. Saya pandu, sekitar satu menit.</string>
-    <string name="setup_conversation_intro_wireless_only">Ponsel baru dinyalakan ulang, jadi debug nirkabel mati. Saya antar ke sana; cukup aktifkan sekali.</string>
-    <string name="setup_conversation_password">Please enter your screen-lock password yourself; I will wait.</string>
-    <string name="setup_conversation_stalled">This screen needs your help; open the current step again or use the detailed guide.</string>
-    <string name="setup_conversation_developer">Saya sedang membukanya untuk Anda. Tunggu sebentar.</string>
-    <string name="setup_conversation_accessibility">Turn on Tadolio on this accessibility page so I can help tap the screen.</string>
-    <string name="setup_conversation_wireless">Saya sedang mengaktifkannya untuk Anda. Tunggu sebentar.</string>
-    <string name="setup_conversation_pair_auto">Saya sedang menghubungkan asisten ponsel. Tunggu sebentar.</string>
-    <string name="setup_conversation_pair_manual">Saya belum bisa menyambungkan otomatis. Buka Sambungkan perangkat dengan kode (nama di Android), lalu masukkan angkanya di notifikasi Tadolio.</string>
-    <string name="setup_conversation_notifications">Allow Tadolio notifications so I can tell you when I need help.</string>
-    <string name="setup_conversation_battery">Select Tadolio and allow unrestricted battery use so Android can keep it running.</string>
-    <string name="setup_conversation_done">Your phone is ready; you can start talking to Tadolio.</string>
-    <string name="setup_conversation_share">Ask my child for help</string>
     <string name="setup_conversation_continue">Mulai</string>
-    <string name="setup_conversation_finish">Start using Tadolio</string>
-    <string name="setup_conversation_manual">Detailed guide / USB</string>
     <string name="setup_conversation_later">Later</string>
     <string name="setup_conversation_retry">Coba lagi</string>
-    <string name="setup_conversation_problems">Ada masalah</string>
-    <string name="setup_conversation_needed">Perlu izin dulu untuk ini. Saya pandu.</string>
-    <string name="setup_conversation_developer_manual">Saya belum bisa membukanya otomatis. Di Informasi perangkat lunak, ketuk Nomor bentukan tujuh kali. Android menyebutnya Opsi developer.</string>
-    <string name="setup_conversation_wireless_manual">Saya belum bisa mengaktifkannya otomatis. Aktifkan Debugging nirkabel, nama Android untuk sambungan asisten lokal.</string>
     <string name="setup_highlight_tap">Ketuk di sini</string>
     <string name="setup_highlight_build">Ketuk di sini 7 kali</string>
     <string name="setup_accessibility_toast">Tap Downloaded apps, tap Tadolio, turn the switch on</string>

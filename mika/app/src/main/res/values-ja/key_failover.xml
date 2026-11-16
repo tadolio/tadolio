@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="key_add_backup">予備 Key を追加</string>
+    <string name="key_remove">削除</string>
+    <string name="key_move_up">上へ</string>
+    <string name="key_available">利用可能</string>
+    <string name="key_invalid">無効</string>
+    <string name="key_exhausted">残高不足</string>
+    <string name="key_rate_limited">レート制限中</string>
+    <string name="key_active">Key %1$d を使用中</string>
+    <string name="keys_all_invalid">%1$d 個の Key はすべて無効です</string>
+    <string name="keys_all_exhausted">すべての Key の残高が不足しています</string>
+    <string name="keys_all_limited">すべての Key がレート制限中です</string>
+    <string name="keys_all_unavailable">すべての Key の確認が必要です</string>
+    <string name="model_backup">予備モデル</string>
+    <string name="model_backup_none">なし</string>
+    <string name="model_backup_notice">%1$s の Key を利用できないため、予備モデル %2$s に切り替えました。</string>
+</resources>

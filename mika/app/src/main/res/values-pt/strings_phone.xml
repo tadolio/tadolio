@@ -111,8 +111,6 @@
     <string name="phone_degraded">O controle do celular não está pronto, então o Tadolio não pode usar apps desta vez; web e arquivos funcionam normalmente.</string>
     <string name="phone_degraded_no_sandbox">O controle do celular não está pronto, então o Tadolio não pode usar apps desta vez; web funcionam normalmente.</string>
     <string name="phone_channel">Pareamento</string>
-    <string name="phone_notify_enter_title">Digite o código de pareamento</string>
-    <string name="phone_notify_enter_text">Digite aqui os 6 dígitos mostrados na tela — não precisa sair da janela de pareamento</string>
     <string name="phone_notify_action">Digitar código</string>
     <string name="phone_notify_input">6 dígitos</string>
     <string name="phone_notify_working">Pareando…</string>
@@ -120,8 +118,6 @@
     <string name="phone_notify_done_text">O controle do celular está configurado. Você já pode voltar ao Tadolio</string>
     <string name="phone_notify_problem">Volte ao Tadolio para ver como resolver</string>
     <string name="phone_notify_window_found">Janela de pareamento encontrada</string>
-    <string name="phone_notify_retry_code">Código errado ou expirado: na janela de pareamento, toque em “Parear dispositivo com código de pareamento” de novo para obter um novo código e digite-o outra vez</string>
-    <string name="phone_notify_retry_window">A janela de pareamento fechou ou o código expirou: toque em “Parear dispositivo com código de pareamento” de novo para obter um novo código e digite-o outra vez</string>
     <string name="phone_notify_code_invalid">Digite 6 dígitos e tente de novo</string>
     <string name="phone_guide_1">Toque em “Parear dispositivo com código de pareamento”</string>
     <string name="phone_guide_2">A notificação do Tadolio aparece no alto da tela; se não aparecer, deslize para baixo para abrir a barra de notificações</string>

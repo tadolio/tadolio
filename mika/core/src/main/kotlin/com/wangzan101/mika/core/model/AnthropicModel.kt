@@ -146,7 +146,7 @@ class AnthropicModel(
             .build()
     }
 
-    private fun mapError(status: Int, retryAfter: String?, body: String): ModelError = ModelAccessErrors.of(status, body, model) ?: when {
+    private fun mapError(status: Int, retryAfter: String?, body: String): ModelError = (if (status in 500..599) ModelError.Server(status) else null) ?: ModelAccessErrors.of(status, body, model) ?: ModelHttp.keyError(status, retryAfter, body) ?: when {
         status == 401 || status == 403 -> ModelError.Auth()
         status == 402 || body.contains("credit balance is too low") -> ModelError.QuotaExceeded()
         status == 429 -> ModelError.RateLimited(HttpSupport.retryAfterMs(retryAfter))

@@ -9,7 +9,7 @@ import org.junit.Test
 
 class PostReviewBoundaryTest {
     @Test fun cosignModelComesFromActualRuntime() = runBlocking {
-        for (hybrid in listOf(false,true)) {
+        repeat(1) {
             val engine = PostStandby(save = {})
             engine.enqueue(listOf(post().copy(cosign = true)),"mine",1000)
             val model = object : ChatModel {
@@ -19,8 +19,8 @@ class PostReviewBoundaryTest {
                     ModelReply(listOf(Part.Text("""[{"id":"p","action":"sign","why":"I support open discussion.","model":"invented"}]""")),StopReason.EndTurn,null)
             }
             var reported = ""
-            PostReviewBoundary.review(engine,1000,true,hybrid,false,{emptyList()},{emptyList()},
-                {model},{model},cosign = { choice, p, name ->
+            PostReviewBoundary.review(engine,1000,true,false,{emptyList()},{emptyList()},
+                {model},cosign = { choice, p, name ->
                     assertEquals("sign",choice.action)
                     assertEquals("p",p.id)
                     reported = name
@@ -32,14 +32,14 @@ class PostReviewBoundaryTest {
         val engine = PostStandby(save = {})
         engine.enqueue(listOf(post()), "mine", 1000)
         for ((enabled, community) in listOf(true to true, false to false)) {
-            PostReviewBoundary.review(engine, 1000, enabled, false, community,
+            PostReviewBoundary.review(engine, 1000, enabled, community,
                 { error("private memory") }, { error("feedback") },
-                { error("own model") }, { error("hybrid model") })
+                { error("own model") })
         }
     }
 
-    @Test fun ownAndHybridUseOnlyOwnersToolFreeModel() = runBlocking {
-        for (hybrid in listOf(false, true)) {
+    @Test fun ownUsesOnlyOwnersToolFreeModel() = runBlocking {
+        repeat(1) {
             var calls = 0
             val engine = PostStandby(save = {})
             val post = post()
@@ -56,9 +56,9 @@ class PostReviewBoundaryTest {
                     return ModelReply(listOf(Part.Text("""[{"id":"p","action":"tell","why":"家里需要婴儿车"}]""")), StopReason.EndTurn, null)
                 }
             }
-            PostReviewBoundary.review(engine, 1000, true, hybrid, hybrid,
+            PostReviewBoundary.review(engine, 1000, true, false,
                 { listOf("家里有小孩，想要二手婴儿车") }, { listOf("喜欢这一类：实用") },
-                { assertFalse(hybrid); model }, { assertTrue(hybrid); model })
+                { model })
             assertEquals(1, calls)
             assertEquals("家里需要婴儿车", engine.takeReminder(1000, true)!!.second.single().why)
         }
@@ -84,8 +84,8 @@ class PostReviewBoundaryTest {
                 return ModelReply(listOf(Part.Text("""[{"id":"p","action":"sign","why":"My independent reason","model":"invented"}]""")),StopReason.EndTurn,null)
             }
         }
-        PostReviewBoundary.review(engine,1000,true,false,true,
-            { error("PRIVATE_OWNER") },{ error("PRIVATE_FEEDBACK") },{ error("own") },{ error("hybrid") },
+        PostReviewBoundary.review(engine,1000,true,true,
+            { error("PRIVATE_OWNER") },{ error("PRIVATE_FEEDBACK") },{ error("own") },
             cosign = { _, _, name -> submitted = name },remote = { model },
             closeRemote = { closed = true })
         assertEquals("Descriptor model from assigned node",submitted)

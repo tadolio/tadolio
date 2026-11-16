@@ -1,52 +1,48 @@
 // Modified by Tadolio contributors (2026)
 package com.wangzan101.mika.ui
 
-import com.wangzan101.mika.i18n.tr
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.ui.res.stringResource
+import com.wangzan101.mika.settings.ProviderStore
+import com.wangzan101.mika.about.HivoConfig
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.platform.testTag
 import com.wangzan101.mika.R
-import com.wangzan101.mika.ui.components.MikaButton
-import com.wangzan101.mika.ui.theme.MikaIcons
 
 /** First greeting is local and works before a model is configured. */
 @Composable
-fun WelcomeScreen(onStart: () -> Unit) {
-    var moving by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
-    var showingNumber by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
-    var inviting by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
-    if (inviting) { ReferralScreen(back = { inviting = false }); return }
+fun WelcomeScreen(store: ProviderStore, onStart: () -> Unit, onOwnModel: () -> Unit, onProviderSelected: () -> Unit) {
+    var moving by remember { mutableStateOf(false) }
+    var showingNumber by remember { mutableStateOf(false) }
+    var invite by remember { mutableStateOf(false) }
     if (showingNumber) { NumberScreen(back = { showingNumber = false }); return }
     if (moving) { NumberMoveScreen(onTransferred = { moving = false; showingNumber = true }) { moving = false }; return }
-    OnboardingConversation(androidx.compose.ui.res.stringResource(R.string.onboarding_greeting),
-        onReply = { if (onboardingAnswer(it) == OnboardingAnswer.Start) onStart() }) {
-        androidx.compose.material3.TextButton(onClick = { moving = true }) {
-            androidx.compose.material3.Text(androidx.compose.ui.res.stringResource(R.string.t42_have_number))
-        }
-        MikaButton(WelcomeCopy.START, onStart, Modifier.fillMaxWidth().testTag("welcome-start"))
-        androidx.compose.material3.TextButton(onClick = { inviting = true }) {
-            androidx.compose.material3.Text(androidx.compose.ui.res.stringResource(R.string.referral_prompt))
-        }
-    }
+    WelcomeContent(HivoConfig.communityEnabled,
+        onStart = onStart, onOwnModel = onOwnModel, onNumber = { moving = true },
+        invite = { invite = true })
+    if (invite) SetupDetails({ invite = false }) { CommunityControls(store, onboarding = true, onChosen = onProviderSelected) }
 }
 
-/** 欢迎页的文字。 */
-object WelcomeCopy {
-    val TITLE: String get() = tr(R.string.welcome_title)
-    val LEAD: String get() = tr(R.string.welcome_lead)
-    val NOTE: String get() = tr(R.string.welcome_note)
-    val START: String get() = tr(R.string.welcome_start)
-
-    data class Item(val icon: ImageVector, val title: String, val body: String)
-
-    val FEATURES get() = listOf(
-        Item(MikaIcons.Apps, tr(R.string.welcome_apps), tr(R.string.welcome_apps_body)),
-        Item(MikaIcons.Globe, tr(R.string.welcome_web), tr(R.string.welcome_web_body)),
-        *(if (com.wangzan101.mika.BuildConfig.SANDBOX_ENABLED) arrayOf(Item(MikaIcons.Doc, tr(R.string.welcome_files), tr(R.string.welcome_files_body))) else emptyArray()),
-        Item(MikaIcons.Clock, tr(R.string.welcome_schedule), tr(R.string.welcome_schedule_body)),
+@Composable
+internal fun WelcomeContent(community: Boolean, onStart: () -> Unit, onOwnModel: () -> Unit, onNumber: () -> Unit, invite: () -> Unit) {
+    SetupPage(
+        title = stringResource(R.string.t60_welcome_title),
+        body = stringResource(R.string.t60_welcome_body),
+        primary = stringResource(if (community) R.string.t60_start_free else R.string.t60_connect_model),
+        onPrimary = if (community) onStart else onOwnModel,
+        notice = if (community) stringResource(R.string.t60_community_notice) else null,
+        links = {
+            TextButton(onOwnModel) { Text(stringResource(R.string.t60_own_model)) }
+            TextButton(onNumber) { Text(stringResource(R.string.t42_have_number)) }
+        },
+        detailsLabel = stringResource(R.string.t60_free_details),
+        details = if (community) ({ close ->
+            Text(stringResource(R.string.t60_free_explanation))
+            TextButton({ close(); invite() }) { Text(stringResource(R.string.operator_invite)) }
+        }) else null,
     )
 }

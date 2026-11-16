@@ -138,6 +138,22 @@ class BuiltinShellRecovery(
                 }
             }
         }
+        val deferred = com.wangzan101.mika.settings.DeferredSetup(app)
+        val hub = com.wangzan101.mika.cap.phone.PhoneServices.of(app).hub
+        scope.launch {
+            var wasAlive = hub.shell.value != null
+            hub.shell.collect { shell ->
+                val process = android.app.ActivityManager.RunningAppProcessInfo()
+                android.app.ActivityManager.getMyMemoryState(process)
+                val background = process.importance > android.app.ActivityManager.RunningAppProcessInfo.IMPORTANCE_FOREGROUND
+                if (com.wangzan101.mika.settings.DeferredSetupPolicy.backgroundLoss(wasAlive, shell != null,
+                        background, FeatureFlags.get(app).quitRequested())) deferred.needBattery()
+                wasAlive = shell != null
+            }
+        }
+        scope.launch {
+            hub.restores.collect { report -> if (report != null && report.lastRestoredAtMs > 0) deferred.needBattery() }
+        }
         val active = FeatureFlags.get(app).quitChanges().map { !it }
         scope.launch { permissions.applyWhenRunning(control.status, active) }
         val service = accessibility

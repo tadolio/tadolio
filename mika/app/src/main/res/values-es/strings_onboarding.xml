@@ -1,12 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Modified by Tadolio contributors (2026) -->
 <resources>
-    <string name="onboarding_greeting">Hello, I am Tadolio. I can help you use your phone. Tap Start or hold to say start.</string>
     <string name="onboarding_read_aloud">Read aloud</string>
     <string name="onboarding_tts_missing">Voice reading is unavailable. You can keep using the buttons.</string>
-    <string name="onboarding_model_question">Which model would you like to use?</string>
-    <string name="onboarding_community">Use free community compute</string>
-    <string name="onboarding_account">Sign in with ChatGPT, Grok or OpenRouter</string>
     <string name="onboarding_key">I have an API Key</string>
-    <string name="onboarding_account_question">Which account would you like to sign in with?</string>
 </resources>

@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="key_add_backup">Adicionar Key de reserva</string>
+    <string name="key_remove">Remover</string>
+    <string name="key_move_up">Mover para cima</string>
+    <string name="key_available">Disponível</string>
+    <string name="key_invalid">Inválida</string>
+    <string name="key_exhausted">Cota esgotada</string>
+    <string name="key_rate_limited">Limite de solicitações</string>
+    <string name="key_active">Usando Key %1$d</string>
+    <string name="keys_all_invalid">Todas as %1$d Keys são inválidas</string>
+    <string name="keys_all_exhausted">Todas as Keys esgotaram a cota</string>
+    <string name="keys_all_limited">Todas as Keys estão com limite de solicitações</string>
+    <string name="keys_all_unavailable">Todas as Keys precisam de atenção</string>
+    <string name="model_backup">Modelo de reserva</string>
+    <string name="model_backup_none">Nenhum</string>
+    <string name="model_backup_notice">As Keys de %1$s estão indisponíveis. Alterado para o modelo de reserva %2$s.</string>
+</resources>

@@ -20,17 +20,18 @@ import java.security.MessageDigest
 object LoopSnapshot {
     private val dir = File(System.getProperty("mika.snapshotDir") ?: "src/test/resources/loop-snapshots")
     private val update = System.getProperty("mika.updateSnapshots") == "true"
+    private const val HEADER = "# Modified by Tadolio contributors (2026)\n"
 
     /** 和金样比对;开了重新生成就直接写入。 */
     fun check(name: String, actual: String) {
         val file = File(dir, "$name.txt")
         if (update) {
             file.parentFile.mkdirs()
-            file.writeText(actual)
+            if (!file.exists() || file.readText().removePrefix(HEADER) != actual) file.writeText(HEADER + actual)
             return
         }
         if (!file.exists()) fail("没有金样 ${file.path};用 ./gradlew :core:test --tests '*LoopScenarioTest' -PupdateSnapshots 生成")
-        assertEquals("快照 $name 变了;确认是有意的改动后用 -PupdateSnapshots 重新生成", file.readText(), actual)
+        assertEquals("快照 $name 变了;确认是有意的改动后用 -PupdateSnapshots 重新生成", file.readText().removePrefix(HEADER), actual)
     }
 
     /** 一个场景的快照:结局,然后各个模型(主模型、辅助角色)收到的请求。 */

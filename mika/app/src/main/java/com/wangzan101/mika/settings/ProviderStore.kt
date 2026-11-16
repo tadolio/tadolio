@@ -1,6 +1,10 @@
 // Modified by Tadolio contributors (2026)
 package com.wangzan101.mika.settings
 
+import com.wangzan101.mika.core.model.KeyAvailability
+import com.wangzan101.mika.core.model.KeyFailure
+import com.wangzan101.mika.core.model.KeyFailoverModel
+import com.wangzan101.mika.core.model.keyFailure
 import android.content.Context
 import com.wangzan101.mika.core.agent.ContextLimits
 import com.wangzan101.mika.core.chatgpt.ChatGptAuth
@@ -43,6 +47,7 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
 import kotlinx.serialization.json.JsonPrimitive
@@ -330,41 +335,75 @@ class ProviderStore(
     val roles: StateFlow<RoleChoices> = _roles.asStateFlow()
 
     /** 服务商 id → 加密后的 Key。 */
-    private val _hybridOwnRoles = MutableStateFlow(RoleChoices())
-    internal val hybridOwnRoles: StateFlow<RoleChoices> = _hybridOwnRoles.asStateFlow()
+    @Volatile private var keys: Map<String, List<String>> = emptyMap()
+    private val keyHealthFile = File(dir, "provider-key-health.json")
+    private var savedKeyHealth = readKeyHealth()
+    private val keyAvailability = KeyAvailability(initial = savedKeyHealth, changed = { states ->
+        val changedIds = (states.keys + savedKeyHealth.keys).filter { states[it] != savedKeyHealth[it] }.toSet()
+        synchronized(keyHealthFile) {
+            writeAtomically(keyHealthFile, buildJsonObject {
+                states.forEach { (id, state) -> putJsonObject(id) {
+                    put("failure", state.failure.name); put("date", state.date); put("retryAt", state.retryAt)
+                } }
+            }.toString())
+        }
+        savedKeyHealth = states
+        val affected = keys.filterValues { values -> values.any { keyId(it) in changedIds } }.keys
+        _providerKeyRevisions.update { revisions ->
+            revisions + affected.associateWith { (revisions[it] ?: 0L) + 1 }
+        }
+    })
+    private val _backup = MutableStateFlow<String?>(null)
+    val backup = _backup.asStateFlow()
 
-    private val _hybridSelected = MutableStateFlow(false)
-    internal val hybridSelected: StateFlow<Boolean> = _hybridSelected.asStateFlow()
+    private fun readKeyHealth(): Map<String, KeyAvailability.State> = runCatching {
+        if (!keyHealthFile.exists()) emptyMap() else Json.parseToJsonElement(keyHealthFile.readText()).jsonObject.mapValues { (_, value) ->
+            val state = value.jsonObject
+            KeyAvailability.State(KeyFailure.valueOf(state.str("failure")), state.str("date"), state["retryAt"]!!.jsonPrimitive.content.toLong())
+        }
+    }.getOrDefault(emptyMap())
 
-    /** Local selection only; external task input must never enable Hybrid. */
-    @Synchronized
-    internal fun selectHybrid(selected: Boolean): Boolean {
-        if (selected && !hybridSelectionAvailable()) return false
-        _hybridSelected.value = selected
-        writeConfig()
-        return true
+    private fun keyId(encrypted: String): String = java.security.MessageDigest.getInstance("SHA-256")
+        .digest(encrypted.toByteArray()).joinToString("") { "%02x".format(it) }
+
+    private fun decryptKeys(encrypted: List<String>): List<Pair<String, String>> = encrypted.mapNotNull { enc ->
+        runCatching { keyId(enc) to String(cipher.decrypt(decode(enc))) }.getOrNull()
     }
 
-    private fun hybridSelectionAvailable(): Boolean {
-        val ownIds = _configs.value.filter { it.kind != ProviderConfig.Kind.Community }.map { it.id }.toSet()
-        val choices = _hybridOwnRoles.value
-        val community = configFor(ModelRole.Main)
-        return choices.main != null && ownIds.containsAll(choices.referenced) &&
-            community?.kind == ProviderConfig.Kind.Community && community.model in listOf("compute", "operator")
+    data class KeySummary(val suffix: String, val status: KeyFailure)
+    fun keySummaries(providerId: String): List<KeySummary> = synchronized(this) {
+        decryptKeys(keys[providerId].orEmpty()).map { (id, key) -> KeySummary(key.takeLast(4), keyAvailability.status(id)) }
     }
 
-    /** Retain explicit local Own choices independently of the selected community route. */
-    @Synchronized
-    internal fun retainHybridOwnRoles(choices: RoleChoices): Boolean {
-        val ownIds = _configs.value.filter { it.kind != ProviderConfig.Kind.Community }.map { it.id }.toSet()
-        if (choices.main == null || !ownIds.containsAll(choices.referenced)) return false
-        _hybridOwnRoles.value = choices
+    @Synchronized fun addProviderKey(providerId: String, key: String) {
+        val provider = provider(providerId) ?: return
+        require(provider.kind in ProviderConfig.Kind.withApiKey && key.isNotBlank())
+        if (decryptKeys(keys[providerId].orEmpty()).any { it.second == key.trim() }) return
+        saveKeys(providerId, keys[providerId].orEmpty() + encode(cipher.encrypt(key.trim().toByteArray())))
+    }
+
+    @Synchronized fun removeProviderKey(providerId: String, index: Int) {
+        saveKeys(providerId, keys[providerId].orEmpty().filterIndexed { i, _ -> i != index })
+    }
+
+    @Synchronized fun moveProviderKey(providerId: String, index: Int, target: Int) {
+        val values = keys[providerId].orEmpty().toMutableList()
+        require(index in values.indices && target in values.indices)
+        values.add(target, values.removeAt(index))
+        saveKeys(providerId, values)
+    }
+
+    @Synchronized fun useBackup(providerId: String?, model: String = "", caps: Capabilities? = null): Boolean {
+        if (providerId == null) { _backup.value = null; prune(); writeConfig(); return true }
+        val p = provider(providerId) ?: return false
+        if (p.kind == ProviderConfig.Kind.Community || caps == null) return false
+        val id = _configs.value.firstOrNull { it.providerId == p.id && it.model == model }?.id
+            ?: newId().also { save(ProviderConfig(it, p.kind, p.baseUrl, model, caps.copy(toolCalls = true), p.name, p.id), null) }
+        _backup.value = id
         prune()
         writeConfig()
         return true
     }
-
-    private var keys: Map<String, String> = emptyMap()
 
     init {
         dir.mkdirs()
@@ -398,8 +437,29 @@ class ProviderStore(
 
     /** 服务商的 Key。解不开(例如密钥库被系统清掉)时当作没有 Key。 */
     fun providerKey(providerId: String): String? {
-        val enc = synchronized(this) { keys[providerId] } ?: return null
-        return runCatching { String(cipher.decrypt(decode(enc))) }.getOrNull()
+        val values = synchronized(this) { keys[providerId].orEmpty() }
+        return decryptKeys(values).firstOrNull { keyAvailability.status(it.first) == KeyFailure.other }?.second
+    }
+
+    /** Other model-platform requests, including audio transcription, share key health. */
+    suspend fun <T> withProviderKey(providerId: String, call: suspend (String?) -> T): T {
+        val credentials = decryptKeys(synchronized(this) { keys[providerId].orEmpty() })
+        if (credentials.isEmpty()) return call(null)
+        var last: ModelError? = null
+        for ((id, key) in credentials) {
+            if (keyAvailability.status(id) != KeyFailure.other) continue
+            try { return call(key) } catch (error: ModelError) {
+                val failure = keyFailure(error)
+                if (failure == KeyFailure.other) throw error
+                keyAvailability.fail(id, failure)
+                last = error
+            }
+        }
+        throw last ?: when (keyAvailability.status(credentials.first().first)) {
+            KeyFailure.exhausted -> ModelError.QuotaExceeded()
+            KeyFailure.rate_limited -> ModelError.RateLimited(60_000)
+            else -> ModelError.Auth()
+        }
     }
 
     /** 只为仍匹配这次额度查询的服务商配置取 Key。 */
@@ -637,49 +697,44 @@ class ProviderStore(
      * 记作看图、轻量,服务商和模型是主模型那条配置的。这是 App 里建可调用模型的唯一入口。
      * [session] 是这次调用属于的对话(同一段对话里建的模型都给同一个);服务商声明了会话头的,每个请求都带上它。
      */
-    fun modelFor(role: ModelRole, session: ModelSession = ModelSession.fresh()): ChatModel? =
-        modelBuilder(role, configFor(role), _roles.value, session)?.invoke()
+    fun modelFor(role: ModelRole, session: ModelSession = ModelSession.fresh()): ChatModel? {
+        val frozen = freezeModels(session, _roles.value, _configs.value, _providers.value, synchronized(this) { keys }, { _, _ -> }, setOf(role))
+        return when (role) {
+            ModelRole.Main -> frozen.main
+            ModelRole.Light -> frozen.light
+            ModelRole.Vision -> frozen.vision
+        }
+    }
 
     /** Capture all role settings before constructing adapters, which may run host callbacks. */
-    internal fun freezeModels(session: ModelSession): ProviderModels {
+    internal fun freezeModels(session: ModelSession, onFallback: (String, String) -> Unit = { _, _ -> }): ProviderModels {
         val choices = _roles.value
         val configs = _configs.value
         val providers = _providers.value
         val encryptedKeys = synchronized(this) { keys }
-        return freezeModels(session, choices, configs, providers, encryptedKeys)
-    }
-
-    /** Only trusted local settings may supply Own roles; community routing stays separate. */
-    @Synchronized
-    internal fun freezeHybridModels(session: ModelSession, ownChoices: RoleChoices = _hybridOwnRoles.value): HybridProviderModels {
-        val configs = _configs.value
-        val providers = _providers.value
-        val community = configFor(ModelRole.Main, _roles.value, configs, providers)
-        require(community?.kind == ProviderConfig.Kind.Community && community.model in listOf("compute", "operator")) {
-            "hybrid_requires_community_model"
-        }
-        val ownIds = configs.filter { it.kind != ProviderConfig.Kind.Community }.map { it.id }.toSet()
-        require(ownIds.containsAll(ownChoices.referenced)) { "hybrid_requires_own_model" }
-        val selected = ModelRole.entries.mapNotNull { configFor(it, ownChoices, configs, providers) }
-        require(selected.none { it.kind == ProviderConfig.Kind.Community } &&
-            configFor(ModelRole.Main, ownChoices, configs, providers) != null) { "hybrid_requires_own_model" }
-        val own = freezeModels(session, ownChoices, configs, providers, keys)
-        return HybridProviderModels(community, own)
+        return freezeModels(session, choices, configs, providers, encryptedKeys, onFallback)
     }
 
     private fun freezeModels(
         session: ModelSession, choices: RoleChoices, configs: List<ProviderConfig>,
-        providers: List<Provider>, encryptedKeys: Map<String, String>,
+        providers: List<Provider>, encryptedKeys: Map<String, List<String>>,
+        onFallback: (String, String) -> Unit,
+        rolesToBuild: Set<ModelRole> = ModelRole.entries.toSet(),
     ): ProviderModels {
         val selected = ModelRole.entries.associateWith { role -> configFor(role, choices, configs, providers) }
-        if (selected[ModelRole.Main] == null) return ProviderModels(null, null, null, null, false)
-        val builders = ModelRole.entries.associateWith { role ->
+        if (selected[ModelRole.Main] == null && rolesToBuild.size == ModelRole.entries.size) return ProviderModels(null, null, null, null, false)
+        val backupConfig = configs.firstOrNull { it.id == _backup.value && it.kind != ProviderConfig.Kind.Community }
+        val backupProvider = providers.firstOrNull { it.id == backupConfig?.providerId }
+        val backupKeys = decryptKeys(encryptedKeys[backupConfig?.providerId].orEmpty())
+        val noticeSent = java.util.concurrent.atomic.AtomicBoolean(false)
+        val builders = rolesToBuild.associateWith { role ->
             val cfg = selected[role]
             val provider = providers.firstOrNull { it.id == cfg?.providerId }
-            val apiKey = cfg?.let { encryptedKeys[it.providerId] }?.let { enc ->
-                runCatching { String(cipher.decrypt(decode(enc))) }.getOrNull()
-            }
-            modelBuilder(role, cfg, choices, session, provider, apiKey)
+            val credentials = decryptKeys(encryptedKeys[cfg?.providerId].orEmpty())
+            val backupBuilder = if (choices.resolve(role) == choices.main && backupConfig?.id != cfg?.id)
+                modelBuilder(role, backupConfig, choices.copy(reasoningEfforts = emptyMap()), session, backupProvider, backupKeys) else null
+            modelBuilder(role, cfg, choices, session, provider, credentials, backupBuilder,
+                { if (noticeSent.compareAndSet(false, true)) onFallback(provider?.name.orEmpty(), backupConfig?.model.orEmpty()) })
         }
         return ProviderModels(selected[ModelRole.Main], builders[ModelRole.Main]?.invoke(),
             builders[ModelRole.Light]?.invoke(), builders[ModelRole.Vision]?.invoke(),
@@ -689,7 +744,9 @@ class ProviderStore(
     private fun modelBuilder(
         role: ModelRole, cfg: ProviderConfig?, choices: RoleChoices, session: ModelSession,
         p: Provider? = cfg?.let { provider(it.providerId) },
-        apiKey: String? = cfg?.let { apiKey(it.id) },
+        credentials: List<Pair<String, String>> = cfg?.let { decryptKeys(keys[it.providerId].orEmpty()) }.orEmpty(),
+        fallbackBuilder: (() -> ChatModel)? = null,
+        onFallback: () -> Unit = {},
     ): (() -> ChatModel)? = cfg?.let {
         check(cfg.kind != ProviderConfig.Kind.Community) { "Community requires a task-scoped model" }
         val source = UsageSource(cfg.providerId, p?.name ?: cfg.name, cfg.model, UsagePurpose.of(role))
@@ -702,7 +759,12 @@ class ProviderStore(
         val setup = ClientSetup(headers(p?.sessionHeader, session), reasoningEffort = choices.reasoningEffort(role),
             thinkingTypes = listed?.thinkingTypes, readTimeoutSeconds = settings?.readTimeoutSeconds)
         // Capture metadata before this closure can run.
-        val build: () -> ChatModel = { modelFactory(configured, apiKey, listed?.endpoint, setup).metered(source, usage, ::checkDailyBudget) }
+        val build: () -> ChatModel = {
+            val models = credentials.map { (id, key) -> id to modelFactory(configured, key, listed?.endpoint, setup).metered(source, usage, ::checkDailyBudget) }
+            if (p?.kind !in ProviderConfig.Kind.withApiKey)
+                modelFactory(configured, credentials.firstOrNull()?.second, listed?.endpoint, setup).metered(source, usage, ::checkDailyBudget)
+            else KeyFailoverModel(models.ifEmpty { listOf(configured.providerId + "-keyless" to modelFactory(configured, null, listed?.endpoint, setup).metered(source, usage, ::checkDailyBudget)) }, keyAvailability, fallbackBuilder?.invoke(), onFallback)
+        }
         build
     }
 
@@ -970,33 +1032,42 @@ class ProviderStore(
     }
 
     private fun setKey(providerId: String, apiKey: String) {
-        keys = if (apiKey.isEmpty()) keys - providerId else keys + (providerId to encode(cipher.encrypt(apiKey.toByteArray())))
-        writeAtomically(keyFile, keysJson())
+        val remaining = keys[providerId].orEmpty().drop(1).filter { encrypted ->
+            runCatching { String(cipher.decrypt(decode(encrypted))) != apiKey }.getOrDefault(true)
+        }
+        val values = if (apiKey.isEmpty()) emptyList() else listOf(encode(cipher.encrypt(apiKey.toByteArray()))) + remaining
+        saveKeys(providerId, values)
+    }
+
+    private fun saveKeys(providerId: String, values: List<String>) {
+        val updated = if (values.isEmpty()) keys - providerId else keys + (providerId to values)
+        writeAtomically(keyFile, buildJsonObject { updated.forEach { (id, v) -> putJsonArray(id) { v.forEach { add(it) } } } }.toString())
+        keys = updated
         val revisions = _providerKeyRevisions.value
         _providerKeyRevisions.value = revisions + (providerId to ((revisions[providerId] ?: 0L) + 1))
     }
 
     /** 删掉没有用途在用的模型配置。Key 存在服务商上,不受影响。 */
     private fun prune() {
-        val ownIds = _configs.value.filter { it.kind != ProviderConfig.Kind.Community }.map { it.id }.toSet()
-        _hybridOwnRoles.value = _hybridOwnRoles.value.keepOnly(ownIds)
-        val used = _roles.value.referenced + _hybridOwnRoles.value.referenced
+        if (_configs.value.none { it.id == _backup.value && it.kind != ProviderConfig.Kind.Community }) _backup.value = null
+        val used = _roles.value.referenced + listOfNotNull(_backup.value)
         _configs.value = _configs.value.filter { it.id in used }
-        if (!hybridSelectionAvailable()) _hybridSelected.value = false
     }
 
     private fun load() {
         if (configFile.isFile) runCatching {
             val root = json.parseToJsonElement(configFile.readText()).jsonObject
+            // Legacy hybridSelected and hybridOwnUses are ignored. The selected community role stays active.
             _providers.value = root["services"]?.jsonArray?.mapNotNull { runCatching { providerOf(it.jsonObject) }.getOrNull() }.orEmpty()
             _configs.value = root["providers"]?.jsonArray?.mapNotNull { runCatching { configOf(it.jsonObject) }.getOrNull() }.orEmpty()
-            _hybridOwnRoles.value = (root["hybridOwnUses"] as? JsonObject)?.let(::choicesOf) ?: RoleChoices()
-            _hybridSelected.value = root["hybridSelected"]?.jsonPrimitive?.booleanOrNull ?: false
+            _backup.value = root["backup"]?.jsonPrimitive?.content
             val uses = root["uses"]?.jsonObject
             _roles.value = if (uses != null) choicesOf(uses) else migrateRoles(root["roles"]?.jsonObject)
         }
         if (keyFile.isFile) runCatching {
-            keys = json.parseToJsonElement(keyFile.readText()).jsonObject.mapValues { it.value.jsonPrimitive.content }
+            keys = json.parseToJsonElement(keyFile.readText()).jsonObject.mapValues { (_, value) ->
+                if (value is kotlinx.serialization.json.JsonArray) value.map { it.jsonPrimitive.content } else listOf(value.jsonPrimitive.content)
+            }
         }
         migrate()
         repairStaleContextDefaults()
@@ -1174,7 +1245,6 @@ class ProviderStore(
     private fun JsonObject.positiveLong(k: String) = (this[k] as? JsonPrimitive)?.longOrNull?.takeIf { it > 0 }
 
     private fun writeConfig() {
-        if (!hybridSelectionAvailable()) _hybridSelected.value = false
         writeAtomically(configFile, configJson())
     }
 
@@ -1240,9 +1310,8 @@ class ProviderStore(
                     }
                 }
             }
+            _backup.value?.let { put("backup", it) }
             put("uses", choicesJson(_roles.value))
-            if (_hybridSelected.value) put("hybridSelected", true)
-            if (_hybridOwnRoles.value.main != null) put("hybridOwnUses", choicesJson(_hybridOwnRoles.value))
         }
         return root.toString()
     }
@@ -1262,7 +1331,7 @@ class ProviderStore(
         }
     }
 
-    private fun keysJson() = buildJsonObject { keys.forEach { (id, v) -> put(id, v) } }.toString()
+    private fun keysJson() = buildJsonObject { keys.forEach { (id, v) -> putJsonArray(id) { v.forEach { add(it) } } } }.toString()
 
     private fun writeAtomically(f: File, text: String) {
         val tmp = File(f.parentFile, f.name + ".tmp")
@@ -1369,6 +1438,3 @@ internal data class ProviderModels(
     val vision: ChatModel?,
     val distinctLight: Boolean,
 )
-
-/** Retained Own roles and community route, captured before the first adapter callback. */
-internal data class HybridProviderModels(val communityConfig: ProviderConfig, val own: ProviderModels)
