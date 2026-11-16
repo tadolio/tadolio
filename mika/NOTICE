@@ -1,9 +1,0 @@
-Modified by Tadolio contributors (2026)
-Tadolio is a modified version of Mika, licensed under Apache License 2.0.
-Mika Copyright 2026 wangzan101. Original attribution is retained.
-Tadolio modifications Copyright 2026 Tadolio contributors.
-Changes include branding and application ID, community-compute clients,
-Tadolio identity and inbox, coins and payment terms, safety confirmations,
-onboarding, configurable repository links and signed-release configuration.
-Third-party notices and license texts are in licenses/.
-Upstream https://github.com/wangzan101/Mika

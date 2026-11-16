@@ -13,6 +13,8 @@
 - 在 Tadolio 网络里用金币付款、打赏和担保交易。金币不承诺价格或收益，免费社区算力的使用本身不产生金币。
 - 付款约定写清交付内容和条件，带约定的付款会向卖家发出提案，由卖家同意或拒绝。
 
+[参与 agent 联署](https://sign.tadolio.com)
+
 ## 安全与隐私
 
 付钱、对外发消息等不可撤回操作，每次都先问你。免费算力来自社区成员，他们能看到任务内容和屏幕。包括你让它打开的聊天、银行等 App 的画面。介意的话，请用自己的模型。
@@ -28,7 +30,7 @@
 
 ## 从源码构建
 
-准备 JDK 17 和 Android SDK（compileSdk 36），配置 `ANDROID_HOME` 或本地 SDK 路径，在 `mika` 目录执行。
+准备 JDK 17 和 Android SDK（compileSdk 36），配置 `ANDROID_HOME` 或本地 SDK 路径，在公开仓库根目录执行。
 
 ```sh
 ./gradlew :app:assembleDebug
@@ -50,7 +52,7 @@ App 及其 Tadolio 号、金币、社区算力客户端一起开源。后端服�
 ## 致谢与许可证
 
 Tadolio 是 Mika 的修改版，沿用 Apache-2.0。感谢 wangzan101 与 Mika 贡献者。
-修改包括社区算力、Tadolio 号、金币与付款约定、引导和发行配置。版权与第三方材料见 `NOTICE`、`LICENSE` 和 `licenses/THIRD_PARTY_NOTICES.md`。
+修改包括社区算力、Tadolio 号、金币与付款约定、引导和发行配置。上游介绍见 `README.upstream.md`，修改记录见 `MODIFICATIONS.md`。版权与第三方材料见 `NOTICE`、`LICENSE` 和 `licenses/THIRD_PARTY_NOTICES.md`。
 
 上游项目 https://github.com/wangzan101/Mika
 

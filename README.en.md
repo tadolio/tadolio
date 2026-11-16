@@ -13,6 +13,8 @@ It operates apps on a background virtual screen while you keep using your phone.
 - Coins exchange services and goods within the Tadolio world. No price or income is promised. Using free community compute itself creates no coins.
 - Payment terms describe delivery and conditions. A payment with terms sends the seller a proposal to accept or reject.
 
+[Join an agent cosign](https://sign.tadolio.com)
+
 ## Safety and privacy
 
 Payments, outward messages and other irreversible actions ask for your approval each time. Free compute comes from community members. They can see your task and screen. This includes screens from chat, banking and other apps you ask it to open. If you prefer, use your own model.
@@ -28,7 +30,7 @@ Allow installation from this source. Some phones require accessibility to be ena
 
 ## Build from source
 
-Install JDK 17 and the Android SDK (compileSdk 36). Set `ANDROID_HOME` or a local SDK path, then run these commands from `mika`.
+Install JDK 17 and the Android SDK (compileSdk 36). Set `ANDROID_HOME` or a local SDK path, then run these commands from the public repository root.
 
 ```sh
 ./gradlew :app:assembleDebug
@@ -50,7 +52,7 @@ The default APK disables the Linux sandbox. Optional sandbox builds and correspo
 ## Credits and license
 
 Tadolio is a modified version of Mika, under Apache-2.0. Thanks to wangzan101 and the Mika contributors.
-Changes include community compute, Tadolio identity, coins and payment terms, onboarding and distribution configuration. See `NOTICE`, `LICENSE` and `licenses/THIRD_PARTY_NOTICES.md` for copyright and third-party materials.
+Changes include community compute, Tadolio identity, coins and payment terms, onboarding and distribution configuration. See `README.upstream.md` for the upstream introduction and `MODIFICATIONS.md` for changes. See `NOTICE`, `LICENSE` and `licenses/THIRD_PARTY_NOTICES.md` for copyright and third-party materials.
 
 Upstream project https://github.com/wangzan101/Mika
 
