@@ -107,6 +107,7 @@ class MinerActivity : ComponentActivity() {
         var busy by remember { mutableStateOf(false) }
         var error by remember { mutableStateOf<Int?>(null) }
         var enabled by remember { mutableStateOf(store.enabled) }
+        var examStatus by remember { mutableStateOf(store.examStatus) }
         var state by remember { mutableStateOf(store.state()) }
         var used by remember { mutableLongStateOf(store.used()) }
         var pending by remember { mutableStateOf(store.pending()) }
@@ -142,6 +143,7 @@ class MinerActivity : ComponentActivity() {
             while (true) {
                 enabled = store.enabled
                 state = store.state()
+                examStatus = store.examStatus
                 keyStatuses = store.keyStatuses()
                 activeKey = store.activeKey
                 used = store.used()
@@ -279,6 +281,31 @@ class MinerActivity : ComponentActivity() {
                                 Text("●", color = color)
                                 Text(stringResource(state.message), style = MaterialTheme.typography.titleLarge)
                             }
+                            if (examStatus["retryAllowed"]?.jsonPrimitive?.booleanOrNull == true) {
+                                Text(stringResource(if (examStatus["failureReason"]?.jsonPrimitive?.contentOrNull == "timeout") R.string.miner_exam_timeout else R.string.miner_exam_answer))
+                                val remaining=examStatus["retryRemaining"]?.jsonPrimitive?.intOrNull ?: 0
+                                Button(enabled=!busy && remaining > 0, onClick={ scope.launch {
+                                    busy=true
+                                    try {
+                                        withContext(Dispatchers.IO) { MinerWorker(this@MinerActivity,store){false}.retryExam() }
+                                        examStatus=store.examStatus
+                                        state=store.state()
+                                    } catch(_:Exception) { error=R.string.miner_save_failed }
+                                    finally { busy=false }
+                                } }) { Text(stringResource(R.string.miner_exam_retry,remaining)) }
+                                TextButton(enabled=!busy,onClick={
+                                    store.enabled=false
+                                    stopService(Intent(this@MinerActivity,MinerService::class.java))
+                                    enabled=false
+                                    store.phase=MinerState.CONNECTING
+                                    state=MinerState.CONNECTING
+                                    more=true
+                                }) { Text(stringResource(R.string.miner_change_model)) }
+                                if (remaining == 0) {
+                                    val reset=examStatus["retryResetAt"]?.jsonPrimitive?.longOrNull ?: 0
+                                    Text(stringResource(R.string.miner_exam_reset,java.text.SimpleDateFormat("HH:mm",java.util.Locale.getDefault()).apply { timeZone=java.util.TimeZone.getTimeZone("Asia/Shanghai") }.format(java.util.Date(reset)) + " (UTC+8)"))
+                                }
+                            }
                             Text(stringResource(R.string.key_active, activeKey))
                             if (state == MinerState.KEY_BAD) Text(stringResource(when {
                                 keyStatuses.all { it == KeyFailure.invalid } -> R.string.keys_all_invalid
@@ -348,7 +375,6 @@ class MinerActivity : ComponentActivity() {
                     if (other) {
                         Text(stringResource(R.string.miner_other_hint), style = MaterialTheme.typography.bodySmall)
                         MinerField(base, { base = it.trim(); keyRows = listOf("" to ""); inputPrice = ""; outputPrice = ""; error = null }, R.string.miner_base, editable)
-                        MinerField(model, { model = it.trim(); inputPrice = ""; outputPrice = "" }, R.string.miner_model, editable)
                     } else platform?.let { item ->
                         MinerLinkedHint(stringResource(item.description), stringResource(R.string.miner_get_key)) {
                             runCatching { uri.openUri(item.keyUrl) }
@@ -369,6 +395,8 @@ class MinerActivity : ComponentActivity() {
                     }
                     TextButton(enabled = editable && keyRows.size < 5, onClick = { keyRows = keyRows + ("" to "") }) { Text(stringResource(R.string.key_add_backup)) }
                     Text(stringResource(R.string.miner_api_only), style = MaterialTheme.typography.bodySmall)
+                    MinerField(model, { model = it.trim(); inputPrice = ""; outputPrice = "" }, R.string.miner_model, editable)
+                    Text(if(platform == null) stringResource(R.string.miner_model_custom) else stringResource(R.string.miner_model_default,platform.model),style=MaterialTheme.typography.bodySmall)
                     MinerStep(3, R.string.miner_step_limit)
                     MinerLimitPicker(limit, { limit = it }, chinese, editable, operator)
                     MinerLinkedHint(stringResource(R.string.miner_limit_jobs, MinerLimits.jobs(limit)) + " " + stringResource(R.string.miner_limit_note), stringResource(R.string.miner_cost_link)) { showCost = !showCost }
@@ -390,7 +418,6 @@ class MinerActivity : ComponentActivity() {
                 }
                 if (more) {
                     if (statusPage) Text(stringResource(R.string.miner_locked_while_running), style = MaterialTheme.typography.bodySmall)
-                    MinerField(model, { model = it.trim(); inputPrice = ""; outputPrice = "" }, R.string.miner_model, editable)
                     MinerToggle(stringResource(R.string.miner_wifi), wifi, { wifi = it }, editable)
                     MinerToggle(stringResource(R.string.miner_charging), charging, { charging = it }, editable)
                     MinerField(minBattery, { minBattery = it }, R.string.miner_battery, editable, KeyboardType.Number)

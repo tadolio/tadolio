@@ -68,7 +68,7 @@
     <string name="miner_state_paused_network">暂停：没有网络</string>
     <string name="miner_state_paused_wifi">暂停：等 Wi-Fi</string>
     <string name="miner_state_paused_charging">暂停：等充电</string>
-    <string name="miner_state_failed_exam">模型没考过。先点停止，再换个模型试</string>
+    <string name="miner_state_failed_exam">没通过考试</string>
     <string name="miner_state_key_bad">Key 不能用了：余额不足或已失效</string>
     <string name="miner_cloud">用的是 %1$s 的 Key</string>
     <string name="miner_today">今天用了</string>
@@ -84,4 +84,11 @@
     <string name="miner_back">返回</string>
     <string name="miner_today_usage">%1$s 万 / %2$s 万</string>
     <string name="miner_siliconflow_name">硅基流动</string>
+    <string name="miner_exam_timeout">有题目超时，可能是模型平台当时响应慢</string>
+    <string name="miner_exam_answer">有题目没答对</string>
+    <string name="miner_exam_retry">立即重考（今天还剩 %1$d 次）</string>
+    <string name="miner_change_model">换个模型</string>
+    <string name="miner_exam_reset">明天 %1$s 可以再考</string>
+    <string name="miner_model_default">默认 %1$s，可以换成该平台模型列表里的任意模型</string>
+    <string name="miner_model_custom">填写该平台模型列表里的模型名</string>
 </resources>

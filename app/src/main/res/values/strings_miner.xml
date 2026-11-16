@@ -68,7 +68,7 @@
     <string name="miner_state_paused_network">Paused: no network</string>
     <string name="miner_state_paused_wifi">Paused: waiting for Wi-Fi</string>
     <string name="miner_state_paused_charging">Paused: waiting for charger</string>
-    <string name="miner_state_failed_exam">The model didn’t pass. Stop, then try another model</string>
+    <string name="miner_state_failed_exam">Didn’t pass the exam</string>
     <string name="miner_state_key_bad">The key stopped working: no balance or revoked</string>
     <string name="miner_cloud">Using your %1$s key</string>
     <string name="miner_today">Used today</string>
@@ -84,4 +84,11 @@
     <string name="miner_back">Back</string>
     <string name="miner_today_usage">%1$sM / %2$sM</string>
     <string name="miner_siliconflow_name">SiliconFlow</string>
+    <string name="miner_exam_timeout">Some questions timed out. The model platform may have been slow.</string>
+    <string name="miner_exam_answer">Some questions were answered incorrectly.</string>
+    <string name="miner_exam_retry">Retake now (%1$d left today)</string>
+    <string name="miner_change_model">Change model</string>
+    <string name="miner_exam_reset">Retakes available tomorrow at %1$s</string>
+    <string name="miner_model_default">Default %1$s. You can use any model in this platform’s model list.</string>
+    <string name="miner_model_custom">Enter a model name from this platform’s model list.</string>
 </resources>

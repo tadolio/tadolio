@@ -24,4 +24,12 @@
     <string name="miner_key_failed">Key 不對或餘額不足。請檢查 Key、餘額和網路後重試。</string>
     <string name="miner_save_failed">啟動失敗，請重試。</string>
     <string name="miner_price_note">內建價格更新於 %1$s；DeepSeek 按尖峰價估算。快取優惠和額外費用另計，以平台帳單為準。</string>
+    <string name="miner_exam_timeout">有題目逾時，可能是模型平台當時回應慢</string>
+    <string name="miner_exam_answer">有題目沒答對</string>
+    <string name="miner_exam_retry">立即重考（今天還剩 %1$d 次）</string>
+    <string name="miner_change_model">換個模型</string>
+    <string name="miner_exam_reset">明天 %1$s 可以再考</string>
+    <string name="miner_model_default">預設 %1$s，可以換成該平台模型列表裡的任意模型</string>
+    <string name="miner_model_custom">填寫該平台模型列表裡的模型名</string>
+    <string name="miner_state_failed_exam">沒通過考試</string>
 </resources>

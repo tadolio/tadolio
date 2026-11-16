@@ -28,6 +28,11 @@ internal class MinerWorker(private val context: Context?, private val store: Min
         }.build()
         val client=if(quick)http.newBuilder().callTimeout(5,TimeUnit.SECONDS).readTimeout(5,TimeUnit.SECONDS).build() else http
         return client.newCall(request).execute().use {
+            if (it.code == 429 && path == "/v1/node/exam/retry") {
+                val result=Json.parseToJsonElement(it.body!!.string()).jsonObject
+                (result["examStatus"] as? JsonObject)?.let { status -> store.examStatus=status }
+                return result
+            }
             check(it.isSuccessful){"miner_hub_unavailable"}
             val source=it.body!!.source();check(!source.request(2_000_001)){"miner_frame_too_large"}
             Json.parseToJsonElement(source.readUtf8())
@@ -42,12 +47,19 @@ internal class MinerWorker(private val context: Context?, private val store: Min
             if(paused && store.phase == MinerState.KEY_BAD) put("pauseReason","key_invalid")
             else if(paused && store.pauseReason == MinerState.LIMIT) put("pauseReason","daily_limit")
         },token).jsonObject
+        store.examStatus=(result["examStatus"] as? JsonObject) ?: buildJsonObject {}
         if(store.phase != MinerState.KEY_BAD) {
             store.phase=MinerState.admission(
                 (result["examStatus"] as? JsonObject)?.get("status")?.jsonPrimitive?.contentOrNull,
                 result["approved"]?.jsonPrimitive?.booleanOrNull==true,
                 result["examPassed"]?.jsonPrimitive?.booleanOrNull==true)
         }
+    }
+    fun retryExam() {
+        val token=store.read().str("token")
+        val result=call("/v1/node/exam/retry",buildJsonObject {},token).jsonObject
+        store.examStatus=(result["examStatus"] as? JsonObject) ?: buildJsonObject {}
+        if(result["ok"]?.jsonPrimitive?.booleanOrNull == true) store.phase=MinerState.WAITING_EXAM
     }
     fun pause(){
         val token=store.read()["token"]?.jsonPrimitive?.content?:return

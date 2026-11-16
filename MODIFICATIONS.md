@@ -324,3 +324,11 @@ App 服务商身份、独立本地加密配置、名片与邀请码、显式逐�
 - Connect the Windows miner download to the v0.1.40 release, with bilingual first-run guidance and Release-page SHA-256 information.
 - Give cosign reviewers the current local date and publication dates, and bounded fact checking through the existing web search and background webpage reader. Both own-model and community reviews retain independent decisions and JSON parsing, with up to three search attempts and three webpage reads per batch. External content keeps untrusted wrapping.
 - Preserve previously recorded positions and the existing review queue, memory separation and decision budgets.
+
+## T63 — 矿工自主重考与模型选择
+
+- 电脑和手机的考试状态提供超时或答错原因、立即重考及换模型入口，简中、繁中和英文文案齐备。
+- 同一鉴权接口支持每天 UTC+8 最多三次手动重考，持久化排队和额度，重复请求复用队列，返回次日重置时间。
+- 继续使用现有考题、及格线和自动重试兜底，保留管理员停用与人工复核限制。
+- 模型输入移到 Key 下方，显示平台默认值与可选模型说明，模型变更使用现有重新登记流程。
+- 考试程序仅增加超时元数据，用于区分模型调用和整题超时，状态仅返回原因分类。

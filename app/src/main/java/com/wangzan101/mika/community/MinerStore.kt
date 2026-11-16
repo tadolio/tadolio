@@ -73,6 +73,9 @@ internal class MinerStore(private val file:File, private val cipher:KeyCipher, p
         phase = MinerState.KEY_BAD
         error("miner_keys_unavailable")
     }
+    var examStatus: JsonObject
+        get() = runCatching { Json.parseToJsonElement(prefs.getString("examStatus", "{}").orEmpty()).jsonObject }.getOrDefault(buildJsonObject {})
+        set(value) { check(prefs.edit().putString("examStatus", value.toString()).commit()) }
     var phase: MinerState
         get() = runCatching { MinerState.valueOf(prefs.getString("phase", null).orEmpty()) }.getOrDefault(MinerState.CONNECTING)
         set(value) { check(prefs.edit().putString("phase", value.name).putLong("phaseAt", now()).commit()) }
