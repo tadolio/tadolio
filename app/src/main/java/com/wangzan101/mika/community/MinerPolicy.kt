@@ -12,8 +12,8 @@ internal object MinerPolicy {
     const val DEFAULT_DAILY_TOKENS = 2_000_000L
     fun initialLimit(saved: String) = saved.ifBlank { DEFAULT_DAILY_TOKENS.toString() }
     /** Price estimates and a confirmation checkbox are not prerequisites for mining. */
-    fun canEnable(base: String, model: String, key: String, limit: Long?, battery: Int?, number: String) =
-        battery != null && battery in 0..100 && number.matches(Regex("[0-9]{8}")) &&
+    fun canEnable(base: String, model: String, key: String, limit: Long?, battery: Int?, number: String, requireNumber: Boolean = true) =
+        battery != null && battery in 0..100 && (!requireNumber || number.matches(Regex("[0-9]{8}"))) &&
             validApi(base, model, key, limit, true)
     fun validApi(base: String, model: String, key: String, dailyLimit: Long?, metered: Boolean): Boolean =
         runCatching {

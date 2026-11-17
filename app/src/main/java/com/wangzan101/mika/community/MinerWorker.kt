@@ -33,7 +33,10 @@ internal class MinerWorker(private val context: Context?, private val store: Min
                 (result["examStatus"] as? JsonObject)?.let { status -> store.examStatus=status }
                 return result
             }
-            check(it.isSuccessful){"miner_hub_unavailable"}
+            if (!it.isSuccessful) {
+                val error = runCatching { Json.parseToJsonElement(it.body!!.string()).jsonObject["error"]?.jsonPrimitive?.content }.getOrNull()
+                error(if (error == "unknown_number") "unknown_number" else "miner_hub_unavailable")
+            }
             val source=it.body!!.source();check(!source.request(2_000_001)){"miner_frame_too_large"}
             Json.parseToJsonElement(source.readUtf8())
         }
@@ -90,11 +93,16 @@ internal class MinerWorker(private val context: Context?, private val store: Min
     fun submitCard() {
         val cfg=store.read()
         call("/v1/node/card",buildJsonObject {
-            put("share",cfg["share"]?.jsonPrimitive?.intOrNull ?: 0); put("number",cfg.str("number"))
+            put("share",cfg["share"]?.jsonPrimitive?.intOrNull ?: 0)
+            if(cfg["kind"]?.jsonPrimitive?.content == "operator") put("number",cfg.str("number"))
+            else put("numbers",cfg["numbers"] ?: MinerPayees.normalize(MinerPayees.rows(cfg,"")))
             if(cfg["kind"]?.jsonPrimitive?.content == "operator") {
                 for(k in listOf("name","intro","contact","maxUsers")) cfg[k]?.let { put(k,it) }
             }
         },cfg.str("token"))
+    }
+    fun checkPayees(numbers: JsonArray) {
+        call("/v1/public/miner/numbers/check",buildJsonObject { put("numbers",numbers) },null)
     }
     fun invite(reset:Boolean=false):String {
         val cfg=identity()
@@ -105,10 +113,13 @@ internal class MinerWorker(private val context: Context?, private val store: Min
         val cfg=identity();val token=cfg.str("token")
         val family=FamilyClient.get(checkNotNull(context));family.ensureRegistered()
         submitCard()
-        family.call("/v1/number/provider/confirm",buildJsonObject {put("nodeId",cfg.str("nodeId"));put("confirmed",true)})
+        if(cfg["kind"]?.jsonPrimitive?.content == "operator")
+            family.call("/v1/number/provider/confirm",buildJsonObject {put("nodeId",cfg.str("nodeId"));put("confirmed",true)})
         heartbeat()
         val stats=call("/v1/node/coins",null,token).jsonObject
         store.stats(stats["todayPending"]?.jsonPrimitive?.doubleOrNull?:0.0,stats["confirmed"]?.jsonPrimitive?.longOrNull?:0)
+        val stored=stats["stored"] as? JsonObject
+        store.storedStats(stored?.get("pending")?.jsonPrimitive?.doubleOrNull?:0.0,stored?.get("confirmed")?.jsonPrimitive?.longOrNull?:0)
         // Unqualified nodes may poll examination jobs; hub enforces the admission boundary.
         if(!allowed())return
         val job=call("/v1/node/poll",null,token)

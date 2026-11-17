@@ -313,6 +313,9 @@ internal class NumberClient private constructor(private val context: Context) {
             put("nodeId", nodeId); put("confirmed", confirmed)
         })
     }
+    suspend fun declineMiner(nodeId: String) = withContext(Dispatchers.IO) {
+        family.call("/v1/number/provider/decline", buildJsonObject { put("nodeId", nodeId) })
+    }
     suspend fun providerUsers(): JsonObject = withContext(Dispatchers.IO) {
         family.call("/v1/number/provider/users").jsonObject
     }

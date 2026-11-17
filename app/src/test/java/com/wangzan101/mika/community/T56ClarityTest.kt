@@ -150,7 +150,7 @@ class T56ClarityTest {
         assertTrue(body.indexOf("RoleChoice()") < body.indexOf("MinerStep(1,"))
         assertTrue(body.indexOf("MinerStep(1,") < body.indexOf("MinerStep(2,"))
         assertTrue(body.indexOf("MinerStep(2,") < body.indexOf("MinerStep(3,"))
-        assertTrue(body.indexOf("MinerStep(3,") < body.indexOf("if (operator) ProviderCardFields()"))
+        assertTrue(body.indexOf("MinerStep(3,") < body.indexOf("R.string.miner_payees_hint"))
         assertTrue(body.indexOf("R.string.miner_today_usage") < body.indexOf("R.string.phone_operator_invite_label"))
         assertTrue(body.indexOf("R.string.phone_operator_invite_label") < body.indexOf("Text(invite,"))
         assertTrue(body.indexOf("Text(invite,") < body.indexOf("R.string.phone_operator_edit"))

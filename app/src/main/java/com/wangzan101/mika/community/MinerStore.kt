@@ -120,6 +120,11 @@ internal class MinerStore(private val file:File, private val cipher:KeyCipher, p
     }
     fun pending() = if(prefs.getLong("statsDay",-1)==MinerPolicy.day(now())) prefs.getString("pending","0")!! else "0"
     fun confirmed()=prefs.getLong("confirmed",0)
+    fun storedStats(pending: Double, confirmed: Long) {
+        check(prefs.edit().putString("storedPending",pending.toString()).putLong("storedConfirmed",confirmed).commit())
+    }
+    fun storedPending()=prefs.getString("storedPending","0").orEmpty()
+    fun storedConfirmed()=prefs.getLong("storedConfirmed",0)
     companion object {
         private val configLock = Any()
         fun activeKind(context:Context) = context.getSharedPreferences("miner_role",Context.MODE_PRIVATE).getString("kind","compute")!!

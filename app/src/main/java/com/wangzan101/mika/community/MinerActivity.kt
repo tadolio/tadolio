@@ -114,6 +114,9 @@ class MinerActivity : ComponentActivity() {
         var confirmed by remember { mutableLongStateOf(store.confirmed()) }
         var nodeId by remember { mutableStateOf(value("nodeId")) }
         var number by remember { mutableStateOf(NumberClient.get(this).mine()) }
+        var payeeRows by remember { mutableStateOf(MinerPayees.rows(saved,number)) }
+        var storedPending by remember { mutableStateOf(store.storedPending()) }
+        var storedConfirmed by remember { mutableLongStateOf(store.storedConfirmed()) }
         // Follow the actual fallback copy, including English in Traditional Chinese locales.
         val chinese = stringResource(R.string.miner_limit_unit) == "万 token"
         val scope = rememberCoroutineScope()
@@ -149,6 +152,8 @@ class MinerActivity : ComponentActivity() {
                 used = store.used()
                 pending = store.pending()
                 confirmed = store.confirmed()
+                storedPending = store.storedPending()
+                storedConfirmed = store.storedConfirmed()
                 number = NumberClient.get(this@MinerActivity).mine()
                 nodeId = withContext(Dispatchers.IO) { runCatching { store.read()["nodeId"]?.jsonPrimitive?.content }.getOrNull().orEmpty() }
                 delay(1000)
@@ -163,7 +168,7 @@ class MinerActivity : ComponentActivity() {
         val priceOutput = if (manual) outputPrice.toDoubleOrNull() else publicQuote?.output ?: presetPrice?.output
         val priceCurrency = if (manual) currency else if (publicQuote != null) "USD" else presetPrice?.currency.orEmpty()
         val prices = MinerPricing.estimate(limit, priceInput, priceOutput)
-        val valid = apiKeys.size in 1..5 && apiKeys.all { it.isNotBlank() } && apiKeys.distinct().size == apiKeys.size && (!operator || OperatorForm.valid(cardName,intro,contact,share.toIntOrNull(),maxUsers.toIntOrNull(),declared)) && MinerPolicy.canEnable(base, model, apiKey, limit, minBattery.toIntOrNull(), number)
+        val valid = apiKeys.size in 1..5 && apiKeys.all { it.isNotBlank() } && apiKeys.distinct().size == apiKeys.size && (!operator || OperatorForm.valid(cardName,intro,contact,share.toIntOrNull(),maxUsers.toIntOrNull(),declared)) && MinerPolicy.canEnable(base, model, apiKey, limit, minBattery.toIntOrNull(), number, requireNumber=operator) && (operator || runCatching { MinerPayees.normalize(payeeRows) }.isSuccess)
         val editable = !statusPage && !busy
 
         @Composable fun ProviderCardFields() {
@@ -217,6 +222,9 @@ class MinerActivity : ComponentActivity() {
                                 error = null
                                 scope.launch {
                                     try {
+                                        if(!operator) withContext(Dispatchers.IO) {
+                                            MinerWorker(this@MinerActivity,store){false}.checkPayees(MinerPayees.normalize(payeeRows))
+                                        }
                                         val result = withContext(Dispatchers.IO) { MinerKeyValidator().validate(base, model, apiKeys) }
                                         if (result != MinerKeyValidator.Result.Valid) { error = result.message; return@launch }
                                         saved = withContext(Dispatchers.IO) {
@@ -242,6 +250,11 @@ class MinerActivity : ComponentActivity() {
                                                     put("wifi", wifi)
                                                     put("charging", charging)
                                                     put("number", number)
+                                                    if(!operator) {
+                                                        val payees=MinerPayees.normalize(payeeRows)
+                                                        put("numbers",payees)
+                                                        put("number",payees.firstOrNull()?.jsonObject?.get("number")?.jsonPrimitive?.content.orEmpty())
+                                                    }
                                                 }
                                             }.also { store.autoStart = autoStart }
                                         }
@@ -253,7 +266,7 @@ class MinerActivity : ComponentActivity() {
                                         store.enabled = true
                                         startMiner()
                                         enabled = store.enabled
-                                    } catch (_: Exception) { store.enabled = false; enabled = false; error = R.string.miner_save_failed }
+                                    } catch (failure: Exception) { store.enabled = false; enabled = false; error = if(failure.message=="unknown_number") R.string.miner_unknown_number else R.string.miner_save_failed }
                                     finally { busy = false }
                                 }
                             }) { Text(stringResource(if (busy) R.string.miner_checking else R.string.miner_start)) }
@@ -325,6 +338,7 @@ class MinerActivity : ComponentActivity() {
                             }
                             LinearProgressIndicator(progress = { (used.toFloat() / (limit ?: 1).coerceAtLeast(1)).coerceIn(0f, 1f) }, modifier = Modifier.fillMaxWidth())
                             Text(stringResource(R.string.miner_coins) + " · " + stringResource(R.string.miner_coins_value, pending, confirmed.toString()))
+                            if(!operator) Text(stringResource(R.string.miner_stored,storedPending,storedConfirmed.toString()))
                             MinerToggle(stringResource(R.string.miner_auto_start), autoStart, { autoStart = it; store.autoStart = it })
                         }
                     }
@@ -406,8 +420,26 @@ class MinerActivity : ComponentActivity() {
                                 String.format(java.util.Locale.ROOT, "%.2f", prices.first), String.format(java.util.Locale.ROOT, "%.2f", prices.second)), Modifier.padding(10.dp), style = MaterialTheme.typography.bodySmall)
                         }
                     }
-                    if (operator) ProviderCardFields()
-                    else Text(stringResource(minerNumberMessage(number), number), style = MaterialTheme.typography.bodySmall)
+                    if (operator) {
+                        ProviderCardFields()
+                        Text(stringResource(R.string.miner_operator_number_reason),style=MaterialTheme.typography.bodySmall)
+                    } else {
+                        Text(stringResource(R.string.miner_payees_hint),style=MaterialTheme.typography.bodySmall)
+                        payeeRows.forEachIndexed { index,row ->
+                            Row(horizontalArrangement=Arrangement.spacedBy(6.dp),verticalAlignment=Alignment.CenterVertically) {
+                                OutlinedTextField(value=row.first,onValueChange={ value -> payeeRows=payeeRows.mapIndexed { i,p -> if(i==index) value to p.second else p } },
+                                    label={Text(stringResource(R.string.miner_payee_number))},modifier=Modifier.weight(1f),singleLine=true,
+                                    keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),enabled=editable)
+                                OutlinedTextField(value=row.second,onValueChange={ value -> payeeRows=payeeRows.mapIndexed { i,p -> if(i==index) p.first to value else p } },
+                                    label={Text(stringResource(R.string.miner_payee_percent))},modifier=Modifier.weight(0.6f),singleLine=true,
+                                    keyboardOptions=KeyboardOptions(keyboardType=KeyboardType.Number),enabled=editable)
+                                TextButton(enabled=editable,onClick={payeeRows=payeeRows.filterIndexed { i,_ -> i!=index }.ifEmpty { listOf("" to "") }}) { Text(stringResource(R.string.miner_payee_remove)) }
+                            }
+                        }
+                        TextButton(enabled=editable&&payeeRows.size<5,onClick={payeeRows=payeeRows+("" to "")}) { Text(stringResource(R.string.miner_payee_add)) }
+                        if(payeeRows.all { it.first.isBlank() }) Text(stringResource(R.string.miner_payees_empty))
+                        Text(stringResource(R.string.miner_stored,storedPending,storedConfirmed.toString()))
+                    }
                 }
                 if (statusPage) RoleChoice()
                 TextButton(onClick = { more = !more }, contentPadding = PaddingValues(0.dp)) {
@@ -432,7 +464,8 @@ class MinerActivity : ComponentActivity() {
                     TextButton(onClick = { details = !details }, contentPadding = PaddingValues(0.dp)) { Text(stringResource(R.string.miner_details)) }
                     if (details) {
                         Text(stringResource(R.string.miner_node, nodeId))
-                        Text(stringResource(minerNumberMessage(number), number))
+                        if(operator) Text(stringResource(minerNumberMessage(number), number))
+                        else Text(payeeRows.filter { it.first.isNotBlank() }.joinToString(" · ") { it.first + if(it.second.isBlank()) "" else " ${it.second}%" }.ifBlank { getString(R.string.miner_payees_empty) })
                         Text(stringResource(R.string.points_disclaimer), style = MaterialTheme.typography.bodySmall)
                     }
                 }

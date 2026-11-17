@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="miner_payee_number">收金币的 Tadolio 号</string>
+    <string name="miner_payee_percent">比例（%）</string>
+    <string name="miner_payee_add">添加收款号（最多 5 个）</string>
+    <string name="miner_payee_remove">移除</string>
+    <string name="miner_payees_hint">可以填任何已存在的号。比例为整数，合计 100%。比例全部留空则平均分，余数给第一个号。</string>
+    <string name="miner_payees_empty">金币先存在这台矿工里，填上号就能领</string>
+    <string name="miner_stored">这台矿工里攒下的金币 · 待确认 %1$s · 已确认 %2$s</string>
+    <string name="miner_unknown_number">这个号不存在，检查一下</string>
+    <string name="miner_receiving_card">正在给你挖的矿工 · %1$s · %2$d%% · 今天 %3$s 金币</string>
+    <string name="miner_decline">不再接收</string>
+    <string name="miner_operator_number_reason">服务商的号会公开在名片上，所以要你在 App 里确认是本人</string>
+</resources>

@@ -364,7 +364,17 @@ private fun NumberInboxScreen(back: () -> Unit, caseId: String?, onCaseOpened: (
                 }
                 NumberMoveEntry { moving = it }
                 TextButton(onClick = { inviting = true }) { Text(stringResource(R.string.referral_title)) }
-                providerCards.filter { it.jsonObject["confirmed"]?.jsonPrimitive?.booleanOrNull != true }.forEach { card ->
+                providerCards.filter { it.jsonObject.operatorText("kind") == "compute" }.forEach { card ->
+                    val miner=card.jsonObject
+                    Text(stringResource(R.string.miner_receiving_card,miner.str("platform"),
+                        miner["percent"]?.jsonPrimitive?.intOrNull ?: 100,miner["todayCoins"]?.jsonPrimitive?.content ?: "0"),
+                        Modifier.padding(horizontal=16.dp))
+                    TextButton(enabled=!busy,onClick={ work {
+                        client.declineMiner(miner.str("nodeId"))
+                        providerCards=client.providerCards()
+                    } }) { Text(stringResource(R.string.miner_decline)) }
+                }
+                providerCards.filter { it.jsonObject.operatorText("kind") == "operator" && it.jsonObject["confirmed"]?.jsonPrimitive?.booleanOrNull != true }.forEach { card ->
                     val proposal = card.jsonObject
                     Text(stringResource(R.string.number_provider_request, proposal.str("platform"), proposal.str("nodeId")),
                         Modifier.padding(horizontal = 16.dp))

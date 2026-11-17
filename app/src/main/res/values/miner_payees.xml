@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="miner_payee_number">Receiving Tadolio number</string>
+    <string name="miner_payee_percent">Share (%)</string>
+    <string name="miner_payee_add">Add number (up to 5)</string>
+    <string name="miner_payee_remove">Remove</string>
+    <string name="miner_payees_hint">Use any existing numbers. Integer shares must total 100%. Leave all shares blank to split equally, with the remainder going to the first number.</string>
+    <string name="miner_payees_empty">Coins stay with this miner until you add a number.</string>
+    <string name="miner_stored">Stored with this miner · Pending %1$s · Confirmed %2$s</string>
+    <string name="miner_unknown_number">This number does not exist. Check it.</string>
+    <string name="miner_receiving_card">Miner working for you · %1$s · %2$d%% · Today %3$s coins</string>
+    <string name="miner_decline">Stop receiving from this miner</string>
+    <string name="miner_operator_number_reason">Your provider number is public on your card, so confirm your identity in the App.</string>
+</resources>
