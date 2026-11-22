@@ -1,6 +1,10 @@
 // Modified by Tadolio contributors (2026)
 package com.wangzan101.mika.calls
 
+import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.cancelAndJoin
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
@@ -94,6 +98,87 @@ class CallHistoryTest {
         assertFalse(legacy.handled)
         assertNull(legacy.task)
         assertNull(legacy.audioReport)
+        assertNull(legacy.summary)
+        assertEquals(SummaryStatus.NOT_REQUESTED, legacy.summaryStatus)
+    }
+
+    @Test fun summaryAndFollowUpStatusesSurviveSerialization() {
+        val original = record(1).copy(summary = CallSummary(
+            purpose = "询问营业时间",
+            followUpDraft = "关于刚才的电话，请问周五几点营业？",
+            uncertainties = listOf("时间尚未确认"),
+            actions = listOf(CallFollowUp("回复来电", CallFollowUp.Status.PENDING)),
+        ))
+        assertEquals(original, Json.decodeFromString<CallRecord>(Json.encodeToString(original)))
+        assertEquals(CallFollowUp.Status.UNKNOWN, CallFollowUp("待确认").status)
+    }
+
+    @Test fun editedDraftSurvivesReopenAndFailedSavePreservesOriginal() = runBlocking {
+        val original = record(1).copy(summary = CallSummary(purpose = "询价", followUpDraft = "原草稿"), summaryStatus = SummaryStatus.READY)
+        val storage = MemoryStorage(listOf(original))
+        val history = CallHistory(storage)
+        assertEquals(CallHistory.Result.SAVED, history.saveFollowUpDraft(original.id, "  修改后的跟进消息  "))
+        val reopened = CallHistory(storage)
+        reopened.load()
+        val expected = original.copy(summary = original.summary!!.copy(followUpDraft = "修改后的跟进消息"))
+        assertEquals(expected, reopened.state.value.single())
+        storage.failWrite = true
+        assertEquals(CallHistory.Result.WRITE_FAILED, reopened.saveFollowUpDraft(original.id, "不能丢掉旧草稿"))
+        assertEquals(expected, reopened.state.value.single())
+        storage.failWrite = false
+        reopened.delete(original.id)
+        assertEquals(CallHistory.Result.NOT_FOUND, reopened.saveFollowUpDraft(original.id, "不复活已删除的通话"))
+    }
+
+    @Test fun manuallyWrittenDraftPreservesLegacySummaryAndHandlingState() = runBlocking {
+        val original = record(1).copy(handled = true, summaryStatus = SummaryStatus.READY,
+            summary = CallSummary(purpose = "确认床垫尺寸", actions = listOf(CallFollowUp("补充尺寸"))))
+        val storage = MemoryStorage(listOf(original))
+        val history = CallHistory(storage)
+        assertEquals(CallHistory.Result.SAVED, history.saveFollowUpDraft(original.id, "请补充床垫尺寸。"))
+        val reopened = CallHistory(storage).also { it.load() }
+        assertEquals(original.copy(summary = original.summary!!.copy(followUpDraft = "请补充床垫尺寸。")),
+            reopened.state.value.single())
+    }
+
+    @Test fun oldSummaryDecodesWithoutDraft() {
+        val summary = Json.decodeFromString<CallSummary>("""{"purpose":"询价","actions":[]}""")
+        assertNull(summary.followUpDraft)
+    }
+
+    @Test fun cancelledSummaryRetryRestoresFailedStatus() = runBlocking {
+        val original = record(1).copy(summaryStatus = SummaryStatus.FAILED)
+        val storage = MemoryStorage(listOf(original))
+        val history = CallHistory(storage)
+        val entered = CompletableDeferred<Unit>()
+        val retry = launch {
+            history.retryFailedSummary(original.id) {
+                entered.complete(Unit)
+                awaitCancellation()
+            }
+        }
+        entered.await()
+        assertEquals(SummaryStatus.PENDING, history.state.value.single().summaryStatus)
+        retry.cancelAndJoin()
+        assertEquals(original, history.state.value.single())
+        assertEquals(listOf(original), storage.records)
+    }
+
+    @Test fun cancellationDoesNotReplaceAnAlreadySavedSummary() = runBlocking {
+        val original = record(1).copy(summaryStatus = SummaryStatus.FAILED)
+        val history = CallHistory(MemoryStorage(listOf(original)))
+        val summary = CallSummary(purpose = "询问营业时间")
+        val entered = CompletableDeferred<Unit>()
+        val retry = launch {
+            history.retryFailedSummary(original.id) {
+                history.setSummary(original.id, summary, SummaryStatus.READY)
+                entered.complete(Unit)
+                awaitCancellation()
+            }
+        }
+        entered.await()
+        retry.cancelAndJoin()
+        assertEquals(original.copy(summary = summary, summaryStatus = SummaryStatus.READY), history.state.value.single())
     }
 
     @Test fun outgoingTaskRoundTripsWithoutClaimingCompletionOrReusingItOnTheNextCall() = runBlocking {

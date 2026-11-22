@@ -56,7 +56,7 @@ class StdioMcpEndpoint private constructor(
     private val prompts: List<McpPromptDescriptor>,
     private val timeoutSec: Int,
     val serverName: String?,
-    val instructions: String?,
+    override val instructions: String?,
 ) : McpEndpoint, Closeable {
 
     override fun tools(): List<McpToolDescriptor> = tools

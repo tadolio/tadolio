@@ -90,7 +90,8 @@ class CliTest(unittest.TestCase):
         self.token_file = self.directory / "token"
         self.token_file.write_text(TOKEN)
 
-    def invoke(self, *args, server=None, script=SCRIPT, stdin=None, env=None, json_option="--json", parse=True):
+    def invoke(self, *args, server=None, script=SCRIPT, stdin=None, env=None, json_option="--json", parse=True,
+               encoding="utf-8"):
         command = [sys.executable, str(script)]
         if json_option is not None:
             command.append(json_option)
@@ -101,9 +102,9 @@ class CliTest(unittest.TestCase):
         process_env.pop("ANDROID_SERIAL", None)
         if env:
             process_env.update(env)
-        result = subprocess.run(command, input=stdin, text=True, encoding="utf-8", capture_output=True,
+        result = subprocess.run(command, input=stdin, encoding=encoding, capture_output=True,
                                 cwd=self.directory, env=process_env, timeout=15)
-        self.assertNotIn(TOKEN, result.stdout + result.stderr)
+        self.assertNotIn(TOKEN if encoding else TOKEN.encode(), result.stdout + result.stderr)
         return result, json.loads(result.stdout) if parse else None
 
     def fake_adb(self, server, **overrides):
@@ -249,7 +250,35 @@ else:
                                        "00000000-0000-4000-8000-000000000001", server=server)
             self.assertNotEqual(0, result.returncode)
             self.assertEqual("incompatible_api", body["error"]["code"])
+            self.assertIn("task_recovery", body["error"]["message"])
+            self.assertIn(DISCOVERY["server_version"], body["error"]["message"])
+            self.assertIn("without --request-id", body["error"]["message"])
+            self.assertEqual("task_recovery", body["error"]["capability"])
+            self.assertEqual(DISCOVERY["server_version"], body["error"]["server_version"])
             self.assertFalse(any(m == "POST" for m, _, _ in server.calls))
+
+    def test_capability_errors_stay_actionable_without_a_phone_version(self):
+        old = {"api_version": 1, "capabilities": ["tasks"]}
+        for args in [["task", "run", "--goal", "once", "--request-id", "00000000-0000-4000-8000-000000000002"],
+                     ["task", "steer", "t1", "--text", "more"],
+                     ["task", "export", "t1"],
+                     ["task", "download", "t1", "f1", "--output", "out"]]:
+            with self.subTest(args=args), api(lambda *_: (200, old, {})) as server:
+                result, body = self.invoke(*args, server=server)
+                self.assertEqual(2, result.returncode)
+                error = body["error"]
+                self.assertEqual("incompatible_api", error["code"])
+                self.assertTrue(error["capability"])
+                self.assertIn(error["capability"], error["message"])
+                self.assertNotIn("server_version", error)
+                self.assertNotIn("version", error["message"])
+
+    def test_download_names_the_missing_files_capability(self):
+        with api() as server:
+            result, body = self.invoke("task", "download", "t1", "f1", "--output", "out", server=server)
+            self.assertEqual(2, result.returncode)
+            self.assertEqual("task_files", body["error"]["capability"])
+            self.assertIn("task_files", body["error"]["message"])
 
     def test_unknown_answer_preserves_known_task_id(self):
         with api(lambda method, path, body: "drop" if method == "POST" else None) as server:
@@ -276,6 +305,8 @@ else:
             result, body = self.invoke("task", "steer", "t1", "--text", "more", server=server)
             self.assertEqual(2, result.returncode)
             self.assertEqual("incompatible_api", body["error"]["code"])
+            self.assertEqual("task_steer", body["error"]["capability"])
+            self.assertIn("task_steer", body["error"]["message"])
             self.assertEqual([("GET", "/api/v1", None)], server.calls)
 
     def test_uncertain_steer_is_not_repeated(self):
@@ -624,6 +655,8 @@ else:
             result, body = self.invoke("task", "export", "t1", server=server)
             self.assertEqual(2, result.returncode)
             self.assertEqual("incompatible_api", body["error"]["code"])
+            self.assertEqual("run_export", body["error"]["capability"])
+            self.assertIn("run_export", body["error"]["message"])
             self.assertEqual([("GET", "/api/v1", None)], server.calls)
         message = "No remote task or run record with id missing"
 
@@ -640,20 +673,22 @@ else:
 
     def test_events_flag_prints_jsonl_without_rewrapping(self):
         header = {key: value for key, value in EXPORT.items() if key != "events"}
-        payload = json.dumps(header, ensure_ascii=False) + "\n" + json.dumps(EXPORT["events"][0], ensure_ascii=False) + "\n"
+        event = {"type": "task_started", "goal": "open\u2028settings"}
+        payload = (json.dumps(header) + "\n" + json.dumps(event, ensure_ascii=False) + "\n").encode()
 
-        def respond(method, path, body):
-            if path == "/api/v1":
-                return 200, DISCOVERY_EXPORT, {}
-            if method == "GET" and path == "/api/v1/tasks/t1/export?events=jsonl":
-                return 200, payload.encode(), {"Content-Type": "application/x-ndjson"}
-            return 500, {}, {}
-
-        with api(respond) as server:
-            result, _ = self.invoke("task", "export", "t1", "--events", server=server, parse=False)
+        with events_api(payload) as server:
+            result, _ = self.invoke("task", "export", "t1", "--events", server=server, parse=False, encoding=None)
             self.assertEqual(0, result.returncode, result.stderr)
             self.assertEqual(payload, result.stdout)
             self.assertEqual([("GET", "/api/v1", None), ("GET", "/api/v1/tasks/t1/export?events=jsonl", None)], server.calls)
+
+    def test_events_flag_rejects_malformed_json_after_valid_header(self):
+        header = {key: value for key, value in EXPORT.items() if key != "events"}
+        payload = (json.dumps(header) + '\n{"type":"task_started"\n').encode()
+        with events_api(payload) as server:
+            result, body = self.invoke("task", "export", "t1", "--events", server=server)
+            self.assertEqual(2, result.returncode)
+            self.assertEqual("protocol", body["error"]["code"])
 
     def test_malformed_export_id_does_not_connect(self):
         result, body = self.invoke("task", "export", "../secret", "--adb", "does-not-exist")
@@ -669,6 +704,17 @@ EXPORT = {
     "events": [{"type": "task_started", "goal": "open settings"}],
 }
 DISCOVERY_EXPORT = {**DISCOVERY, "capabilities": ["tasks", "task_steer", "run_export"]}
+
+
+def events_api(payload):
+    def respond(method, path, body):
+        if path == "/api/v1":
+            return 200, DISCOVERY_EXPORT, {}
+        if method == "GET" and path == "/api/v1/tasks/t1/export?events=jsonl":
+            return 200, payload, {"Content-Type": "application/x-ndjson"}
+        return 500, {}, {}
+
+    return api(respond)
 
 
 if __name__ == "__main__":

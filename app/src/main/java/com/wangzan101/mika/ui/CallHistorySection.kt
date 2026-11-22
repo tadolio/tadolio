@@ -25,6 +25,7 @@ import com.wangzan101.mika.calls.CallDirection
 import com.wangzan101.mika.calls.CallTaskBrief
 import com.wangzan101.mika.calls.CallRecord
 import com.wangzan101.mika.calls.CallTranscriptLine
+import com.wangzan101.mika.calls.SummaryStatus
 import com.wangzan101.mika.ui.components.*
 import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaTheme
@@ -44,8 +45,11 @@ internal fun CallHistorySection(
     historyWriteFailed: Boolean,
     onMark: suspend (String, Boolean) -> CallActionResult,
     onDelete: suspend (String) -> CallActionResult,
+    onRetrySummary: suspend (String) -> CallActionResult,
     onClear: suspend () -> CallActionResult,
+    focusRecordId: String? = null,
     onReuseTask: ((String, CallTaskBrief) -> Unit)? = null,
+    onSaveDraft: (suspend (String, String) -> CallActionResult)? = null,
 ) {
     var filter by rememberSaveable { mutableStateOf(HistoryFilter.ALL) }
     var query by rememberSaveable { mutableStateOf("") }
@@ -56,8 +60,17 @@ internal fun CallHistorySection(
     var busy by remember { mutableStateOf(false) }
     var feedback by remember { mutableStateOf<CallActionResult?>(null) }
     val scope = rememberCoroutineScope()
+    LaunchedEffect(focusRecordId, history) {
+        if (focusRecordId != null && history.any { it.id == focusRecordId }) {
+            filter = HistoryFilter.ALL
+            query = ""
+            showAll = true
+            expanded = focusRecordId
+        }
+    }
     val failure = stringResource(R.string.calls_action_failed)
     val clearFailure = stringResource(R.string.calls_history_clear_failed)
+    val summaryFailure = stringResource(R.string.calls_summary_failed)
     val cleared = stringResource(R.string.calls_history_cleared)
     val deleted = stringResource(R.string.calls_history_deleted)
     val handled = stringResource(R.string.calls_history_done)
@@ -80,6 +93,11 @@ internal fun CallHistorySection(
                 (digits != null && record.number.orEmpty().filter(Char::isDigit).contains(digits)) ||
                 direction.contains(text, ignoreCase = true) || record.result.contains(text, ignoreCase = true) ||
                 record.transcript.any { it.text.contains(text, ignoreCase = true) } ||
+                record.summary?.let { summary ->
+                    listOfNotNull(summary.purpose, summary.conclusion, summary.followUpDraft).plus(summary.highlights)
+                        .plus(summary.uncertainties).plus(summary.actions.map { it.text })
+                        .any { it.contains(text, ignoreCase = true) }
+                } == true ||
                 record.task?.let { task ->
                     (listOf(task.goal, task.context, task.constraints) + task.questions).any {
                         it.contains(text, ignoreCase = true)
@@ -155,6 +173,8 @@ internal fun CallHistorySection(
                             change(if (next) handled else unhandled) { onMark(record.id, next) }
                         },
                         onDelete = { pendingDelete = record.id },
+                        onSaveDraft = onSaveDraft?.let { save -> { text -> save(record.id, text) } },
+                        onRetrySummary = { change("摘要已更新", summaryFailure) { onRetrySummary(record.id) } },
                         onReuse = if (record.number != null && record.task != null && onReuseTask != null) {
                             { onReuseTask(record.number, record.task) }
                         } else null,
@@ -219,7 +239,9 @@ internal fun CallHistorySection(
 @Composable
 private fun CallHistoryItem(
     record: CallRecord, expanded: Boolean, first: Boolean, busy: Boolean,
-    onExpand: () -> Unit, onMark: () -> Unit, onDelete: () -> Unit, onReuse: (() -> Unit)?,
+    onExpand: () -> Unit, onMark: () -> Unit, onDelete: () -> Unit, onRetrySummary: () -> Unit,
+    onReuse: (() -> Unit)?,
+    onSaveDraft: (suspend (String) -> CallActionResult)?,
 ) {
     var showTask by rememberSaveable(record.id) { mutableStateOf(false) }
     var showTranscript by rememberSaveable(record.id) { mutableStateOf(false) }
@@ -243,6 +265,40 @@ private fun CallHistoryItem(
                 HorizontalDivider()
                 Text(stringResource(R.string.calls_history_period, start, end),
                     style = MaterialTheme.typography.bodySmall, color = MikaTheme.colors.ink3)
+                record.summary?.let { summary ->
+                    summary.purpose?.let { Text("${stringResource(R.string.calls_summary_purpose)}：$it") }
+                    if (summary.highlights.isNotEmpty()) {
+                        Text(stringResource(R.string.calls_summary_highlights), style = MaterialTheme.typography.labelLarge)
+                        summary.highlights.forEach { Text("• $it") }
+                    }
+                    summary.conclusion?.let { Text("${stringResource(R.string.calls_summary_conclusion)}：$it") }
+                    if (summary.uncertainties.isNotEmpty()) {
+                        Text(stringResource(R.string.calls_summary_uncertainties), style = MaterialTheme.typography.labelLarge)
+                        summary.uncertainties.forEach { Text("• $it") }
+                    }
+                    if (summary.actions.isNotEmpty()) {
+                        Text(stringResource(R.string.calls_summary_actions), style = MaterialTheme.typography.labelLarge)
+                        summary.actions.forEach { item ->
+                            val state = when (item.status) {
+                                com.wangzan101.mika.calls.CallFollowUp.Status.PENDING -> R.string.calls_summary_pending
+                                com.wangzan101.mika.calls.CallFollowUp.Status.DONE -> R.string.calls_summary_done
+                                com.wangzan101.mika.calls.CallFollowUp.Status.UNKNOWN -> R.string.calls_summary_unknown
+                            }
+                            Text("${stringResource(state)}：${item.text}")
+                        }
+                    }
+                }
+                if (record.summaryStatus == SummaryStatus.READY && record.summary != null) {
+                    CallFollowUpDraft(record.id, record.summary.followUpDraft, onSaveDraft)
+                }
+                if (record.summaryStatus == SummaryStatus.PENDING) {
+                    Text(stringResource(R.string.calls_summary_generating), color = MikaTheme.colors.ink3)
+                } else if (record.summaryStatus == SummaryStatus.FAILED) {
+                    Text(stringResource(R.string.calls_summary_failed), color = MaterialTheme.colorScheme.error)
+                    TextButton(onClick = onRetrySummary, enabled = !busy, modifier = Modifier.testTag("call-summary-retry")) {
+                        Text(stringResource(R.string.calls_summary_retry))
+                    }
+                }
                 record.task?.let { task ->
                     Text(stringResource(R.string.calls_record_result_unconfirmed),
                         style = MaterialTheme.typography.bodySmall, color = MikaTheme.colors.ink3)
@@ -317,8 +373,16 @@ private fun CallHistoryItem(
 @Composable
 internal fun CallTranscriptText(line: CallTranscriptLine) {
     Column {
-        Text(stringResource(if (line.role == "assistant") R.string.app_name else R.string.calls_caller),
+        Text(stringResource(callTranscriptSpeakerLabel(line.role)),
             style = MaterialTheme.typography.labelMedium, color = MikaTheme.colors.ink3)
         Text(line.text, style = MaterialTheme.typography.bodyMedium)
     }
+}
+
+/** One role mapping for the full transcript and the compact latest-line preview. */
+@StringRes
+internal fun callTranscriptSpeakerLabel(role: String): Int = when (role) {
+    "assistant" -> R.string.app_name
+    "system" -> R.string.calls_dtmf_status_label
+    else -> R.string.calls_caller
 }

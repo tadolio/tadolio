@@ -1,11 +1,9 @@
 // Modified by Tadolio contributors (2026)
 package com.wangzan101.mika.core.cap.root
 
-import com.wangzan101.mika.core.action.ConfirmChoice
 import com.wangzan101.mika.core.action.ApprovalSettings
 import com.wangzan101.mika.core.agent.AgentLoop
 import com.wangzan101.mika.core.agent.FakeModel
-import com.wangzan101.mika.core.agent.TaskState
 import com.wangzan101.mika.core.assembly.knownToolNames
 import com.wangzan101.mika.core.assembly.toolDispatcher
 import com.wangzan101.mika.core.gate.ConfirmationGate
@@ -15,7 +13,6 @@ import com.wangzan101.mika.core.model.Role
 import com.wangzan101.mika.core.model.StopReason
 import com.wangzan101.mika.core.record.RunEvent
 import com.wangzan101.mika.core.record.RunSink
-import com.wangzan101.mika.core.risk.IrrevAction
 import com.wangzan101.mika.core.run.Attendance
 import com.wangzan101.mika.core.run.RunId
 import com.wangzan101.mika.core.run.RunInbox
@@ -25,8 +22,6 @@ import com.wangzan101.mika.core.run.RunSpec
 import com.wangzan101.mika.core.testing.answerReply
 import com.wangzan101.mika.core.tool.FakeScreen
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.async
-import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -74,16 +69,17 @@ class RootCommandToolTest {
             approvals = ApprovalSettings { autonomous })
 
     @Test
-    fun communityCannotOfferOrExecuteRootEvenWhenPortIsSupplied() = runTest {
+    fun communityOffersRootAndRunsReadOnlyCommandsWithTheSuppliedPort() = runTest {
         val port = FakeRoot()
         val spec = RunSpec(RunId("community"), "test", "thread",
             computeMode = com.wangzan101.mika.core.run.ComputeMode.Community)
         val dispatcher = toolDispatcher(FakeScreen(), root = port, runSpec = spec)
-        assertTrue(dispatcher.offeredNow(all = true).none { it.name == "root_run_command" })
-        assertTrue(dispatcher.promptSections(dispatcher.offeredNow(all = true), all = true).none { "root_run_command" in it })
-        val call = Part.ToolCall("root", "root_run_command", """{"command":"ls /data"}""")
-        assertEquals("community_root_forbidden", dispatcher.executeRead(call).content.s("error"))
-        assertTrue(port.ran.isEmpty())
+        assertTrue(dispatcher.offeredNow(all = true).any { it.name == "root_run_command" })
+        assertTrue(dispatcher.promptSections(dispatcher.offeredNow(all = true), all = true).any { "root_run_command" in it })
+        val reader = FakeModel(root("ls /data"), FINISH)
+        AgentLoop(reader, dispatcher, "BASE").run(spec, RunInbox())
+        assertEquals(1, port.ran.size)
+        port.ran.clear()
         val model = FakeModel(root("rm /sdcard/x"), FINISH)
         AgentLoop(model, dispatcher, "BASE", approvals = ApprovalSettings { true }).run(spec, RunInbox())
         assertTrue(port.ran.isEmpty())
@@ -112,38 +108,14 @@ class RootCommandToolTest {
         assertTrue(sink.all.none { it is RunEvent.Confirmation })
     }
 
-    /** 会改的先问:卡片上是这条命令;同意了跑一次,再来一条一样的还要再问。 */
+    /** 会改的直接跑:用户打开「允许 root 命令」本身就是授权,不再逐条问。 */
     @Test
-    fun changesAskFirstAndRunOnceApproved() = runTest {
+    fun changingCommandsRunWithoutAsking() = runTest {
         val port = FakeRoot()
         val m = FakeModel(root("rm /sdcard/Download/old.apk"), FINISH)
-        val l = loop(m, port)
-        val run = async { l.run("t") }
-        advanceUntilIdle()
-        val waiting = l.state.value as TaskState.WaitingConfirmation
-        assertEquals(ROOT_CONFIRM_APP, waiting.request.app)
-        assertEquals(IrrevAction.other, waiting.request.action)
-        assertEquals("rm /sdcard/Download/old.apk", waiting.request.content)
-        assertTrue(port.ran.isEmpty())
-        l.answerConfirmation(ConfirmChoice.Once)
-        run.await()
+        loop(m, port).run("t")
         assertEquals(listOf("rm /sdcard/Download/old.apk"), port.ran)
         assertEquals("true", m.result(1).s("ok"))
-    }
-
-    @Test
-    fun declinedChangesDoNotRun() = runTest {
-        val port = FakeRoot(); val sink = Events()
-        val m = FakeModel(root("pm uninstall com.example.app"), FINISH)
-        val l = loop(m, port, sink = sink)
-        val run = async { l.run("t") }
-        advanceUntilIdle()
-        l.answerConfirmation(ConfirmChoice.Deny)
-        run.await()
-        assertTrue(port.ran.isEmpty())
-        val r = m.result(1)
-        assertEquals("confirmation_declined", r.s("error"))
-        assertEquals("declined", sink.all.filterIsInstance<RunEvent.Confirmation>().last().decision)
     }
 
     @Test

@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Modified by Tadolio contributors (2026) -->
 <resources>
-    <!-- Chat composer: hold to talk -->
-    <string name="voice_placeholder_idle">Hold to talk, tap to type</string>
-    <string name="voice_placeholder_busy">Hold to talk to the task, tap to type</string>
-    <string name="voice_placeholder_answer">Hold to answer, tap to type</string>
+    <string name="voice_placeholder_idle">Type, or hold to talk</string>
+    <string name="voice_placeholder_busy">Type to the task, or hold to talk</string>
+    <string name="voice_placeholder_answer">Type your answer, or hold to talk</string>
     <string name="voice_listening">Listening</string>
     <string name="voice_steer_to">Telling “%1$s”</string>
     <string name="voice_engine_phone">Phone</string>
@@ -32,13 +31,16 @@
     <string name="voice_unavailable_no_engine">This phone has no built-in speech recognition, and no speech-to-text model has been picked. Pick a model platform’s speech model in Settings › Models › Speech to text and it will work.</string>
     <string name="voice_unavailable_system_gone">Speech to text is set to the phone’s built-in recognition, but this phone doesn’t have it now. Pick another one in Settings › Models › Speech to text.</string>
     <string name="voice_unavailable_system_silent">The phone’s built-in speech recognition didn’t respond, so no words came through. Pick a model platform’s speech model in Settings › Models › Speech to text and it will work.</string>
+    <string name="voice_unavailable_system_failed">The phone’s built-in speech recognition couldn’t start. Try again, or choose another recognition method in Settings › Models › Speech to text.</string>
+    <string name="voice_service_permission_title">The phone’s speech recognition can’t record yet</string>
+    <string name="voice_service_permission_body">“%1$s” is the app that does speech recognition on this phone, and it hasn’t been allowed to record audio, so it can’t hear you. Tadolio’s own microphone permission is fine. Open its permission page and turn on the microphone, then come back and hold to talk again. You can also choose another recognition method in Settings › Models › Speech to text.</string>
+    <string name="voice_service_settings_failed">Couldn’t open the settings page for “%1$s”. Find it in the system’s app list and turn on the microphone.</string>
     <string name="voice_unavailable_provider_gone">The model platform of the chosen speech model has been removed. Pick another one in Settings › Models › Speech to text.</string>
     <string name="voice_unavailable_off">Speech to text is turned off. Pick one in Settings › Models › Speech to text.</string>
     <string name="voice_go_pick">Pick one</string>
     <string name="voice_permission_title">Tadolio needs the microphone</string>
     <string name="voice_permission_body">To hear you while you hold to talk, Tadolio needs to record audio. It was denied before, so the phone won’t ask again. Turn on the microphone on Tadolio’s permission page in system settings.</string>
     <string name="voice_permission_open">Open settings</string>
-    <!-- Floating capsule: long press to talk -->
     <string name="capsule_voice_talk">Talk</string>
     <string name="capsule_voice_send">Send</string>
     <string name="capsule_voice_answer_title">Answering Tadolio</string>
@@ -57,5 +59,6 @@
     <string name="capsule_voice_sent">Sent: %1$s</string>
     <string name="capsule_voice_need_mic">Tap to allow the mic in Tadolio</string>
     <string name="capsule_voice_not_ready">Voice input isn’t ready · tap</string>
+    <string name="capsule_voice_service_need_mic">Speech recognition can’t record yet · tap</string>
     <string name="capsule_voice_open">Open Tadolio</string>
 </resources>

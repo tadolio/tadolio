@@ -126,6 +126,11 @@ fun MemoryScreen(
     onOpenRoutes: () -> Unit = {},
 ) {
     BackHandler(onBack = onBack)
+    var market by rememberSaveable { mutableStateOf(false) }
+    if (market) {
+        SkillMarketScreen(onBack = { market = false }, onImport = vm::importSkill)
+        return
+    }
     val ui by vm.ui.collectAsState()
     var searching by rememberSaveable { mutableStateOf(false) }
     val searchable = ui.segment != Segment.Skills
@@ -151,7 +156,7 @@ fun MemoryScreen(
 
         when (ui.segment) {
             Segment.Memories -> MemoryEntries(vm, ui)
-            Segment.Skills -> SkillsSection(vm, ui.skills, pending = false)
+            Segment.Skills -> SkillsSection(vm, ui.skills, pending = false, onMarket = { market = true })
             Segment.Pending -> {
                 if (ui.pendingCount == 0) {
                     GroupLabel("")
@@ -179,6 +184,7 @@ fun MemoryScreen(
         GroupCard {
             SwitchRow(stringResource(R.string.memory_use), stringResource(R.string.memory_use_sub), ui.switches.useMemory, first = true) { on -> vm.setSwitches { it.copy(useMemory = on) } }
             SwitchRow(stringResource(R.string.memory_auto), stringResource(R.string.memory_auto_sub), ui.switches.autoRemember) { on -> vm.setSwitches { it.copy(autoRemember = on) } }
+            SwitchRow(stringResource(R.string.memory_infer), stringResource(R.string.memory_infer_sub), ui.switches.inferMemories) { on -> vm.setSwitches { it.copy(inferMemories = on) } }
             SwitchRow(stringResource(R.string.memory_learn), stringResource(R.string.memory_learn_sub), ui.switches.learnSkills) { on -> vm.setSwitches { it.copy(learnSkills = on) } }
             SwitchRow(stringResource(R.string.memory_tasks), stringResource(R.string.memory_tasks_sub), ui.switches.rememberTasks) { on -> vm.setSwitches { it.copy(rememberTasks = on) } }
         }

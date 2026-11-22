@@ -13,8 +13,11 @@ import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.hasAnyAncestor
+import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.hasText
+import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.longClick
@@ -93,7 +96,7 @@ class ChatDeleteAndSelectTest {
             ChatWithDrawer(
                 vm, Prerequisites.Check(emptyList()), reduceMotion = true,
                 conversations = { store.list() }, conversationChanges = store.changes, conversationTitle = store::title,
-                onPlans = {}, onMemory = {}, onBrowser = {}, onSettings = {}, reopen = drawerOpen,
+                onSettings = {}, reopen = drawerOpen,
             ) { open ->
                 ChatScreen(vm, Prerequisites.Check(emptyList()), MutableStateFlow(null), MutableStateFlow(false), reduceMotion = true,
                     onOpenDrawer = open, openSettings = {}, recommendations = recommendations)
@@ -107,7 +110,7 @@ class ChatDeleteAndSelectTest {
         show(vm, drawerOpen = false)
         compose.onNodeWithTag("composer-field").performClick().performTextInput("第一份草稿")
         compose.onNodeWithTag("composer-field").assertIsFocused()
-        compose.onNodeWithContentDescription("新对话").performClick()
+        compose.onNode(hasContentDescription("新对话") and hasAnyAncestor(hasTestTag("drawer")).not()).performClick()
         compose.onNodeWithTag("composer-field").assert(hasText(""))
         compose.onNodeWithTag("composer-field").performTextReplacement("第二份草稿")
         compose.onNodeWithContentDescription("菜单").performClick()
@@ -133,6 +136,7 @@ class ChatDeleteAndSelectTest {
         compose.waitForIdle()
         compose.onNodeWithText("plan.pdf").assertExists()
         compose.onNodeWithContentDescription("菜单").performClick()
+        compose.onNode(hasScrollAction() and hasAnyAncestor(hasTestTag("drawer"))).performScrollToNode(hasText("订票"))
         compose.onNode(hasTestTag("conversation-row") and hasText("订票")).performClick()
         compose.onNodeWithTag("composer-field").assert(hasText(""))
         compose.onNodeWithText("plan.pdf").assertDoesNotExist()
@@ -203,7 +207,11 @@ class ChatDeleteAndSelectTest {
         val vm = vm(DeleteImpact(runningTask = true, schedules = 2))
         show(vm, drawerOpen = true)
 
-        compose.onNodeWithTag("drawer-select").performClick()
+        // 上游已将多选入口移到会话的长按菜单,并默认选中该会话。
+        compose.onNodeWithText("天气").performTouchInput { longClick() }
+        compose.onNodeWithTag("drawer-menu-select").performClick()
+        compose.onNodeWithText("已选 1 条").assertExists()
+        compose.onNode(hasTestTag("conversation-row") and hasText("天气")).performClick()
         compose.waitForIdle()
         // 每行左边出现勾选框;点一行是勾选,不再是打开对话
         compose.onAllNodesWithTag("conversation-check", useUnmergedTree = true).assertCountEquals(3)
@@ -240,10 +248,13 @@ class ChatDeleteAndSelectTest {
         compose.waitForIdle()
         assertEquals(0, compose.onAllNodesWithText("天气").fetchSemanticsNodes().size)
         assertEquals(0, compose.onAllNodesWithText("周报").fetchSemanticsNodes().size)
+        compose.onNode(hasScrollAction() and hasAnyAncestor(hasTestTag("drawer"))).performScrollToNode(hasText("订票"))
         compose.onNodeWithText("订票").assertExists()
         // 删完自动退出多选
         compose.onNodeWithTag("drawer-select-bar").assertDoesNotExist()
-        compose.onNodeWithTag("drawer-select").assertExists()
+        compose.onNodeWithTag("drawer-select-cancel").assertDoesNotExist()
+        compose.onNode(hasTestTag("conversation-row") and hasText("订票")).performClick()
+        compose.waitUntil(5_000) { vm.ui.value.conversationId == "b" }
     }
 
     /** 长按在原地弹出菜单:抬起的那一行(还是那个标题)和三项置顶、改名、删除;只是打开菜单什么都不改。 */

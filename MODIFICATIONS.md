@@ -1,6 +1,22 @@
 <!-- Modified by Tadolio contributors (2026) -->
 # Tadolio modifications
 
+## T68 upstream 0.1.50 integration (2026-11-22)
+
+- Merge Android string resources by resource identity, retaining Tadolio product changes and Mika attribution while receiving upstream additions and revisions.
+- Retain Tadolio package identity, optional sandbox exclusions and release signing guards with upstream 0.1.50 build configuration.
+- Combine local manifest entries with upstream SMS, notification and quick-settings components; retain structured CLI compatibility errors with Tadolio copy.
+- Preserve the product README and record the complete new upstream README separately; receive Shizuku attribution and real-time speech documentation.
+- Receive the upstream task lifecycle, manual screen control, Shizuku shell transport, lock recovery, screen maps, teaching, parallel child agents, plugins, device folders, voice and owner-directed WeChat results.
+- Keep Tadolio onboarding, elder home, family confirmation, community source notices, number/miner entries, coins, restart recovery and notification/post triggers alongside the new UI, project workspaces and plan editor.
+- Combine encrypted T59 key lists, persistent key health and rotation with model groups, role-specific fallback chains and global 429 cooldown. Freeze transports and fallback metadata at task start; the loop owns model failover and standalone calls reuse the shared policy.
+- Remove compute-mode capability gates from calls, broadcasts, WeChat, root commands, browser/profile access, memory and task assembly. Keep user app-access choices, outgoing-content redaction, untrusted-content boundaries and on-phone irreversible-action confirmation.
+- Keep task-scoped community transports out of normal API adapters and close them from finally, including call summaries. Keep local and desktop miner key-pool behavior.
+- Restrict update metadata, downloads and mirror verification to configured Tadolio release attachments, rejecting upstream APKs and their verification metadata. Disabling product updates suppresses automatic downloads and ready capsules.
+- Sandbox-free builds omit Linux assets/native launchers, terminal/workspace command entry points and plugin script tools/prompt hooks; skill-only plugins remain available.
+- Brand new UI, prompt and export copy as Tadolio, preserve upstream attribution without exposing author contact controls, and strip source-attribution comments from model prompts.
+- Regenerate prompt/loop snapshots and document measured prompt sizes, migration/regression results, offline builds and remaining validation in the T68 development report.
+
 ## T47 one-level friend invitations (2026-11-15)
 
 - Add explicit, immutable referrer binding with number-age, official-number and governance checks, seven-day defaults and source-network snapshots.

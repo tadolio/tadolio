@@ -2,6 +2,8 @@
 package com.wangzan101.mika.ui
 
 import com.wangzan101.mika.ChineseUi
+import com.wangzan101.mika.cap.sandbox.AttachmentFailure
+import com.wangzan101.mika.cap.sandbox.AttachmentFailureReason
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,14 +15,16 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.test.hasTestTag
+import android.net.Uri
 import androidx.compose.ui.test.assertCountEquals
+import androidx.compose.ui.test.assertHasClickAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsEnabled
 import androidx.compose.ui.test.assertIsNotEnabled
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.isSelected
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onAllNodesWithContentDescription
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithContentDescription
@@ -28,14 +32,20 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.unit.dp
+import androidx.core.content.FileProvider
+import androidx.test.espresso.Espresso
 import androidx.test.ext.junit.runners.AndroidJUnit4
+import com.wangzan101.mika.chat.AttachFilesProvider
 import com.wangzan101.mika.ui.theme.MikaTheme
+import kotlinx.coroutines.runBlocking
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
+import java.io.File
 
-/** 对话页的附件:「＋」面板开关、面板里的照片、输入框上方待发的那一排、发出去的消息怎么画。 */
+/** 对话页的附件:「＋」的回调、相册页、输入框上方待发的那一排、发出去的消息怎么画。 */
 @RunWith(AndroidJUnit4::class)
 class ChatAttachmentsTest {
     @get:Rule(order = Int.MIN_VALUE) val chinese = ChineseUi()
@@ -49,64 +59,62 @@ class ChatAttachmentsTest {
         attachments: List<PendingAttachment> = emptyList(),
         text: String = "",
         mode: ComposerMode = ComposerMode.Idle,
+        rejected: List<AttachmentFailure> = emptyList(),
         onSend: () -> Unit = {},
+        onPlus: (() -> Unit)? = null,
+        attachBlocked: Boolean = false,
     ) = compose.setContent {
         MikaTheme {
             CompositionLocalProvider(LocalAttachImages provides images) {
                 var t by remember { mutableStateOf(text) }
-                var followUpMode by remember { mutableStateOf(FollowUpMode.Steer) }
-                val canAttach = mode == ComposerMode.Idle || followUpMode == FollowUpMode.Queue
                 Box(Modifier.fillMaxSize()) {
                     Composer(
                         Modifier, t, { t = it }, mode, hasHistory = false, onSend = onSend, onStop = {},
-                        followUpMode = followUpMode,
-                        onFollowUpMode = { followUpMode = it },
-                        attachPanel = if (canAttach) ({ Box(Modifier.fillMaxSize().testTag("panel-body")) }) else null,
-                        attachBlocked = !canAttach,
+                        onPlus = onPlus,
+                        attachBlocked = attachBlocked,
                         attachments = attachments,
+                        rejected = rejected,
                     )
                 }
             }
         }
     }
 
-    private fun waitGone(tag: String) = compose.waitUntil(3_000) { compose.onAllNodesWithTag(tag).fetchSemanticsNodes().isEmpty() }
-
-    @Test fun plusOpensThePanelAndTurnsIntoClose() {
-        composer()
-        compose.onAllNodesWithTag("panel-body").assertCountEquals(0)
-        compose.onNodeWithContentDescription(AttachCopy.ADD).performClick()
-        compose.onNodeWithTag("panel-body").assertIsDisplayed()
-        // 再点(这时是 ×)收起
-        compose.onNodeWithContentDescription(AttachCopy.CLOSE).performClick()
-        waitGone("panel-body")
-        compose.onNodeWithContentDescription(AttachCopy.ADD).assertIsDisplayed()
+    @Test fun rejectedAttachmentsShowTheirIndividualReasons() {
+        composer(rejected = listOf(
+            AttachmentFailure("big.zip", AttachmentFailureReason.TOO_LARGE),
+            AttachmentFailure("photo.jpg", AttachmentFailureReason.LOW_DEVICE_SPACE),
+            AttachmentFailure("notes.txt", AttachmentFailureReason.IO_ERROR),
+        ))
+        compose.onNodeWithText("big.zip：超过 200 MiB 限制", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("photo.jpg：手机存储空间不足", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("notes.txt：无法读取或复制", substring = true).assertIsDisplayed()
     }
 
-    @Test fun waitingForAnAnswerCanSwitchToQueueAndAddTheFirstAttachment() {
-        composer(mode = ComposerMode.Answer)
-        compose.onNodeWithContentDescription(AttachCopy.ADD).assertIsDisplayed()
-        compose.onNodeWithTag("follow-up-mode-queue").assertIsDisplayed().performClick()
-        compose.onNode(hasTestTag("follow-up-mode-queue") and isSelected()).assertIsDisplayed()
+    @Test fun plusOpensTheSheetThroughCallback() {
+        var opened = 0
+        composer(onPlus = { opened++ })
         compose.onNodeWithContentDescription(AttachCopy.ADD).performClick()
-        compose.onNodeWithTag("panel-body").assertIsDisplayed()
+        assertEquals(1, opened)
     }
 
-    @Test fun tappingTheFieldClosesThePanel() {
-        composer()
-        compose.onNodeWithContentDescription(AttachCopy.ADD).performClick()
-        compose.onNodeWithTag("panel-body").assertIsDisplayed()
-        compose.onNodeWithTag("composer-field").performClick()
-        waitGone("panel-body")
+    @Test fun waitingForAnAnswerCanStillOpenTheSheet() {
+        var opened = 0
+        composer(mode = ComposerMode.Answer, onPlus = { opened++ })
+        compose.onNodeWithContentDescription(AttachCopy.ADD).assertIsDisplayed().performClick()
+        assertEquals(1, opened)
     }
 
-    @Test fun backClosesThePanelFirst() {
-        composer()
+    @Test fun blockedAttachmentsKeepThePlusButOnlyExplain() {
+        var opened = 0
+        composer(onPlus = { opened++ }, attachBlocked = true)
         compose.onNodeWithContentDescription(AttachCopy.ADD).performClick()
-        compose.onNodeWithTag("panel-body").assertIsDisplayed()
-        compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
-        waitGone("panel-body")
-        assertEquals(false, compose.activity.isFinishing)
+        assertEquals(0, opened)
+    }
+
+    @Test fun noPlusWhenAttachmentsAreOff() {
+        composer()
+        compose.onAllNodesWithContentDescription(AttachCopy.ADD).assertCountEquals(0)
     }
 
     @Test fun trayShowsPhotosAndFileCardsAndAttachmentsAloneCanBeSent() {
@@ -146,30 +154,94 @@ class ChatAttachmentsTest {
         assertEquals(listOf("content://f/9"), removed)
     }
 
-    private fun panel(access: PhotoAccess, recent: List<PendingAttachment>?, selected: List<PendingAttachment> = emptyList(), onGrant: () -> Unit = {}) =
+    @Test fun clickingLocalTrayItemsOpensThem() {
+        val opened = mutableListOf<String>()
+        val removed = mutableListOf<String>()
         compose.setContent {
             MikaTheme {
                 CompositionLocalProvider(LocalAttachImages provides images) {
-                    AttachPanel(access, recent, selected, {}, {}, {}, {}, onGrant)
+                    PendingTray(
+                        items = listOf(
+                            PendingAttachment("content://m/1", "a.jpg", 1000),
+                            PendingAttachment("content://f/9", "a.pdf", 10),
+                        ),
+                        onRemove = { removed += it },
+                        onOpen = { opened += it.uri },
+                    )
+                }
+            }
+        }
+        compose.onNodeWithTag("tray-photo").assertHasClickAction().performClick()
+        compose.onNodeWithTag("tray-file").assertHasClickAction().performClick()
+        assertEquals(listOf("content://m/1", "content://f/9"), opened)
+        assertEquals(emptyList<String>(), removed)
+    }
+
+    @Test fun localPendingAttachmentOpensInFileViewerAndMissingReturnsFalse() {
+        val context = compose.activity
+        assertFalse(runBlocking { AttachFiles.openPending(context, "content://nonexistent.invalid/missing.txt", "missing.txt") })
+        val dir = File(context.cacheDir, "attach/viewing").apply { mkdirs() }
+        val file = File(dir, "pending-preview.txt").apply { writeText("pending preview body") }
+        try {
+            val uri = FileProvider.getUriForFile(context, AttachFilesProvider.authority(context.packageName), file).toString()
+            compose.setContent {
+                MikaTheme {
+                    CompositionLocalProvider(LocalAttachImages provides images) {
+                        PendingTray(listOf(PendingAttachment(uri, "pending-preview.txt", file.length())), onRemove = {})
+                    }
+                }
+            }
+            compose.onNodeWithTag("tray-file").performClick()
+            compose.waitUntil(5_000) { compose.onAllNodesWithTag("viewer.text").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("pending preview body", substring = true).assertIsDisplayed()
+            Espresso.pressBack()
+        } finally {
+            file.delete()
+        }
+    }
+
+    @Test fun externalUriPendingAttachmentCopiesToViewingAndOpensInFileViewer() {
+        val context = compose.activity
+        val file = File(context.cacheDir, "external-pending.txt").apply { writeText("copied external body") }
+        try {
+            val uri = Uri.fromFile(file).toString()
+            compose.setContent {
+                MikaTheme {
+                    CompositionLocalProvider(LocalAttachImages provides images) {
+                        PendingTray(listOf(PendingAttachment(uri, "external-pending.txt", file.length())), onRemove = {})
+                    }
+                }
+            }
+            compose.onNodeWithTag("tray-file").performClick()
+            compose.waitUntil(5_000) { compose.onAllNodesWithTag("viewer.text").fetchSemanticsNodes().isNotEmpty() }
+            compose.onNodeWithText("copied external body", substring = true).assertIsDisplayed()
+            Espresso.pressBack()
+        } finally {
+            file.delete()
+        }
+    }
+
+    private fun photosPage(access: PhotoAccess, recent: List<PendingAttachment>?, selected: List<PendingAttachment> = emptyList(), onGrant: () -> Unit = {}) =
+        compose.setContent {
+            MikaTheme {
+                CompositionLocalProvider(LocalAttachImages provides images) {
+                    PlusPhotosPage(access, recent, selected, {}, onGrant, {}, {})
                 }
             }
         }
 
-    @Test fun panelWithoutPhotoAccessExplainsAndOffersToAllow() {
+    @Test fun photosPageWithoutPhotoAccessExplainsAndOffersToAllow() {
         var granted = 0
-        panel(PhotoAccess.None, emptyList(), onGrant = { granted++ })
-        compose.onNodeWithText(AttachCopy.CAMERA).assertIsDisplayed()
-        compose.onNodeWithText(AttachCopy.ALBUM).assertIsDisplayed()
-        compose.onNodeWithText(AttachCopy.FILES).assertIsDisplayed()
+        photosPage(PhotoAccess.None, emptyList(), onGrant = { granted++ })
         compose.onNodeWithText(AttachCopy.NEED_ACCESS).assertIsDisplayed()
         compose.onNodeWithText(AttachCopy.GRANT).performClick()
         assertEquals(1, granted)
         compose.onAllNodesWithTag("recent-photo").assertCountEquals(0)
     }
 
-    @Test fun panelListsRecentPhotosWithNumberedSelection() {
+    @Test fun photosPageListsRecentPhotosWithNumberedSelection() {
         val recent = (1..6).map { PendingAttachment("content://m/$it", "p$it.jpg", 1, photo = true) }
-        panel(PhotoAccess.Full, recent, selected = listOf(recent[4], recent[1]))
+        photosPage(PhotoAccess.Full, recent, selected = listOf(recent[4], recent[1]))
         compose.onNodeWithText(AttachCopy.RECENT).assertIsDisplayed()
         compose.onNodeWithText(AttachCopy.ALL).assertIsDisplayed()
         compose.onAllNodesWithTag("recent-photo").assertCountEquals(6)
@@ -179,7 +251,7 @@ class ChatAttachmentsTest {
     }
 
     @Test fun partialAccessOffersToChangeTheSelection() {
-        panel(PhotoAccess.Partial, listOf(PendingAttachment("content://m/1", "p.jpg", 1, photo = true)))
+        photosPage(PhotoAccess.Partial, listOf(PendingAttachment("content://m/1", "p.jpg", 1, photo = true)))
         compose.onNodeWithText(AttachCopy.RECENT_PARTIAL).assertIsDisplayed()
         compose.onNodeWithText(AttachCopy.CHANGE).assertIsDisplayed()
     }

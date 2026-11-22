@@ -9,6 +9,20 @@ import org.junit.Test
 import java.time.Instant
 
 class PlanEditorTest {
+    @Test fun copyingNotificationKeepsEventSemanticsAndClearsConditionHistory() {
+        val source = TriggerDefinition("old", "thread", "watch", 0,
+            onNotification = NotificationMatch(listOf("com.example.app"), listOf("parcel")),
+            lastFiredAtMs = 123L, lastConditionMet = true)
+        val copy = editedTrigger(source.toCopyPlanDraft(1000L), null, "copy", "new-thread", 1000L)
+        assertEquals("copy", copy.id)
+        assertEquals("new-thread", copy.threadId)
+        assertEquals(source.onNotification, copy.onNotification)
+        assertFalse(copy.enabled)
+        assertNull(copy.lastFiredAtMs)
+        assertNull(copy.lastConditionMet)
+        assertTrue(upcoming(copy, 1000L, 3).isEmpty())
+        assertTrue(copy.canToggle(listOf(TriggerWindow("copy", 0, 0))))
+    }
     private val now = Instant.parse("2026-11-06T00:00:00Z").toEpochMilli()
     private val zone = "Asia/Shanghai"
 
@@ -26,6 +40,88 @@ class PlanEditorTest {
         store.upsert(edited.copy(enabled = true))
         assertTrue(store.claimDue(now).isEmpty())
         assertEquals(edited.onNotification, store.get(original.id)?.onNotification)
+    }
+
+    @Test fun copyingWeeklyPlanKeepsRulesButStartsPausedWithFreshHistory() {
+        val original = TriggerDefinition(
+            "plan", "thread", "goal", now, conditionGoal = "condition", idleOnly = true,
+            calendarTime = "08:00", calendarTimes = listOf("08:00", "20:00"),
+            calendarDays = listOf(1, 5), calendarZone = zone, notifyWhen = ConditionNotify.EachTimeMet,
+            cooldownMs = 300_000, lastConditionMet = true, lastValue = "observed", baselineValue = "base",
+            baselineAtMs = now, lastFiredAtMs = now, source = TriggerSource.External,
+        )
+        val copy = editedTrigger(original.toCopyPlanDraft(now), null, "copy", original.threadId, now)
+
+        assertEquals("copy", copy.id)
+        assertEquals(original.threadId, copy.threadId)
+        assertEquals(original.goal, copy.goal)
+        assertEquals(original.conditionGoal, copy.conditionGoal)
+        assertEquals(original.calendarClocks(), copy.calendarClocks())
+        assertEquals(original.calendarDays, copy.calendarDays)
+        assertEquals(original.calendarZone, copy.calendarZone)
+        assertEquals(original.notifyWhen, copy.notifyWhen)
+        assertEquals(original.cooldownMs, copy.cooldownMs)
+        assertEquals(TriggerSource.User, copy.source)
+        assertTrue(copy.idleOnly)
+        assertFalse(copy.enabled)
+        assertNull(copy.lastConditionMet)
+        assertNull(copy.lastValue)
+        assertNull(copy.baselineValue)
+        assertNull(copy.baselineAtMs)
+        assertNull(copy.lastFiredAtMs)
+    }
+
+    @Test fun copyingAnExpiredReminderSuggestsAFutureTime() {
+        val original = TriggerDefinition("plan", "thread", "remind me", now - 1, reminderText = "remind me")
+        val copy = editedTrigger(original.toCopyPlanDraft(now), null, "copy", original.threadId, now)
+
+        assertTrue(copy.nextAtMs > now)
+        assertEquals(original.reminderText, copy.reminderText)
+        assertFalse(copy.enabled)
+    }
+
+    @Test fun copyingAFutureIntervalKeepsItsFirstTimeAndCadence() {
+        val original = TriggerDefinition("plan", "thread", "goal", now + 180_000, intervalMs = 900_000)
+        val copy = editedTrigger(original.toCopyPlanDraft(now), null, "copy", original.threadId, now)
+
+        assertEquals(original.nextAtMs, copy.nextAtMs)
+        assertEquals(original.intervalMs, copy.intervalMs)
+        assertFalse(copy.enabled)
+    }
+
+    /** 复制页面的「首次执行」要显示成当地时间,不能把 UTC 的 ISO 字符串塞进 yyyy-MM-dd HH:mm 输入框。 */
+    @Test fun copyingAFutureOncePlanShowsLocalTimeInsteadOfIso() {
+        val original = TriggerDefinition("plan", "thread", "goal", now + 600_000)
+        val draft = original.toCopyPlanDraft(now)
+
+        assertEquals(formatPlanEditorTime(original.nextAtMs, draft.zone), draft.firstAt)
+        assertFalse(draft.firstAt.contains('T'))
+        val copy = editedTrigger(draft, null, "copy", original.threadId, now)
+        assertEquals(original.nextAtMs, copy.nextAtMs)
+    }
+
+    /** 带秒的计划向上取整到下一分钟:截掉秒后不能落到当前时刻之前,否则保存会被判成「时间不在将来」。 */
+    @Test fun copyingAPlanWithSecondsRoundsUpToAWholeLocalMinute() {
+        val original = TriggerDefinition("plan", "thread", "goal", now + 30_000)
+        val draft = original.toCopyPlanDraft(now)
+        val copy = editedTrigger(draft, null, "copy", original.threadId, now)
+
+        assertTrue(copy.nextAtMs > now)
+        assertTrue(copy.nextAtMs <= now + 90_000)
+        assertEquals(formatPlanEditorTime(copy.nextAtMs, draft.zone), draft.firstAt)
+        assertFalse(draft.firstAt.contains('T'))
+    }
+
+    /** 过期的固定间隔计划从下一次排期开始,同样不能把 ISO 字符串塞进输入框。 */
+    @Test fun copyingAnExpiredIntervalStartsAtItsNextOccurrenceInLocalTime() {
+        val original = TriggerDefinition("plan", "thread", "goal", now - 60_000, intervalMs = 300_000)
+        val draft = original.toCopyPlanDraft(now)
+        val copy = editedTrigger(draft, null, "copy", original.threadId, now)
+
+        assertEquals(now + 240_000, copy.nextAtMs)
+        assertEquals(original.intervalMs, copy.intervalMs)
+        assertEquals(formatPlanEditorTime(copy.nextAtMs, draft.zone), draft.firstAt)
+        assertFalse(draft.firstAt.contains('T'))
     }
 
     @Test fun createsOneShotWithIndependentIdentityAndMatchingPreview() {

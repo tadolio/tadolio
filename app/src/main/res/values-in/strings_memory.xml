@@ -26,6 +26,8 @@
     <string name="memory_use_sub">Jika nonaktif, Tadolio tidak membaca maupun menyimpan memori</string>
     <string name="memory_auto">Ingat apa yang saya katakan</string>
     <string name="memory_auto_sub">Dirangkum dari kata-kata Anda sendiri setelah tiap tugas</string>
+    <string name="memory_infer">Izinkan Tadolio menyimpan kesimpulannya sendiri</string>
+    <string name="memory_infer_sub">Saat Anda memintanya mengingat, kesimpulannya sendiri juga disimpan, ditandai bukan kata-kata Anda</string>
     <string name="memory_learn">Belajar dari tugas sebelumnya (keterampilan dan catatan aplikasi)</string>
     <string name="memory_learn_sub">Hal yang dipelajari Tadolio baru dipakai setelah Anda menerimanya</string>
     <string name="memory_tasks">Ingat tugas sebelumnya</string>
@@ -60,6 +62,7 @@
     <string name="date_pattern_md">d MMM</string>
     <string name="memory_said_via">Anda berkata pada %1$s lewat %2$s: “%3$s”</string>
     <string name="memory_said">Anda berkata pada %1$s: “%2$s”</string>
+    <string name="memory_inferred">Kesimpulan Tadolio pada %1$s, atas permintaan Anda: “%2$s”</string>
     <string name="verify_returned">Dikembalikan oleh pemeriksaan</string>
     <string name="skills_drafts">Draf keterampilan baru — dicoba setelah Anda menerimanya</string>
     <string name="skills_accept_try">Terima dan coba</string>
@@ -92,5 +95,10 @@
     <string name="skills_imported">Diimpor</string>
     <string name="skill_builtin_name">Sudah ada keterampilan bawaan dengan nama ini. Ganti namanya lalu coba lagi.</string>
     <string name="skill_draft_pending">Draf dengan nama ini masih menunggu ditinjau. Selesaikan yang itu dulu.</string>
-
+    <string name="market_title">Pasar keterampilan</string>
+    <string name="market_sub">Jelajahi keterampilan yang dibagikan di GitHub</string>
+    <string name="market_source">Sumber keterampilan</string>
+    <string name="market_add">Tambahkan untuk ditinjau</string>
+    <string name="market_network_error">Gagal mengunduh. Periksa repositori dan jaringan, lalu coba lagi.</string>
+    <string name="market_invalid">Konten tidak valid atau telah berubah. Buka kembali pasar untuk memuat ulang.</string>
 </resources>

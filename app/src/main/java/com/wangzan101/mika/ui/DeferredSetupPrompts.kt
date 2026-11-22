@@ -5,6 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.os.PowerManager
 import android.provider.Settings
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -16,6 +17,7 @@ import com.wangzan101.mika.R
 import com.wangzan101.mika.number.NumberClient
 import com.wangzan101.mika.settings.DeferredSetup
 import com.wangzan101.mika.settings.DeferredSetupPolicy
+import com.wangzan101.mika.ui.theme.MikaTheme
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 import kotlinx.serialization.json.booleanOrNull
@@ -50,7 +52,8 @@ internal fun DeferredSetupPrompts(ui: ChatUi) {
             delay(2000)
         }
     }
-    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    // The chat top bar floats over the message list, so these prompts need their own opaque background.
+    Column(Modifier.fillMaxWidth().background(MikaTheme.colors.bg), verticalArrangement = Arrangement.spacedBy(8.dp)) {
         if (battery) {
             val copy = StatusCopy.batteryBanner()
             Row(Modifier.fillMaxWidth().padding(12.dp)) {

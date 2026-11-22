@@ -60,11 +60,13 @@ class KeyFailoverModel(
     private val availability: KeyAvailability,
     private val fallback: ChatModel? = null,
     private val onFallback: () -> Unit = {},
+    private val rotate: Boolean = false,
 ) : StreamingChatModel {
     init { require(models.isNotEmpty()) }
     override val name get() = models.first().second.name
     override val capabilities get() = models.first().second.capabilities
     private var notified = false
+    private val turn = java.util.concurrent.atomic.AtomicInteger()
 
     override suspend fun complete(system: String, messages: List<Message>, tools: List<ToolSpec>): ModelReply =
         attempt { it.complete(system, messages, tools) }
@@ -77,7 +79,9 @@ class KeyFailoverModel(
 
     private suspend fun attempt(call: suspend (ChatModel) -> ModelReply): ModelReply {
         var last: ModelError? = null
-        for ((id, model) in models) {
+        val start = if (rotate) (turn.getAndIncrement() and Int.MAX_VALUE) % models.size else 0
+        for (offset in models.indices) {
+            val (id, model) = models[(start + offset) % models.size]
             if (availability.status(id) != KeyFailure.other) continue
             try { return call(model) } catch (error: ModelError) {
                 val failure = keyFailure(error)

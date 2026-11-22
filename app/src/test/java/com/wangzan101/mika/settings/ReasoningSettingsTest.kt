@@ -83,7 +83,7 @@ class ReasoningSettingsTest {
 
     @Test fun providerReportedLevelsWorkForEveryProtocol() {
         val cfg = ProviderConfig("c", ProviderConfig.Kind.OpenAiCompat, "https://example.test", "m", caps)
-        assertNull(ReasoningOptions.of(cfg, null))
+        assertFalse(ReasoningOptions.of(cfg, null)!!.fromProvider)
         val chat = ListedModel(
             "m", endpoint = ModelEndpoint(ModelProtocol.ChatCompletions, "https://example.test"),
             reasoningEfforts = listOf("low", "high"),
@@ -106,12 +106,19 @@ class ReasoningSettingsTest {
         val viaMessages = ListedModel("m", endpoint = ModelEndpoint(ModelProtocol.Messages, "https://example.test"))
         assertFalse(ReasoningOptions.of(xai, viaMessages)!!.fromProvider)
         assertEquals(ProviderConfig.Kind.Xai, ProviderStore.adapterFor(xai, viaMessages.endpoint).first)
-        // 列表还没加载、或只说了能思考没给档位:兼容接口、Messages、generateContent 都不猜
+        // 列表还没加载、或只说了能思考没给档位:OpenAI 兼容接口给通用档位并标来源不是服务商,
+        // Anthropic / Gemini 仍不猜(各模型写法不一样,猜错了每次都被拒)
         val thinking = ListedModel("m", reasoning = true)
-        for (kind in listOf(ProviderConfig.Kind.OpenAiCompat, ProviderConfig.Kind.Anthropic, ProviderConfig.Kind.Gemini)) {
+        val generic = listOf("none", "minimal", "low", "medium", "high", "xhigh", "max")
+        for (kind in listOf(ProviderConfig.Kind.Anthropic, ProviderConfig.Kind.Gemini)) {
             assertNull(ReasoningOptions.of(direct.copy(kind = kind), null))
             assertNull(ReasoningOptions.of(direct.copy(kind = kind), thinking))
         }
+        val compat = direct.copy(kind = ProviderConfig.Kind.OpenAiCompat)
+        assertEquals(generic, ReasoningOptions.of(compat, null)!!.levels)
+        assertFalse(ReasoningOptions.of(compat, null)!!.fromProvider)
+        assertEquals(generic, ReasoningOptions.of(compat, thinking)!!.levels)
+        assertFalse(ReasoningOptions.of(compat, thinking)!!.fromProvider)
     }
 
     // 预设里官方文档写明档位的兼容服务商(DeepSeek)按预设给;列表写明过的仍以列表为准,自定义地址照旧不猜
@@ -131,9 +138,29 @@ class ReasoningSettingsTest {
         val listed = ReasoningOptions.of(declared, ListedModel("m2", reasoningEfforts = listOf("low")))!!
         assertEquals(listOf("low"), listed.levels)
         assertTrue(listed.fromProvider)
-        // 对不上预设的地址(自定义)没有档位
+        // 对不上预设的地址(第三方网关):给通用档位,入口不再整行消失
         val custom = ProviderConfig("c3", ProviderConfig.Kind.OpenAiCompat, "https://custom.example/v1", "m3", caps)
-        assertNull(ReasoningOptions.of(custom, ListedModel("m3")))
+        assertFalse(ReasoningOptions.of(custom, ListedModel("m3"))!!.fromProvider)
+    }
+
+    // DeepSeek 列表只写开着思考的强度(low / high / max),官方文档另写 none 关掉思考:读到列表后照样关得掉(#563)
+    @Test fun listedLevelsKeepTheDocumentedOffSwitch() {
+        val deepSeek = ListedModel("deepseek-flash", reasoningEfforts = listOf("low", "high", "max"))
+        val official = ProviderConfig("d1", ProviderConfig.Kind.OpenAiCompat, "https://api.deepseek.com", "deepseek-flash", caps)
+        val options = ReasoningOptions.of(official, deepSeek)!!
+        assertEquals(listOf("none", "low", "high", "max"), options.levels)
+        assertTrue(options.fromProvider)
+        // 地址写成 /v1、对不上预设时,以前整行没有,现在照列表给
+        val v1 = official.copy(baseUrl = "https://api.deepseek.com/v1")
+        assertEquals(listOf("low", "high", "max"), ReasoningOptions.of(v1, deepSeek)!!.levels)
+        // 列表已有 none、或这家文档没写 none、或列表说没有档位:都不补
+        assertEquals(listOf("none", "high"), ReasoningOptions.of(official, ListedModel("m", reasoningEfforts = listOf("none", "high")))!!.levels)
+        val agg = ProviderConfig("d2", ProviderConfig.Kind.OpenAiCompat, "https://agg.example/v1", "m", caps)
+        assertEquals(listOf("low"), ReasoningOptions.of(agg, ListedModel("m", reasoningEfforts = listOf("low")))!!.levels)
+        assertEquals(emptyList<String>(), ReasoningOptions.of(official, ListedModel("m", reasoningEfforts = emptyList()))!!.levels)
+        // 列表让这个模型走别的协议(这里是 Messages)时,OpenAI 兼容文档里的 none 不适用
+        val viaMessages = deepSeek.copy(endpoint = ModelEndpoint(ModelProtocol.Messages, "https://api.deepseek.com/anthropic", null))
+        assertEquals(listOf("low", "high", "max"), ReasoningOptions.of(official, viaMessages)!!.levels)
     }
 
     // Anthropic 列表写明的档位照给;只接受按预算思考的模型能思考但没有可选档位,也不接受档位

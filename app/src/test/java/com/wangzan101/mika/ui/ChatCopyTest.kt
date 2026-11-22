@@ -5,6 +5,7 @@ import org.junit.Rule
 import com.wangzan101.mika.i18n.ChineseTexts
 import com.wangzan101.mika.chat.BranchOrigin
 import com.wangzan101.mika.chat.ConversationSummary
+import com.wangzan101.mika.core.usage.DeepSeekCost
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
@@ -16,19 +17,36 @@ import java.time.ZoneId
 class ChatCopyTest {
     @get:Rule val texts = ChineseTexts()
 
-    @Test fun distinctNonBlankExamples() {
-        assertEquals(6, ChatCopy.examples.size)
-        assertEquals(6, ChatCopy.examples.map { it.text }.filter { it.isNotBlank() }.toSet().size)
+    @Test fun fiveDistinctExamplesStartWithGithubStar() {
+        val examples = ChatCopy.examples
         val repo = com.wangzan101.mika.about.MikaLinks.REPO
-        val first = ChatCopy.examples.first()
-        if (repo.isEmpty()) {
-            assertEquals("看看明天下不下雨", first.text)
-        } else {
-            assertEquals(ChatCopy.ExampleKind.Web, first.kind)
-            assertEquals("打开 $repo，给 Tadolio 点个 star", first.text)
+        val count = if (repo.isBlank()) 4 else 5
+        assertEquals(count, examples.size)
+        assertEquals(count, examples.map { it.title }.filter { it.isNotBlank() }.toSet().size)
+        assertEquals(count, examples.map { it.prompt }.filter { it.isNotBlank() }.toSet().size)
+        assertEquals(examples.size, examples.map { it.kind }.toSet().size)
+        if (repo.isNotBlank()) {
+            assertEquals(ChatCopy.ExampleKind.Web, examples.first().kind)
+            assertTrue(examples.first().prompt.contains(repo))
         }
-        assertEquals(ChatCopy.examples.map { it.text }, ChatCopy.recommendationSeeds().map { it.first })
-        assertEquals(ChatCopy.examples.map { it.text }, ChatCopy.recommendationSeeds().map { it.second })
+        assertTrue(examples.none { it.prompt.contains("github.com/wangzan101", ignoreCase = true) })
+        // 短标题上卡片、完整提示词进输入框:两者分开存
+        assertEquals(ChatCopy.examples.map { it.title }, ChatCopy.recommendationSeeds().map { it.first })
+        assertEquals(ChatCopy.examples.map { it.prompt }, ChatCopy.recommendationSeeds().map { it.second })
+    }
+
+    /** 卡片图标按类型挑:提示词和内置示例一字不差才认得出;自己加的任务显示通用图标。 */
+    @Test fun kindsOnlyMatchTheBuiltInExamples() {
+        val examples = ChatCopy.examples
+        examples.forEach { assertEquals(it.kind, ChatCopy.kindOf(it.prompt)) }
+        assertNull(ChatCopy.kindOf("打开设置，把字体调大"))
+        assertNull(ChatCopy.kindOf(examples.first().prompt + "，再顺手点个 watch"))
+    }
+
+    @Test fun taskCostShowsTwoDecimalPlaces() {
+        assertEquals("约 ¥1.20", ChatTokensCopy.cost(DeepSeekCost("1.2", "1.2")))
+        assertEquals("约 ¥0.00", ChatTokensCopy.cost(DeepSeekCost("0.001", "0.004")))
+        assertEquals("约 ¥0.01–¥0.02", ChatTokensCopy.cost(DeepSeekCost("0.005", "0.015")))
     }
 
     /** 分支标题:源标题后面加后缀,总长不超过 24 字;截的是源标题,后缀留着,emoji 不截半个。 */
@@ -53,7 +71,7 @@ class ChatCopyTest {
         assertEquals("a.pdf", ChatCopy.plainTitle("附件:/workspace/inbox/a.pdf(1 KB)"))
         assertEquals(ScreenCopy.TAG, ChatCopy.plainTitle("[[screen:s1]]"))
         // 在浏览器页上对着一页问的:页面说明不当标题
-        val paged = com.wangzan101.mika.core.cap.web.AttachedPage.compose(com.wangzan101.mika.core.cap.web.AttachedPage.Page("https://a.example/", "页"), "挑一个\n第二行")
+        val paged = com.wangzan101.mika.core.agent.AttachedPage.compose(com.wangzan101.mika.core.agent.AttachedPage.Page("https://a.example/", "页"), "挑一个\n第二行")
         assertEquals("挑一个", ChatCopy.plainTitle(paged))
     }
 
@@ -132,6 +150,93 @@ class ChatCopyTest {
         assertTrue(fresh.running.single().enabled)
     }
 
+    /** 归档的对话不进置顶和最近;当前正在看的那个留着(带归档标记),还在跑任务的仍列在进行中。 */
+    @Test fun drawerHidesArchivedExceptCurrentAndRunning() {
+        val all = listOf(
+            ConversationSummary("a", "一", 30L),
+            ConversationSummary("b", "二", 20L, archivedAt = 5L),
+            ConversationSummary("c", "三", 10L, archivedAt = 6L),
+            ConversationSummary("d", "四", 5L, archivedAt = 7L),
+        )
+        val s = drawerSections(all, CurrentConversation("a", false, "一", ""), others = listOf("d"), { null }, canSwitch = true, now = 0L, zone = zone)
+        assertEquals(listOf("d"), s.running.map { it.id })
+        assertTrue(s.running.single().archived)
+        assertEquals(listOf("a"), s.recent.map { it.id })
+        assertTrue(s.recent.none { it.archived })
+        // 当前看的就是归档的那个:留着,不然不知道自己在哪
+        val cur = drawerSections(all, CurrentConversation("b", false, "二", ""), emptyList(), { null }, canSwitch = true, now = 0L, zone = zone)
+        assertEquals(listOf("a", "b"), cur.recent.map { it.id })
+        assertTrue(cur.recent.last().archived)
+        assertTrue(cur.recent.last().current)
+        // 没归档时一条不少
+        val plain = drawerSections(all.map { it.copy(archivedAt = null) }, CurrentConversation("a", false, "一", ""), emptyList(), { null }, true, 0L, zone)
+        assertEquals(listOf("a", "b", "c", "d"), plain.recent.map { it.id })
+    }
+
+    /** 多选的勾选范围跟着视图走:普通侧栏是列出来的对话,归档视图里是归档的那些;草稿没有编号,勾不了。 */
+    @Test fun drawerSelectableIdsFollowTheView() {
+        val sections = DrawerSections(
+            running = listOf(DrawerConversation("a", "一", "", running = true, current = true, enabled = true)),
+            recent = listOf(
+                DrawerConversation("b", "二", "", running = false, current = false, enabled = true),
+                DrawerConversation(null, "新对话", "", running = false, current = false, enabled = true),
+            ),
+        )
+        val archived = listOf(DrawerConversation("c", "三", "", running = false, current = false, enabled = true, archived = true))
+        assertEquals(setOf("a", "b"), drawerSelectableIds(sections, archived, archivedView = false))
+        assertEquals(setOf("c"), drawerSelectableIds(sections, archived, archivedView = true))
+    }
+
+    /** 搜索筛选:全部含归档,未归档/已归档各取一边;删掉的不搜。 */
+    @Test fun drawerSearchCandidatesFilterByArchiveState() {
+        val all = listOf(
+            ConversationSummary("a", "附件:/workspace/inbox/a.pdf(1 KB)", 3L),
+            ConversationSummary("b", "二", 2L, archivedAt = 1L),
+            ConversationSummary("c", "三", 1L),
+        )
+        val deleted = setOf("c")
+        assertEquals(listOf("a", "b"), drawerSearchCandidates(all, deleted, SearchArchiveFilter.All).map { it.id })
+        assertEquals(listOf("a"), drawerSearchCandidates(all, deleted, SearchArchiveFilter.Active).map { it.id })
+        assertEquals(listOf("b"), drawerSearchCandidates(all, deleted, SearchArchiveFilter.Archived).map { it.id })
+        // 标题还是侧栏里显示的样子(去掉附件行)
+        assertEquals("a.pdf", drawerSearchCandidates(all, deleted, SearchArchiveFilter.All).first().title)
+    }
+
+    private fun archivedRow(id: String, archivedAt: Long) =
+        DrawerConversation(id, id, "", running = false, current = false, enabled = true, archived = true, archivedAt = archivedAt)
+
+    /** 归档视图按归档时间分段:本周(周一起算)、本月、更早;没记归档时间的归到更早,不会漏。 */
+    @Test fun archiveViewGroupsByWeekMonthAndOlder() {
+        val now = at(2026, 11, 12, 15) // 周四
+        val rows = listOf(
+            archivedRow("a", at(2026, 11, 12, 9)),
+            archivedRow("b", at(2026, 11, 9, 20)),
+            archivedRow("c", at(2026, 11, 2)),
+            archivedRow("d", at(2026, 9, 30)),
+        )
+        val groups = archiveGroups(rows, now, zone)
+        assertEquals(listOf(ArchivePeriod.ThisWeek, ArchivePeriod.ThisMonth, ArchivePeriod.Earlier), groups.map { it.period })
+        assertEquals(listOf("a", "b"), groups[0].rows.map { it.id })
+        assertEquals(listOf("c"), groups[1].rows.map { it.id })
+        assertEquals(listOf("d"), groups[2].rows.map { it.id })
+        val unknown = archiveGroups(
+            listOf(DrawerConversation("e", "五", "", running = false, current = false, enabled = true, archived = true)),
+            now, zone,
+        )
+        assertEquals(listOf(ArchivePeriod.Earlier), unknown.map { it.period })
+    }
+
+    /** 一行写清归档了多久:当天是「今天归档」,其余是「归档于 N 天前」。 */
+    @Test fun archivedAgoSaysTodayOrDays() {
+        val now = at(2026, 11, 12, 15)
+        assertEquals("今天归档", archivedAgo(at(2026, 11, 12, 9), now, zone))
+        assertEquals("归档于 3 天前", archivedAgo(at(2026, 11, 9, 15), now, zone))
+        assertEquals("归档于 40 天前", archivedAgo(at(2026, 10, 3, 15), now, zone))
+        assertEquals("本周", archivePeriodLabel(ArchivePeriod.ThisWeek))
+        assertEquals("本月", archivePeriodLabel(ArchivePeriod.ThisMonth))
+        assertEquals("更早", archivePeriodLabel(ArchivePeriod.Earlier))
+    }
+
     @Test fun greetingFollowsTheTimeOfDay() {
         assertEquals("早上好", ChatCopy.greeting(7))
         assertEquals("中午好", ChatCopy.greeting(12))
@@ -174,14 +279,44 @@ class ChatCopyTest {
         assertEquals("继续说点什么…", ChatCopy.placeholder(ComposerMode.Idle, hasHistory = true))
         assertEquals("回答 Tadolio 的问题", ChatCopy.placeholder(ComposerMode.Answer, hasHistory = true))
         assertEquals("补充或改要求…", ChatCopy.placeholder(ComposerMode.Busy, hasHistory = true))
-        assertEquals("写下下一件事…", ChatCopy.placeholder(ComposerMode.Busy, hasHistory = true, followUp = FollowUpMode.Queue))
     }
 
-    @Test fun followUpHintExplainsWhenItTakesEffect() {
-        assertEquals("下一步就按这句话调整", followUpHint(FollowUpMode.Steer, ExchangeStatus.Working))
-        assertEquals("任务暂停中，继续后生效", followUpHint(FollowUpMode.Steer, ExchangeStatus.Paused("等解锁")))
-        assertEquals("任务暂停中，继续后生效", followUpHint(FollowUpMode.Steer, ExchangeStatus.NeedsTakeover("login", "登录")))
-        assertEquals("当前任务结束后自动开始", followUpHint(FollowUpMode.Queue, ExchangeStatus.Working))
+    @Test fun drawerSectionsGroupsProjectChatsAndIncludesThemInSelectableIds() {
+        val p1 = com.wangzan101.mika.chat.Project(id = "p1", name = "科研")
+        val p2 = com.wangzan101.mika.chat.Project(id = "p2", name = "空项目")
+        val all = listOf(
+            ConversationSummary("c-p1-recent", "普通成员", 10L, projectId = p1.id),
+            ConversationSummary("c-p1-pinned", "置顶成员", 5L, pinnedAt = 99L, projectId = p1.id),
+            ConversationSummary("c-solo", "独立对话", 20L),
+            ConversationSummary("c-orphan", "已删项目的对话", 15L, projectId = "missing"),
+        )
+        val s = drawerSections(
+            all,
+            CurrentConversation(null, false, "", ""),
+            emptyList(),
+            { null },
+            canSwitch = true,
+            now = 0L,
+            zone = zone,
+            projects = listOf(p1, p2),
+        )
+        assertEquals(2, s.projects.size)
+        assertEquals(listOf("c-p1-pinned", "c-p1-recent"), s.projects[0].rows.map { it.id })
+        assertEquals(listOf("科研", "科研"), s.projects[0].rows.map { it.projectName })
+        assertEquals(emptyList<String>(), s.projects[1].rows.map { it.id })
+        assertEquals(listOf("c-solo", "c-orphan"), s.recent.map { it.id })
+        assertEquals(setOf("c-p1-pinned", "c-p1-recent", "c-solo", "c-orphan"), drawerSelectableIds(s, emptyList(), archivedView = false))
+    }
+
+    @Test fun sandboxCopyMarksProjectWorkspacesDistinctly() {
+        val projectWs = com.wangzan101.mika.cap.sandbox.WorkspaceUsage(
+            dirName = "p-proj1", conversationId = null, title = "Mika 开发", bytes = 1024L, busy = false, projectId = "proj1",
+        )
+        val chatWs = com.wangzan101.mika.cap.sandbox.WorkspaceUsage(
+            dirName = "c-chat1", conversationId = "chat1", title = "闲聊", bytes = 512L, busy = false, projectId = null,
+        )
+        assertEquals("项目 · Mika 开发", SandboxCopy.workspaceTitle(projectWs))
+        assertEquals("闲聊", SandboxCopy.workspaceTitle(chatWs))
     }
 
     @Test

@@ -1,6 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Modified by Tadolio contributors (2026) -->
 <resources>
+    <string name="chat_confirmed_goals">هدف‌های تأییدشده: %1$d/%2$d</string>
+    <string name="chat_last_confirmed_goals">آخرین تأیید: %1$d/%2$d</string>
     <string name="chat_greeting_morning">صبح بخیر</string>
     <string name="chat_greeting_noon">بعدازظهر بخیر</string>
     <string name="chat_greeting_afternoon">بعدازظهر بخیر</string>
@@ -54,6 +56,7 @@
     <string name="chat_attach_rejected">افزودن ممکن نشد: %1$s (حجم هر فایل باید کمتر از ۲۰۰ مگابایت باشد)</string>
     <string name="chat_stop">توقف</string>
     <string name="chat_send">ارسال</string>
+    <string name="chat_scroll_to_bottom">رفتن به پایین</string>
     <string name="drawer_running_task">کار در حال اجرا</string>
     <string name="drawer_running">در حال اجرا</string>
     <string name="drawer_yesterday">دیروز</string>
@@ -105,6 +108,23 @@
     <string name="drawer_rename_title">تغییر نام گفتگو</string>
     <string name="drawer_pinned">سنجاق‌شده</string>
     <string name="drawer_pinned_mark">سنجاق‌شده</string>
+    <string name="drawer_archive">بایگانی</string>
+    <string name="drawer_unarchive">خارج کردن از بایگانی</string>
+    <string name="drawer_archived">بایگانی‌شده</string>
+    <string name="drawer_archived_count">%1$d بایگانی‌شده</string>
+    <string name="drawer_archive_empty">هیچ گفتگویی بایگانی نشده است</string>
+    <string name="drawer_archive_done">«%1$s» بایگانی شد</string>
+    <string name="drawer_archive_this_week">این هفته</string>
+    <string name="drawer_archive_this_month">این ماه</string>
+    <string name="drawer_archive_earlier">قدیمی‌تر</string>
+    <string name="drawer_archived_today">امروز بایگانی شد</string>
+    <plurals name="drawer_archived_days_ago">
+        <item quantity="one">%1$d روز پیش بایگانی شد</item>
+        <item quantity="other">%1$d روز پیش بایگانی شد</item>
+    </plurals>
+    <string name="drawer_search_filter_all">همه</string>
+    <string name="drawer_search_filter_active">بایگانی‌نشده</string>
+    <string name="drawer_search_filter_archived">بایگانی‌شده</string>
     <string name="settings_title">تنظیمات</string>
     <string name="chat_unconfirmed">تأیید ممکن نشد: %1$s</string>
     <string name="chat_unverified">انجام شد، اما تأیید نتیجه ممکن نشد</string>
@@ -123,6 +143,10 @@
     <string name="step_viewed">%1$s مشاهده شد</string>
     <string name="step_viewed_part">%2$s در %1$s مشاهده شد</string>
     <string name="step_failed">ناموفق بود</string>
+    <string name="step_declined_not_said">نوشته نشد: گفتهٔ خود شما نیست</string>
+    <string name="step_declined_sensitive">نوشته نشد: اطلاعات حساس</string>
+    <string name="step_declined_not_asked">تغییری نکرد: شما نخواسته بودید</string>
+    <string name="step_declined_not_requested">نوشته نشد: در این پیام خواسته نشده بود به خاطر سپرده شود</string>
     <string name="step_number">مرحلهٔ %1$d</string>
     <string name="source_label">منبع</string>
     <plurals name="screenshots">
@@ -172,6 +196,9 @@
     <string name="zoom_in">بزرگ‌نمایی</string>
     <string name="chat_message_actions">گزینه‌های پیام</string>
     <string name="chat_copy">کپی</string>
+    <string name="share_card_question">پرسش</string>
+    <string name="share_card_answer">پاسخ</string>
+    <string name="share_card_made_by">توسط Tadolio انجام شد</string>
     <string name="chat_quote">نقل‌قول</string>
     <string name="chat_select_text">انتخاب متن</string>
     <string name="chat_copied">کپی شد</string>
@@ -191,6 +218,7 @@
     <string name="chat_withdraw_message">پس گرفتن پیام</string>
     <string name="pip_close">بستن نمای کوچک این کار</string>
     <string name="pip_unmute">روشن کردن دوبارهٔ صدا</string>
+    <string name="pip_mute">قطع صدا</string>
     <string name="pip_back">بازگشت در صفحهٔ مجازی</string>
     <string name="pip_reopen">نمایش صفحه</string>
     <string name="pip_closed_needs_you">به توجه شما نیاز دارد</string>
@@ -219,11 +247,11 @@
     <string name="drawer_search_results">نتایج جست‌وجو</string>
     <string name="drawer_search_truncated">نمایش اولین %1$d نتیجه</string>
     <string name="drawer_searching">در حال جست‌وجو…</string>
-    <string name="recommendations_add">افزودن کار پیشنهادی</string>
+    <string name="recommendations_add">افزودن کار</string>
     <string name="recommendations_delete">حذف</string>
     <string name="recommendations_delete_body">دیگر در صفحهٔ اصلی نمایش داده نمی‌شود.</string>
     <string name="recommendations_delete_title">این کار پیشنهادی حذف شود؟</string>
-    <string name="recommendations_edit">ویرایش کار پیشنهادی</string>
+    <string name="recommendations_edit">ویرایش کار</string>
     <string name="recommendations_empty">کار پیشنهادی وجود ندارد</string>
     <string name="recommendations_empty_sub">کارهای افزوده‌شده در گفتگوی جدید نمایش داده می‌شوند</string>
     <string name="recommendations_footer">در گفتگوی جدید، روی یک کار بزنید تا متن آن در ورودی قرار گیرد. به‌صورت خودکار ارسال نمی‌شود.</string>
@@ -233,7 +261,7 @@
     <string name="recommendations_reset_body">فایل غیرقابل‌خواندن با یک فهرست خالی جایگزین می‌شود.</string>
     <string name="recommendations_save_failed">ذخیره ممکن نشد. دوباره تلاش کنید.</string>
     <string name="recommendations_sub">مدیریت کارها و متن‌های صفحهٔ اصلی</string>
-    <string name="recommendations_title">کارهای پیشنهادی</string>
+    <string name="recommendations_title">کارهای ذخیره‌شده</string>
     <string name="recommendations_drag">برای تغییر ترتیب بکشید</string>
     <string name="recommendations_drag_hint">دستگیره را بکشید تا ترتیب نمایش تغییر کند.</string>
     <string name="recommendations_move_up">انتقال به بالا</string>
@@ -245,8 +273,59 @@
     <string name="recommendations_unreadable">کارهای پیشنهادی ذخیره‌شده خوانده نشدند، بنابراین فعلاً قابل تغییر نیستند.</string>
     <string name="share_draft_replace_body">این محتوای به‌اشتراک‌گذاشته‌شده جایگزین پیش‌نویس فعلی شما می‌شود.</string>
     <string name="chat_attach_unavailable">افزودن ممکن نشد: %1$s. بررسی کنید فایل‌ها در دسترس و در محدودهٔ حجم باشند.</string>
+    <string name="chat_attach_too_large">%1$s: از محدودیت 200 MiB بیشتر است</string>
+    <string name="chat_attach_low_device_space">%1$s: فضای ذخیره‌سازی گوشی کافی نیست؛ فضا را آزاد کنید و دوباره تلاش کنید</string>
+    <string name="chat_attach_workspace_limit">%1$s: فضای ذخیره‌سازی محیط کار به سقف رسیده است؛ فایل‌های محیط کار را پاک کنید و دوباره تلاش کنید</string>
+    <string name="chat_attach_io_error">%1$s: خواندن یا کپی کردن ممکن نیست؛ بررسی کنید فایل در دسترس باشد و دوباره تلاش کنید</string>
     <string name="chat_retry_missing">%1$s: فایل موجود نیست</string>
     <string name="chat_retry_limit">%1$s: به سقف کپی رسید</string>
     <string name="chat_retry_failed">%1$s: کپی ممکن نشد</string>
+    <plurals name="drawer_archive_many_done">
+        <item quantity="one">%1$d گفتگو بایگانی شد</item>
+        <item quantity="other">%1$d گفتگو بایگانی شد</item>
+    </plurals>
+    <plurals name="drawer_archive_many_skipped">
+        <item quantity="one">%1$d بایگانی نشد</item>
+        <item quantity="other">%1$d بایگانی نشد</item>
+    </plurals>
+    <string name="chat_task_cost_estimate">تقریباً %1$s</string>
+    <string name="chat_task_cost_partial">%1$s (ناقص)</string>
+    <string name="chat_task_cost_unavailable">هزینه در دسترس نیست</string>
+    <string name="chat_example_github_star_title">به پروژه گیت‌هاب ستاره بده</string>
+    <string name="chat_example_follow_title">ایکس را باز کن، وانگ زان (@wangzan101) را جست‌وجو کن و حساب او را دنبال کن.</string>
+    <string name="chat_example_group_summary_title">واتساپ را باز کن و پیام‌های خوانده‌نشدهٔ امروز را خلاصه کن؛ مواردی را که به پاسخ من نیاز دارند مشخص کن.</string>
+    <string name="chat_example_alarms_title">برای فردا صبح در ساعت‌های ۹:۴۰، ۹:۵۰ و ۱۰:۰۰ زنگ هشدار تنظیم کن.</string>
+    <string name="chat_example_pdf_title">خلاصه‌کردن PDF</string>
+    <string name="chat_example_schedule_title">تنظیم یادآور روزانه</string>
+    <string name="chat_example_pdf">PDFای که میفرستم را در یک خلاصه کوتاه جمعبندی کن</string>
+    <string name="chat_example_schedule">هر روز صبح ساعت ۸ یادم بینداز هوا را چک کنم</string>
+    <string name="chat_empty_value">یک جمله بگو تا اپ‌هایت را اجرا کنم، وب بگردم و کارت را تمام کنم.</string>
+    <string name="saved_task_save">ذخیره به‌عنوان کار</string>
+    <string name="task_field_add">افزودن فیلد</string>
+    <string name="task_field_name">نام فیلد</string>
+    <string name="task_field_name_invalid">از ۱ تا ۴۰ نویسه، بدون آکولاد یا خط جدید استفاده کنید.</string>
+    <string name="task_field_insert">درج</string>
+    <string name="task_fields_too_many">حداکثر %1$d فیلد متفاوت استفاده کنید.</string>
+    <string name="task_fill_apply">پر کردن کادر ورودی</string>
+    <string name="chat_read_aloud">Read aloud</string>
+    <string name="chat_stop_speaking">Stop speaking</string>
+    <string name="chat_audio">Audio</string>
+    <string name="chat_audio_play">Play</string>
+    <string name="chat_audio_stop">Stop</string>
+    <string name="plus_sub_camera">همین حالا عکس بگیر</string>
+    <string name="plus_sub_album">از عکس‌ها انتخاب کن، چندتا هم می‌شود</string>
+    <string name="plus_sub_files">سند، PDF، آرشیو</string>
+    <string name="plus_sub_device">پوشه‌های این گوشی را بگرد</string>
+    <string name="plus_clipboard">تخته‌شمار</string>
+    <string name="plus_sub_clipboard">آنچه تازه کپی کردی را بچسبان</string>
+    <string name="plus_sub_teach">یک بار نشان بده تا Tadolio یاد بگیرد</string>
+    <string name="plus_sub_skills">یک مهارت برای این نوبت انتخاب کن</string>
+    <string name="plus_sub_checklists">یک فهرست کار ذخیره کن</string>
+    <string name="plus_sub_workflows">یک کار ذخیره‌شدهٔ چندمرحله‌ای را اجرا کن</string>
+    <string name="plus_sub_tasks">کار ذخیره‌شده را در کادر ورودی پر کن</string>
+    <string name="plus_sub_browser">مرورگر داخلی را باز کن</string>
+    <string name="plus_skills_empty">هنوز مهارت شخصی نداری. مهارت‌هایی که Tadolio از کارهای انجام‌شده یاد می‌گیرد اینجا نمایش داده می‌شوند.</string>
+    <string name="plus_clipboard_empty">متنی برای چسباندن از تخته‌شمار نیست</string>
+    <string name="plus_skill_directive">از مهارت «%1$s» استفاده کن: </string>
     <string name="setup_follow_x">برای تازه‌ها X @tadolio_ را دنبال کنید: %1$s</string>
 </resources>

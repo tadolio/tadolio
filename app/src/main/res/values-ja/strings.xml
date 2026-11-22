@@ -70,8 +70,9 @@
     <string name="speech_doubao_plan">課金方式</string>
     <string name="speech_doubao_duration_note">認識した時間で課金</string>
     <string name="speech_doubao_concurrent_note">同時接続数で課金</string>
-    <string name="speech_funasr_model">Fun-ASR（セルフホスト）</string>
-    <string name="speech_funasr_setup_hint">話しながら文字になります。自分で動かしている Fun-ASR リアルタイムサーバー（Fun-ASR プロジェクトの serve_realtime_ws.py、通常はローカルネットワーク内）が認識します。アカウントやキーは不要です。</string>
+    <string name="speech_funasr_model">Qwen（セルフホスト）</string>
+    <string name="speech_funasr_setup_hint">話しながら文字になります。自分で動かしているリアルタイム認識サーバー（通常はローカルネットワーク内）が認識します。アカウントやキーは不要です。Fun-ASR-Nano と Qwen3-ASR に対応しています。</string>
+    <string name="speech_funasr_deploy_guide">デプロイ手順</string>
     <string name="speech_funasr_server">サーバー</string>
     <string name="speech_funasr_address">アドレス</string>
     <string name="speech_funasr_enter_address">例: 192.168.1.10:10095</string>
@@ -93,7 +94,7 @@
     <string name="speech_live_auth">サービスがキーを拒否しました。キーと、選んだリージョンのものかを確認してください。</string>
     <string name="speech_live_refused">サービスがリクエストを拒否しました（%1$s）。</string>
     <string name="speech_live_unreachable">サービスに接続できません。アドレスと、サービスが動いているかを確認してください。</string>
-    <string name="speech_funasr_service">Fun-ASR リアルタイム音声認識</string>
+    <string name="speech_funasr_service">Qwen リアルタイム音声認識</string>
     <string name="speech_funasr_choose_note">セルフホストのサーバーまたは Alibaba Cloud Bailian</string>
     <string name="speech_funasr_tab_local">セルフホスト</string>
     <string name="speech_bailian_tab">Bailian・%1$s</string>
@@ -131,6 +132,27 @@
     <string name="terminal_task_running">Tadolio もこのワークスペースで作業しています。同時に変更すると互いに影響する場合があります。</string>
     <string name="terminal_copy_all">すべてコピー</string>
     <string name="terminal_copied">コピーしました</string>
+    <string name="personal_replay_title">スマートフォンの画面</string>
+    <string name="personal_replay_close">閉じる</string>
+    <string name="personal_replay_live_screen">スマートフォンのライブ画面</string>
+    <string name="personal_replay_recorded_screen">録画されたタスク画面</string>
+    <string name="personal_replay_loading">画面を読み込み中…</string>
+    <string name="personal_replay_empty">再生できる画面はまだありません。</string>
+    <string name="personal_replay_live">ライブ</string>
+    <string name="personal_replay_pause">一時停止</string>
+    <string name="personal_replay_play">再生</string>
+    <string name="personal_replay_return_live">ライブに戻る</string>
+    <string name="drawer_projects">プロジェクト</string>
+    <string name="drawer_new_project">新しいプロジェクト</string>
+    <string name="drawer_project_new_title">新しいプロジェクト</string>
+    <string name="drawer_project_name_hint">プロジェクト名</string>
+    <string name="drawer_project_rename_title">プロジェクト名を変更</string>
+    <string name="drawer_project_new_chat">プロジェクト内で新しいチャット</string>
+    <string name="drawer_project_empty">チャットはまだありません</string>
+    <string name="drawer_project_delete_title">このプロジェクトを削除しますか？</string>
+    <string name="drawer_project_delete_body">「%1$s」のすべてのチャットと共有ワークスペースのファイルが削除され、元に戻せません。</string>
+    <string name="drawer_project_actions">プロジェクトの操作</string>
+    <string name="chat_project_shared">プロジェクト</string>
     <string name="app_name">Tadolio</string>
     <string name="standby_title">Always ready</string>
     <string name="standby_sms">Automatically check new text messages for scams</string>
@@ -203,8 +225,6 @@
     <string name="number_provider_source">From your provider %1$s</string>
     <string name="number_provider_counts">%1$d bound users, including %2$d without a number</string>
     <string name="number_provider_usage">Bound %1$s · Last used %2$s · Requests in 30 days %3$d</string>
-
-    <!-- Modified by Tadolio contributors (2026) -->
     <string name="move_title">Change phone or recover number</string>
     <string name="move_moved">This number has moved to another phone.</string>
     <string name="move_new_number">Get a new number on this phone</string>

@@ -6,7 +6,10 @@ import com.wangzan101.mika.i18n.tr
 import com.wangzan101.mika.i18n.trPlural
 import android.content.Context
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import com.wangzan101.mika.chat.ConversationStore
 import com.wangzan101.mika.ui.components.MikaDialog
 import androidx.compose.material3.Text
@@ -27,8 +30,11 @@ import com.wangzan101.mika.core.trigger.CONDITION_PLAN_EDITED
 import com.wangzan101.mika.core.trigger.ConditionNotify
 import com.wangzan101.mika.core.trigger.TriggerDefinition
 import com.wangzan101.mika.core.trigger.TriggerSource
+import com.wangzan101.mika.core.trigger.TriggerSnapshot
 import com.wangzan101.mika.core.trigger.TriggerWindow
 import com.wangzan101.mika.core.trigger.TriggerWindowState
+import com.wangzan101.mika.core.trigger.canToggle
+import com.wangzan101.mika.core.trigger.toCopyPlanDraft
 import com.wangzan101.mika.task.ExactAlarmGuide
 import com.wangzan101.mika.task.TriggerRuntime
 import com.wangzan101.mika.ui.components.ActionSheet
@@ -57,7 +63,7 @@ import java.time.format.DateTimeFormatter
 
 /**
  * 已保存的定时任务:分「进行中」「已停用」两段,每条三行(做什么、什么时候与下次、上次结果),右边开关。
- * 点一行升起操作面板(看对话、立即执行、编辑、删除)。右上角可手动新建；保存后让调度器重新布置系统闹钟。
+ * 点一行升起操作面板，可查看执行记录。右上角可手动新建；保存后让调度器重新布置系统闹钟。
  */
 @Composable
 fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (String) -> Unit) {
@@ -65,8 +71,10 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
     var snapshot by remember { mutableStateOf(TriggerRuntime.snapshot(context)) }
     var creating by remember { mutableStateOf<String?>(null) }
     var editing by remember { mutableStateOf<TriggerDefinition?>(null) }
+    var copying by remember { mutableStateOf<TriggerDefinition?>(null) }
     var deleting by remember { mutableStateOf<TriggerDefinition?>(null) }
     var acting by remember { mutableStateOf<TriggerDefinition?>(null) }
+    var viewingHistory by remember { mutableStateOf<String?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
     var segment by rememberSaveable { mutableIntStateOf(0) }
     // 从系统设置回来时重读:刚开了权限,提示就该消失
@@ -76,7 +84,7 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
         onPauseOrDispose {}
     }
     fun refresh() { snapshot = TriggerRuntime.snapshot(context) }
-    fun act(block: () -> Unit): Boolean =
+    fun act(block: () -> Unit = {}): Boolean =
         runCatching { block(); refresh(); error = null }
             .onFailure { error = it.message ?: tr(R.string.op_failed) }
             .isSuccess
@@ -114,7 +122,8 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
             GroupCard {
                 shown.forEachIndexed { i, plan ->
                     val last = snapshot.windows.filter { it.triggerId == plan.id }.maxByOrNull { it.dueAtMs }
-                    PlanRow(plan, last, first = i == 0, onClick = { acting = plan }, onToggle = { on -> act { TriggerRuntime.setEnabled(context, plan.id, on) } })
+                    PlanRow(plan, last, first = i == 0, canToggle = plan.canToggle(snapshot.windows),
+                        onClick = { acting = plan }, onToggle = { on -> act { TriggerRuntime.setEnabled(context, plan.id, on) } })
                 }
             }
         }
@@ -126,13 +135,20 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
             plan.reminderText ?: plan.goal,
             listOfNotNull(
                 SheetAction(tr(R.string.plans_open_chat)) { onOpenConversation(plan.threadId) },
+                SheetAction(tr(R.string.plans_run_history)) {
+                    if (act()) viewingHistory = plan.id
+                },
                 if (plan.onNotification == null && plan.onPost == null) SheetAction(tr(R.string.plans_run_now)) { act { TriggerRuntime.runNow(context, plan.id) } } else null,
-                SheetAction(tr(R.string.plans_edit_title)) { editing = plan },
-
+                SheetAction(tr(R.string.plans_edit_time)) { editing = plan },
+                SheetAction(tr(R.string.plans_copy)) { copying = plan },
                 SheetAction(tr(R.string.confirm_delete), destructive = true) { deleting = plan },
             ),
             onDismiss = { acting = null },
         )
+    }
+
+    viewingHistory?.let { id ->
+        PlanRunHistoryDialog(snapshot, id, onDismiss = { viewingHistory = null })
     }
 
     creating?.let { threadId ->
@@ -143,6 +159,22 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
             onSave = { plan ->
                 if (act { TriggerRuntime.schedule(context, plan) }) creating = null
             },
+        )
+    }
+
+    copying?.let { plan ->
+        val draft = remember(plan.id) { plan.toCopyPlanDraft(System.currentTimeMillis()) }
+        PlanEditorDialog(
+            original = null,
+            newThreadId = plan.threadId,
+            onDismiss = { copying = null },
+            onSave = { copy ->
+                if (act { TriggerRuntime.schedule(context, copy) }) {
+                    segment = if (copy.enabled) 0 else 1
+                    copying = null
+                }
+            },
+            initialDraft = draft,
         )
     }
 
@@ -165,14 +197,40 @@ fun PlansScreen(context: Context, onBack: () -> Unit, onOpenConversation: (Strin
     }
 }
 
+@Composable
+private fun PlanRunHistoryDialog(snapshot: TriggerSnapshot, planId: String, onDismiss: () -> Unit) {
+    val windows = remember(snapshot, planId) { snapshot.recentWindows(planId, 10) }
+    MikaDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(tr(R.string.plans_run_history)) },
+        text = {
+            if (windows.isEmpty()) {
+                Text(tr(R.string.plans_never_run))
+            } else {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    windows.forEachIndexed { index, window ->
+                        ListRow(
+                            icon = null,
+                            title = formatPlanTime(window.claimedAtMs),
+                            subtitle = windowLabel(window),
+                            first = index == 0,
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = { TextButton(onDismiss) { Text(tr(R.string.ok_got_it)) } },
+    )
+}
 
 @Composable
-private fun PlanRow(plan: TriggerDefinition, last: TriggerWindow?, first: Boolean, onClick: () -> Unit, onToggle: (Boolean) -> Unit) {
+private fun PlanRow(plan: TriggerDefinition, last: TriggerWindow?, first: Boolean, canToggle: Boolean,
+    onClick: () -> Unit, onToggle: (Boolean) -> Unit) {
     val status = when {
         plan.enabled -> tr(R.string.drawer_running)
         last?.state == TriggerWindowState.Delivered -> tr(R.string.plans_done)
         last?.state == TriggerWindowState.Skipped -> tr(R.string.plans_checked)
-        last?.state == TriggerWindowState.Failed -> tr(R.string.plans_check_failed)
+        last?.state == TriggerWindowState.Failed -> tr(R.string.step_failed)
         last?.state == TriggerWindowState.Unknown -> tr(R.string.plans_result_pending)
         else -> tr(R.string.chat_paused)
     }
@@ -193,8 +251,6 @@ private fun PlanRow(plan: TriggerDefinition, last: TriggerWindow?, first: Boolea
     val sourceSubtitle = "${planSourceLabel(plan.source)} · $subtitle"
     val c = MikaTheme.colors
     val delivered = last?.state == TriggerWindowState.Delivered
-    // 一次性的任务做完后不能再打开;循环的和从没跑过的可以
-    val canToggle = plan.onPost != null || plan.onNotification != null || plan.enabled || plan.intervalMs != null || plan.calendarTime != null || last == null
     ListRow(
         null, plan.reminderText ?: plan.goal, sourceSubtitle, first = first,
         detail = last?.let { lastResult(plan, it) } ?: tr(R.string.plans_never_run),
@@ -227,7 +283,7 @@ private fun windowLabel(w: TriggerWindow): String = when (w.state) {
         CONDITION_PLAN_EDITED -> tr(R.string.trace_cancelled)
         else -> tr(R.string.plans_unchanged)
     }
-    TriggerWindowState.Failed -> tr(R.string.plans_check_failed)
+    TriggerWindowState.Failed -> tr(R.string.step_failed)
     TriggerWindowState.Unknown -> tr(R.string.plans_result_pending)
     TriggerWindowState.Claimed, TriggerWindowState.Dispatched, TriggerWindowState.ActionDispatched -> tr(R.string.plans_running_now)
 }

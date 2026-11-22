@@ -191,6 +191,51 @@ class BridgeTests(unittest.TestCase):
         self.deliver("明天呢", "om_2")
         self.assertEqual(self.api.writes[-1], ("start", "明天呢", "mcp-test"))
 
+    def test_question_shown_by_status_is_not_pushed_again(self):
+        self.deliver()
+        self.api.status.update(status="waiting_for_answer", question="Which city?")
+        self.deliver("/status", "om_2")
+        shown = len(self.sent)
+        self.bridge.poll_once()
+        self.assertEqual(len(self.sent), shown)
+        # The question is still answerable: the record above must not cost the user their answer.
+        self.deliver("/answer Shanghai", "om_3")
+        self.assertEqual(self.api.writes[-1], ("answer", "Shanghai"))
+
+    def test_final_result_shown_by_status_is_not_pushed_again(self):
+        self.deliver()
+        self.api.status.update(status="done", answer="今天晴天")
+        self.deliver("/status", "om_2")
+        shown = len(self.sent)
+        self.bridge.poll_once()
+        self.assertEqual(len(self.sent), shown)
+
+    def test_inflight_poll_cannot_replace_terminal_status(self):
+        for old_response in (
+                {"task_id": "task_1", "status": "waiting_for_answer", "question": "Old question"},
+                ApiError("http_404", status=404)):
+            with self.subTest(old_response=old_response):
+                peer = "oc_chat:ou_owner"
+                self.store.update(peer, task_id="task_1", notice="", uncertain=0)
+                final = {"task_id": "task_1", "status": "done", "answer": "Final result"}
+                self.sent.clear()
+
+                def finish_during_poll(task_id):
+                    self.assertEqual("task_1", task_id)
+                    with patch.object(self.api, "task", return_value=final):
+                        self.deliver("/status", "status-" + type(old_response).__name__)
+                    if isinstance(old_response, ApiError):
+                        raise old_response
+                    return old_response
+
+                with patch.object(self.api, "task", side_effect=finish_during_poll):
+                    self.bridge.poll_once()
+                self.assertEqual(1, len(self.sent))
+                self.assertIn("Final result", self.sent[0][1])
+                session = self.store.session(peer)
+                self.assertTrue(session["notice"].startswith("terminal:"))
+                self.assertEqual(0, session["uncertain"])
+
     def test_old_poll_failure_does_not_mark_replacement_task_uncertain(self):
         peer = "oc_chat:ou_owner"
         self.store.update(peer, task_id="task_old")
@@ -375,6 +420,27 @@ class ContractTests(unittest.TestCase):
             with self.assertRaises(ApiError) as error:
                 self.api.request("POST", "/tasks", {"goal": "test"})
         connect.assert_not_called()
+        self.assertFalse(error.exception.uncertain)
+
+    def test_tls_validates_the_address_it_dials_not_the_setup_one(self):
+        # HTTPSConnection.connect dials through its own super(), which here resolves to
+        # PrivateHTTPConnection.connect, so the checked dial must still be the one that runs
+        # after setup. Reordering the bases or overriding connect would silently skip it.
+        host, port = "phone.example.test", self.server.server_port
+        resolve, answers = socket.getaddrinfo, iter(("127.0.0.1", "203.0.113.9"))
+
+        def changing_dns(name, port, *args, **kwargs):
+            return resolve(next(answers, "203.0.113.9") if name == host else name, port, *args, **kwargs)
+
+        with patch.object(socket, "getaddrinfo", side_effect=changing_dns):
+            api = MikaApi(f"https://{host}:{port}", "test-token")  # setup resolves a private address
+        public = [(socket.AF_INET, socket.SOCK_STREAM, socket.IPPROTO_TCP, "", ("203.0.113.9", port))]
+        with patch.object(socket, "getaddrinfo", return_value=public), \
+                patch.object(socket.socket, "connect") as connect:
+            with self.assertRaises(ApiError) as error:
+                api.request("GET")
+        connect.assert_not_called()
+        self.assertEqual("invalid_private_address", error.exception.code)
         self.assertFalse(error.exception.uncertain)
 
     def test_tls_keeps_original_hostname_after_address_validation(self):

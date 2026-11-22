@@ -5,7 +5,7 @@
     <string name="calls_device_and_permissions">Устройство и разрешения</string>
     <string name="calls_edit_rule">Изменить</string>
     <string name="calls_nav_receive">Приём</string>
-    <string name="calls_nav_task">Задача</string>
+    <string name="calls_nav_task">Вызов</string>
     <string name="calls_pause_enable_first">Включите автоответ, чтобы временно его приостанавливать.</string>
     <string name="calls_rule_delay_summary">Задержка ответа: %1$d с</string>
     <string name="calls_rule_pause">Временная пауза</string>
@@ -34,4 +34,10 @@
     <string name="calls_task_review_blocked">Для вызова телефон должен быть готов, без активного звонка и с выбранной SIM.</string>
     <string name="calls_task_sim_override_summary">Этот звонок: %1$s · По умолчанию: %2$s</string>
     <string name="calls_voice_settings">Голос</string>
+    <string name="calls_contacts_tab">Контакты</string>
+    <string name="calls_manual_tab">Ввести вручную</string>
+    <string name="calls_contacts_search">Поиск по имени или номеру</string>
+    <string name="calls_contacts_permission">Разрешите Tadolio читать контакты, чтобы выбрать их номера. Номера также можно ввести вручную.</string>
+    <string name="calls_contacts_empty">Нет контактов с подходящим номером телефона.</string>
+    <string name="calls_contacts_failed">Не удалось загрузить контакты.</string>
 </resources>

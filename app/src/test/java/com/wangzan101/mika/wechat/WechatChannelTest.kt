@@ -12,7 +12,6 @@ import com.wangzan101.mika.core.run.RunId
 import com.wangzan101.mika.core.run.SendOutcome
 import com.wangzan101.mika.core.wechat.WechatAccount
 import com.wangzan101.mika.core.wechat.WechatApi
-import com.wangzan101.mika.core.wechat.WechatImage
 import com.wangzan101.mika.settings.KeyCipher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.cancelAndJoin
@@ -43,44 +42,54 @@ class WechatChannelTest {
 
     private fun response(body: String) = MockResponse().setHeader("Content-Type", "application/json").setBody(body)
 
-    @Test fun communityPauseDoesNotReplayPendingMessagesOrContactServer() = runTest {
-        val store = WechatStore(tmp.newFolder(), cipher)
-        store.saveAccount(WechatAccount("token", "http://127.0.0.1:1/", "bot", "owner"))
-        store.setEnabled(true)
-        store.journal("pending", store.peer("owner"), "private goal")
-        val channel = WechatChannel(store, WechatApi(OkHttpClient(), "0.1.37"),
-            tasksAllowed = { WechatTaskPolicy.allowed(true) }, log = {})
-        val received = mutableListOf<ChannelInput>()
-        channel.start(ChannelInputSink { received += it })
-        assertEquals(null, channel.pollOnce())
-        assertTrue(received.isEmpty())
-        assertEquals(1, store.pending().size)
-        assertTrue(WechatTaskPolicy.allowed(false))
-        assertEquals(false, WechatTaskPolicy.allowed(true))
+    @Test fun communityReplaysPendingMessagesAndPollsNormally() = runTest {
+        MockWebServer().use { server ->
+            server.start()
+            val store = WechatStore(tmp.newFolder(), cipher)
+            store.saveAccount(WechatAccount("token", server.url("/").toString(), "bot", "owner"))
+            store.setEnabled(true)
+            store.journal("pending", store.peer("owner"), "task goal")
+            val channel = WechatChannel(store, WechatApi(OkHttpClient(), "test"),
+                tasksAllowed = { WechatTaskPolicy.allowed(true) }, log = {})
+            val received = mutableListOf<ChannelInput>()
+            server.enqueue(response("""{"get_updates_buf":"next","msgs":[]}"""))
+            channel.start(ChannelInputSink { received += it }).use { channel.pollOnce() }
+            assertEquals(1, received.size)
+            assertEquals(1, server.requestCount)
+            assertTrue(WechatTaskPolicy.allowed(false))
+            assertTrue(WechatTaskPolicy.allowed(true))
+        }
     }
 
-    @Test fun communityBlocksPendingImagesAndImageExportBeforeReadingFiles() = runTest {
-        val store = WechatStore(tmp.newFolder(), cipher)
-        store.saveAccount(WechatAccount("token", "http://127.0.0.1:1/", "bot", "owner"))
-        store.setEnabled(true)
-        val peer = store.peer("owner")
-        store.journal("pending-image", peer, "附件:/workspace/inbox/private.jpg")
-        val files = object : WechatImageFiles {
-            override suspend fun receive(peer: ChannelPeer, messageId: String, text: String,
-                images: List<WechatImage>, accept: (String) -> Boolean): Boolean = error("community image import")
-            override suspend fun read(image: Delivery.Image): ByteArray = error("community image export")
+    @Test fun communityImportsImagesAndDispatchesTheTask() = runTest {
+        MockWebServer().use { server ->
+            server.start()
+            val store = WechatStore(tmp.newFolder(), cipher)
+            store.saveAccount(WechatAccount("token", server.url("/").toString(), "bot", "owner"))
+            store.setEnabled(true)
+            var imported = false
+            val files = object : WechatImageFiles {
+                override suspend fun receive(peer: ChannelPeer, images: List<WechatImageSource>,
+                    accept: (List<SavedWechatImage>) -> Boolean): Boolean {
+                    imported = true
+                    return accept(listOf(SavedWechatImage("/workspace/inbox/photo.jpg", 42, "synthetic")))
+                }
+                override suspend fun read(image: Delivery.Image): ByteArray = error("not exporting")
+            }
+            val channel = WechatChannel(store, WechatApi(OkHttpClient(), "test"),
+                tasksAllowed = { WechatTaskPolicy.allowed(true) }, log = {}, imageFiles = files)
+            val received = mutableListOf<ChannelInput>()
+            server.enqueue(response("""{"get_updates_buf":"next","msgs":[{
+                "message_id":"image-task","from_user_id":"owner","message_type":1,"context_token":"ctx",
+                "item_list":[{"type":2,"image_item":{}}]}]}"""))
+            channel.start(ChannelInputSink { received += it }).use { channel.pollOnce() }
+            assertTrue(imported)
+            assertEquals(1, received.size)
+            assertTrue(store.pending().single().text.contains("/workspace/inbox/photo.jpg"))
         }
-        val channel = WechatChannel(store, WechatApi(OkHttpClient(), "test"),
-            tasksAllowed = { WechatTaskPolicy.allowed(true) }, log = {}, imageFiles = files)
-        channel.start(ChannelInputSink { error("community image dispatched") }).use {
-            assertEquals(null, channel.pollOnce())
-            assertEquals(SendOutcome.Failed, channel.send(peer,
-                Delivery.Image("out", peer.threadId, "/private.jpg", "private.jpg", 42)))
-        }
-        assertEquals(1, store.pending().size)
     }
 
-    @Test fun switchingToCommunityDuringImageImportDiscardsPreparedContent() = runBlocking {
+    @Test fun disablingChannelDuringImageImportDiscardsPreparedContent() = runBlocking {
         MockWebServer().use { server ->
             server.start(InetAddress.getByName("127.0.0.1"), 0)
             val store = WechatStore(tmp.newFolder(), cipher)
@@ -89,10 +98,10 @@ class WechatChannelTest {
             var allowed = true
             var imported: Boolean? = null
             val files = object : WechatImageFiles {
-                override suspend fun receive(peer: ChannelPeer, messageId: String, text: String,
-                    images: List<WechatImage>, accept: (String) -> Boolean): Boolean {
+                override suspend fun receive(peer: ChannelPeer, images: List<WechatImageSource>,
+                    accept: (List<SavedWechatImage>) -> Boolean): Boolean {
                     allowed = false
-                    return accept("private image contents").also { imported = it }
+                    return accept(emptyList()).also { imported = it }
                 }
                 override suspend fun read(image: Delivery.Image): ByteArray = error("Unexpected export")
             }
@@ -122,10 +131,10 @@ class WechatChannelTest {
             var active = original
             var imported: Boolean? = null
             val images = object : WechatImageFiles {
-                override suspend fun receive(peer: ChannelPeer, messageId: String, text: String,
-                    images: List<WechatImage>, accept: (String) -> Boolean): Boolean {
+                override suspend fun receive(peer: ChannelPeer, images: List<WechatImageSource>,
+                    accept: (List<SavedWechatImage>) -> Boolean): Boolean {
                     active = original.copy(id = "replacement", askId = "replacement")
-                    return accept(text).also { imported = it }
+                    return accept(emptyList()).also { imported = it }
                 }
 
                 override suspend fun read(image: Delivery.Image): ByteArray = error("Unexpected image export")

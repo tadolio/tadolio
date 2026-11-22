@@ -5,7 +5,7 @@
     <string name="calls_device_and_permissions">الجهاز والأذونات</string>
     <string name="calls_edit_rule">تعديل</string>
     <string name="calls_nav_receive">الرد</string>
-    <string name="calls_nav_task">مهمة</string>
+    <string name="calls_nav_task">اتصال</string>
     <string name="calls_pause_enable_first">فعّل الرد التلقائي لتتمكن من إيقافه مؤقتًا.</string>
     <string name="calls_rule_delay_summary">مهلة الرد: %1$d ث</string>
     <string name="calls_rule_pause">إيقاف مؤقت</string>
@@ -34,4 +34,10 @@
     <string name="calls_task_review_blocked">للاتصال، يجب أن يكون الهاتف جاهزًا ومن دون مكالمة جارية، مع اختيار بطاقة SIM.</string>
     <string name="calls_task_sim_override_summary">هذه المكالمة: %1$s · المفضلة: %2$s</string>
     <string name="calls_voice_settings">الصوت</string>
+    <string name="calls_contacts_tab">جهات الاتصال</string>
+    <string name="calls_manual_tab">إدخال يدوي</string>
+    <string name="calls_contacts_search">البحث بالاسم أو الرقم</string>
+    <string name="calls_contacts_permission">اسمح لـ Tadolio بقراءة جهات الاتصال لتحديد أرقامها. يمكنك أيضًا إدخال الأرقام يدويًا.</string>
+    <string name="calls_contacts_empty">لا توجد جهات اتصال برقم هاتف صالح للاختيار.</string>
+    <string name="calls_contacts_failed">تعذرت قراءة جهات الاتصال.</string>
 </resources>

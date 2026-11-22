@@ -40,6 +40,19 @@ class RunTimelineViewModelTest {
 
     private fun ready(runId: String) = RunTimelineViewModel(store, runId).load() as TimelineUi.Ready
 
+    @Test fun recordedGoalsKeepTheirConfirmationsAfterTheTaskEnds() {
+        val criteria = listOf("确认地址", "确认店名", "给出推荐")
+        val id = run("找咖啡馆") {
+            event(RunEvent.Criteria(clock, criteria, emptyList(), confirmedIds = setOf(1)))
+            event(RunEvent.Criteria(clock, criteria, emptyList(), complete = true, confirmedIds = setOf(1, 2, 3)))
+            event(RunEvent.TaskEnded(clock, "succeeded", "推荐拿铁"))
+        }
+        assertEquals(criteria, ready(id).header.criteria)
+        assertEquals(setOf(1, 2, 3), ready(id).header.confirmedIds)
+        val old = run("旧任务") { event(RunEvent.Criteria(clock, criteria, emptyList())) }
+        assertNull(ready(old).header.confirmedIds)
+    }
+
     /** 任务还在跑、还没有结束事件时算「进行中」:页面据此每秒重读,跑完就停。 */
     @Test fun anUnfinishedRunOfALiveTaskReadsAsRunning() {
         val h = store.open("打开设置")
@@ -152,7 +165,7 @@ class RunTimelineViewModelTest {
         val ui = ready(id)
         assertEquals(listOf(1, 2, 3, 4), ui.steps.map { it.step })
         val (launch, look, tap, stale) = ui.steps
-        assertEquals("先".repeat(80) + "…", launch.said)
+        assertEquals(long, launch.said)
         assertEquals("打开 App", launch.tool)
         assertEquals("com.android.settings", launch.detail)
         assertEquals("生效", launch.result)
@@ -238,6 +251,20 @@ class RunTimelineViewModelTest {
         assertEquals(listOf("act", "act"), rows.drop(1).map { it.kind })
     }
 
+    /** 外部 MCP 连接器调用的活动单独成行,标的是连接器配置的名字;普通的读照旧合并。 */
+    @Test fun mcpCallShowsTheConnectorName() {
+        val id = run("查笔记") {
+            event(RunEvent.ModelReply(clock, 1, "", "mcp_demo__search", "{}", 10, 1, null))
+            event(RunEvent.Activity(clock, 1, "observe", "web_read_page", "example.com", "completed", listOf(1), callId = "r1"))
+            event(RunEvent.Activity(clock, 1, "act", "mcp_demo__search", null, "completed", callId = "m1", mcpConnector = "Team notes"))
+        }
+        val rows = ready(id).steps.single().activities
+        assertEquals(2, rows.size)
+        assertEquals("observe", rows[0].kind)
+        assertEquals("mcp", rows[1].kind)
+        assertEquals("已调用 Team notes MCP", rows[1].label)
+    }
+
     @Test fun showsVerifierAndGuardTags() {
         // 和 AgentLoop 一样用守卫自己的序列化拼结果
         fun withGuard(vararg v: GuardVerdict) =
@@ -256,6 +283,10 @@ class RunTimelineViewModelTest {
             event(RunEvent.ToolResult(clock, 4, "phone_tap", reordered, null, null))
             event(RunEvent.ModelReply(clock, 5, "", "phone_tap", "{}", null, null, null))
             event(RunEvent.ToolResult(clock, 5, "phone_tap", """{"ok":false,"error":"some_new_code"}""", null, null))
+            event(RunEvent.ModelReply(clock, 6, "", "memory_save", "{}", null, null, null))
+            event(RunEvent.ToolResult(clock, 6, "memory_save", """{"ok":false,"error":"content_not_from_user","message":"m","recoverable":false,"counts_as_failure":false}""", null, null))
+            event(RunEvent.ModelReply(clock, 7, "", "skill_save", "{}", null, null, null))
+            event(RunEvent.ToolResult(clock, 7, "skill_save", """{"ok":false,"error":"sensitive","message":"m","recoverable":false}""", null, null))
             event(RunEvent.ModelReply(clock, 3, "好了", "finish", """{"answer":"x"}""", null, null, null))
             event(RunEvent.Verifier(clock, "fail", "{}"))
             event(RunEvent.ToolResult(clock, 3, "finish", """{"ok":false,"error":"verification_failed"}""", null, null))
@@ -268,6 +299,12 @@ class RunTimelineViewModelTest {
         val four = ui.steps.single { it.step == 4 }
         assertEquals(listOf(Tag("守卫提醒:操作连续失败", TagTone.Warn), Tag("守卫提醒", TagTone.Warn)), four.tags)
         assertEquals("出错了", ui.steps.single { it.step == 5 }.result)
+        // 按规矩没收的不算出错:不带「出错」(界面按这个前缀把一步标成失败),说没收和原因;工具用界面上的名字
+        val declined = ui.steps.single { it.step == 6 }
+        assertEquals("不是你亲口说的,没有写入", declined.result)
+        assertEquals("写入记忆", declined.tool)
+        // 同一个错误码,结果里没写不计入失败的(存技能)照旧算出错
+        assertEquals("出错了", ui.steps.single { it.step == 7 }.result)
         assertFalse(ui.toString().contains("brand_new") || ui.toString().contains("some_new_code"))
         assertEquals("核查没通过", ui.header.verdict)
         assertEquals("没有完成", ui.header.outcome)

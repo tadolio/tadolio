@@ -96,7 +96,8 @@ class T56ClarityTest {
         assertFalse(refresh.contains("delay("))
         assertFalse(refresh.contains("while"))
         val entries = drawer.substringAfter("NavEntry(MikaIcons.Heart, stringResource(R.string.number_title)")
-        assertTrue(entries.indexOf("R.string.miner_title") < entries.indexOf("R.string.drawer_plans"))
+        assertTrue(entries.contains("R.string.miner_title"))
+        assertTrue(drawer.substringAfter("&& permanent)").substringBefore("// 搜索框").contains("R.string.drawer_plans"))
         assertTrue(drawer.contains("rightText: String? = null"))
         assertTrue(source("ui/MainActivity.kt").contains("onMiner = { context.startActivity"))
     }
@@ -140,7 +141,9 @@ class T56ClarityTest {
         assertEquals("模型、模型平台与 Token 用量", resources("values-zh")["settings_model_sub"])
         assertTrue(File("src/main/res/values/community.xml").readText().contains("Your provider"))
         resources("values").values.forEach { assertFalse(it, Regex("(?i)\\boperator\\b").containsMatchIn(it)) }
-        assertTrue(source("task/TaskRun.kt").contains("社区节点模式 · "))
+        assertTrue(source("task/TaskRun.kt").contains("_communityPlatform.value = platform"))
+        assertTrue(source("task/TaskRunState.kt").contains("run?.takeIf { it.community }?.communityPlatform"))
+        assertTrue(source("ui/ChatScreen.kt").contains("communityTask?.communityPlatform?.collectAsState()"))
     }
 
     @Test fun setupAndRunningSectionsFollowTheReviewedOrder() {

@@ -72,5 +72,7 @@
     <string name="mcp_cli_connection_check">connect memverifikasi koneksi. Permintaan yang berhasil akan memperbarui waktu di atas.</string>
     <string name="mcp_history_title">Izinkan komputer melihat riwayat</string>
     <string name="mcp_history_detail">Komputer yang terhubung dapat membaca semua percakapan, catatan proses, dan isi Trace yang direkam, termasuk permintaan serta jawaban model dengan data sensitif disamarkan. Berlaku untuk koneksi USB dan jaringan pribadi.</string>
+    <string name="progress_calling_mcp">Memanggil %1$s via MCP…</string>
+    <string name="progress_called_mcp">%1$s telah dipanggil via MCP</string>
     <string name="mcp_cli_install_no_repo">Minta panduan pemasangan CLI atau Skill kepada distributor Tadolio. Gunakan metode koneksi yang dipilih di ponsel dan periksa koneksi dengan connect. Rahasiakan token. USB memakai ADB yang diizinkan. Wi-Fi atau VPN pribadi memakai alamat HTTP dan berkas token pribadi. Jika hanya memasang Skill, gunakan skrip bawaannya. Jangan kirim tugas ponsel atau tampilkan token dalam percakapan.</string>
 </resources>

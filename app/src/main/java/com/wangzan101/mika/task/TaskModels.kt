@@ -16,7 +16,7 @@ internal class TaskModels(
 ) {
     val light: ChatModel? = light
     val vision: ChatModel? = vision
-    val routedLight: ChatModel? = this.light.takeIf { distinctLight && !community }
+    val routedLight: ChatModel? = this.light.takeIf { distinctLight }
 
     fun auxiliary(model: ChatModel?): ChatModel? = when {
         model == null -> null
@@ -28,9 +28,10 @@ internal class TaskModels(
         fun fromFrozen(
             own: ProviderModels,
             decorateMain: (ChatModel) -> ChatModel,
+            community: Boolean = false,
         ): TaskModels? {
             val main = own.main ?: return null
-            return TaskModels(decorateMain(main), own.light, own.vision, own.distinctLight, community = false)
+            return TaskModels(decorateMain(main), own.light, own.vision, own.distinctLight, community = community)
         }
     }
 }

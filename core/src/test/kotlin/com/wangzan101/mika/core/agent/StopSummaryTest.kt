@@ -50,6 +50,16 @@ class StopSummaryTest {
         assertTrue(StopSummary.worthSaying(events.filterIsInstance<RunEvent.Criteria>(), null))
     }
 
+    @Test fun multiGoalSummaryUsesConfirmationsEvenIfTheInitialMetricNeverChanged() {
+        val checkpoint = RunEvent.Criteria(1, listOf("地址", "店名", "推荐"), emptyList(),
+            progress = RunEvent.Progress("步骤完成", 0, 3), confirmedIds = setOf(1, 2))
+        val events = listOf(checkpoint)
+        val summary = StopSummary.plain("找咖啡馆", events, null)
+        val facts = StopSummary.facts("找咖啡馆", events, null)
+        assertTrue(summary, "已确认进度:目标 2/3" in summary && "0/3" !in summary)
+        assertTrue(facts, "<progress>\n目标 2/3\n</progress>" in facts && "0/3" !in facts)
+    }
+
     @Test fun plainSummaryCountsBatchActionsAndNamesThem() {
         val text = StopSummary.plain("把推荐里的岗位都打个招呼", greeting, null, ::label, ::app)
         assertEquals(
@@ -142,5 +152,19 @@ class StopSummaryTest {
         assertTrue(text, text.contains("2. The user said: 看四个设置页; the user stopped this task partway; before the stop: 已经停下。看完了网络、蓝牙;显示、声音还没看。"))
         assertEquals(null, Conversation.stopSummary(old))
         assertEquals("已经停下。看完了网络、蓝牙;显示、声音还没看。", Conversation.stopSummary(stopped))
+    }
+
+    @Test fun stopSummarySupportsMultipleLanguagesWithoutBias() {
+        val enText = StopSummary.plain("Send messages to jobs", greeting, null, ::label, ::app, language = "en")
+        assertTrue(enText, enText.startsWith("Stopped. Actions before stop:"))
+        assertTrue(enText, enText.contains("Visited: jobs.example.com"))
+
+        val jaText = StopSummary.plain("メッセージを送信", greeting, null, ::label, ::app, language = "ja")
+        assertTrue(jaText, jaText.startsWith("停止しました。停止前:"))
+        assertTrue(jaText, jaText.contains("アクセス先: jobs.example.com"))
+
+        val esText = StopSummary.plain("Enviar mensajes", greeting, null, ::label, ::app, language = "es")
+        assertTrue(esText, esText.startsWith("Detenida. Antes de detener:"))
+        assertTrue(esText, esText.contains("Visitado: jobs.example.com"))
     }
 }

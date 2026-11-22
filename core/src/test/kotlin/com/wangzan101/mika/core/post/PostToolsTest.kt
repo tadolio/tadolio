@@ -124,7 +124,7 @@ class PostToolsTest {
         val names = dispatcher.definitions().map { it.name }
         assertTrue(names.containsAll(listOf("hivo_post_publish", "hivo_post_withdraw",
             "hivo_post_search", "hivo_post_get", "hivo_post_mine")))
-        assertFalse("hivo_number_inbox" in names)
+        assertTrue("hivo_number_inbox" in names)
         val gate = ConfirmationGate(phoneOnly = true)
         val judge = ConfirmDecision(dispatcher, gate, ApprovalSettings { true }, autonomous = true)
         val request = dispatcher.approvalRisk("hivo_post_publish", publishArgs)!!.ask!!

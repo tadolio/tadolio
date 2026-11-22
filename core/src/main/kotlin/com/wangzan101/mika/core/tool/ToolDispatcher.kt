@@ -71,7 +71,7 @@ class ToolDispatcher internal constructor(
     }
 
     /** 用到才展开的组:收着的能力各一组,有屏幕的能力共用的通用工具一组([ToolGroups.SCREENS];没有收着的屏时它们一直都在)。 */
-    private val activeCapabilities: List<Capability> get() = capabilities.filter { !community || it.id in setOf("phone", "web") }
+    private val activeCapabilities: List<Capability> get() = capabilities
     private val folding: List<String> get() = activeCapabilities.filter { it.folds }.map { it.id }
     private val screenGroups: Set<String> get() = activeCapabilities.filter { it.folds && it.family != null }.map { it.id }.toSet()
 
@@ -81,7 +81,7 @@ class ToolDispatcher internal constructor(
         else -> null
     }
 
-    private val registry = ToolRegistry(ctx, tools, ::groupOf) { !community || communityAdmission(it) }
+    private val registry = ToolRegistry(ctx, tools, ::groupOf)
 
     /** 本任务已展开的能力组(按展开的先后)。 */
     private val opened = linkedSetOf<String>()
@@ -143,7 +143,7 @@ class ToolDispatcher internal constructor(
     suspend fun placeMode(): String? = surfaces.mode()
 
     /** 本任务提供跑技能脚本的工具(参考资料的附注按它写)。 */
-    fun scriptsOffered(): Boolean = !community && ctx.scripts?.offered() == true
+    fun scriptsOffered(): Boolean = ctx.scripts?.offered() == true
 
     /**
      * 系统提示词里各能力与核心的段落,按发给模型的同一份工具列表 [specs] 判断有没有;收着的能力组只在展开后才有自己的段落。
@@ -216,8 +216,6 @@ class ToolDispatcher internal constructor(
 
     /** 只读的调用(读屏、报失败一类):工具声明会改变屏幕、页面或沙箱的一律拒绝,那些只能经执行入口做。 */
     suspend fun executeRead(call: Part.ToolCall, step: Int? = null): ToolExecution {
-        if (community && call.name == "root_run_command")
-            return fail("community_root_forbidden", "Root commands are unavailable in community mode.", recoverable = false)
         val tool = registry.declared(call.name)
         if (tool != null && (!tool.readOnly || !tool.readOnly(parseArgs(call.argsJson)) || tool.approvalRisk(parseArgs(call.argsJson), ctx)?.alwaysConfirm == true)) {
             return fail("not_a_read", Feedback.format("not_a_read", "tool" to call.name), recoverable = false)
@@ -235,9 +233,30 @@ class ToolDispatcher internal constructor(
 
     private var executed = 0
 
+    /** 宿主可提供运行级人工控制；核心不依赖界面或设备输入实现。 */
+    var manualControl: com.wangzan101.mika.core.run.ManualControl? = null
+    private val manualObserver = com.wangzan101.mika.core.run.ManualControl.Observer()
+
     private suspend fun dispatch(call: Part.ToolCall, step: Int?, sub: SubActions?): ToolExecution {
-        if (community && call.name == "root_run_command")
-            return fail("community_root_forbidden", "Root commands are unavailable in community mode.", recoverable = false)
+        return try { withScreenControl(call.name, successful = { it: ToolExecution -> it.content["ok"] != JsonPrimitive(false) }) {
+            dispatchAutomatic(call, step, sub)
+        } } catch (e: com.wangzan101.mika.core.run.ManualControl.Interrupted) {
+            fail(com.wangzan101.mika.core.run.ManualControl.CHANGED, e.message.orEmpty(), recoverable = true)
+        }
+    }
+
+    /** 只锁单个屏幕操作；组合脚本的子步各自经过此入口，非屏幕工具不占用触控权。 */
+    internal suspend fun <T> withScreenControl(name: String, successful: (T) -> Boolean, block: suspend () -> T): T {
+        val control = manualControl ?: return block()
+        if (offScreen(name) || composite(name)) return block()
+        val verb = verb(name)
+        val observation = verb in setOf(Verb.Observe, Verb.ListElements, Verb.Screenshot, Verb.ReadPage)
+        // 后台网页正文不能证明已看过当前画面；每个分发器分别记录自己的观察代次。
+        return control.automatic(observation, refresh = observation && verb != Verb.ReadPage,
+            refreshed = successful, observer = manualObserver, block = block)
+    }
+
+    private suspend fun dispatchAutomatic(call: Part.ToolCall, step: Int?, sub: SubActions?): ToolExecution {
         surfaces.skip()
         val tool = registry[call.name] ?: return unknown(call.name, parseArgs(call.argsJson))
         // 收着的组里的工具(入口,或模型凭记忆调了没给它看的)照常执行;它那一组就此展开,结果里说一句,下一次调用起看得到整组
@@ -290,8 +309,12 @@ class ToolDispatcher internal constructor(
         val outerIdle = ctx.idleScrolls
         ctx.pacedWaitMs = 0
         ctx.idleScrolls = 0
+        var mcpConnector: String? = null
         // 界面上的准备(路线要的目标、改变界面的动作前先看一眼)与收尾都在界面一侧
         val result = surfaces.around(tool, args.o, inlineScreen) { reportsEffect ->
+            // 嵌套调用(页面脚本里的动作):里层走过的连接器归里层这次调用,外层恢复自己那份
+            val outerMcpConnector = ctx.mcpConnector
+            ctx.mcpConnector = null
             ctx.reportsEffect = reportsEffect
             try {
                 if (!tool.yieldsToSteer) tool.execute(args, ctx)
@@ -306,6 +329,8 @@ class ToolDispatcher internal constructor(
                 fail("operation_failed", Feedback.format("operation_failed", "tool" to tool.name, "error" to (e.message ?: e::class.simpleName)))
             } finally {
                 ctx.reportsEffect = false
+                mcpConnector = ctx.mcpConnector
+                ctx.mcpConnector = outerMcpConnector
             }
         }
         val waited = ctx.pacedWaitMs
@@ -318,8 +343,12 @@ class ToolDispatcher internal constructor(
         val seen = remember(result.observations + tool.observations(args.o, result, evidenceLog), tool.capability)
         // 打进输入框的字(端口明确说不是密码框):之后读屏里的输入框回显不给回答作证
         if (tool.verb == Verb.TypeText && ok && result.content["secret"] == JsonPrimitive(false)) args.o.argStr("text")?.let(evidenceLog::noteTyped)
-        // 停留里轻轻滚过页面:只记进运行记录,不给模型
-        val record = if (idled > 0) JsonObject(result.record + ("idleScrolls" to JsonPrimitive(idled))) else result.record
+        // 停留里轻轻滚过页面:只记进运行记录,不给模型;走过的 MCP 连接器也一样只进记录
+        val record = if (idled == 0 && mcpConnector == null) result.record else JsonObject(buildMap {
+            putAll(result.record)
+            if (idled > 0) put("idleScrolls", JsonPrimitive(idled))
+            mcpConnector?.let { put("mcpConnector", JsonPrimitive(it)) }
+        })
         return result.with(observations = seen, place = placeAfter(tool.verb, result.content), waitMs = waited, record = record)
     }
 
@@ -329,6 +358,11 @@ class ToolDispatcher internal constructor(
 
     /** 每条记进证据账本的观察(运行记录据此原样记下,评测能照样重建账本);由循环设置。 */
     var observer: ((Observation) -> Unit)? = null
+
+    /** MCP 调用开始/结束的通知(循环把任务状态标成正在调用哪个连接器)。 */
+    fun observeMcpCalls(onStarted: (String) -> (() -> Unit)) {
+        ctx.onMcpCallStarted = onStarted
+    }
 
     /** 不认识的工具;是改名前的名字时说清现在叫什么(不替模型换成新名执行)。 */
     private fun unknown(name: String, args: JsonObject) = ToolExecution(buildJsonObject {
@@ -409,8 +443,10 @@ class ToolDispatcher internal constructor(
     }
 
     /** 此刻这块屏上要做一个改动屏幕的动作了:按这块屏的能力的节奏先停一会儿([Capability.beforeWrite])。 */
-    internal suspend fun beforeWrite(tool: String, outward: Boolean): Paced =
-        capabilities.firstOrNull { it.id == surface }?.beforeWrite(ctx, verb(tool), outward) ?: Paced.NONE
+    internal suspend fun beforeWrite(tool: String, outward: Boolean): Paced {
+        suspend fun prepare() = capabilities.firstOrNull { it.id == surface }?.beforeWrite(ctx, verb(tool), outward) ?: Paced.NONE
+        return manualControl?.automatic(observer = manualObserver) { prepare() } ?: prepare()
+    }
 
     /** 那个动作做完了:交给这块屏的能力([Capability.afterWrite])。 */
     internal fun afterWrite(tool: String, result: JsonObject) {

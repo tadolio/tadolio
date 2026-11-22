@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+
+    <string name="onboarding_read_aloud">Read aloud</string>
+    <string name="onboarding_tts_missing">Voice reading is unavailable. You can keep using the buttons.</string>
+    <string name="onboarding_key">I have an API Key</string>
+</resources>

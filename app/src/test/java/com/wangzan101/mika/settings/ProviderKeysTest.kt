@@ -79,6 +79,31 @@ class ProviderKeysTest {
         assertThrows(IllegalArgumentException::class.java) { store.addProviderKey(account.id, "synthetic-one") }
     }
 
+    @Test fun t59BackupAndEncryptedKeyArrayMigrateToOneFallbackChainIdempotently() = runTest {
+        var store = store()
+        val primary = connect(store, "legacy-primary", "synthetic-bad-one")
+        store.addProviderKey(primary.id, "synthetic-good")
+        val backup = connect(store, "legacy-backup", "synthetic-backup")
+        store.use(ModelRole.Main, primary.id, "synthetic-model", caps)
+        store.useBackup(backup.id, "backup-model", caps)
+        val config = File(tmp.root, "providers.json")
+        val current = Json.parseToJsonElement(config.readText()).jsonObject
+        val backupId = store.backup.value!!
+        val legacy = JsonObject(current + ("backup" to JsonPrimitive(backupId)) + ("uses" to
+            JsonObject(current.getValue("uses").jsonObject - "MainFallbacks")))
+        config.writeText(legacy.toString())
+        val credentials = File(tmp.root, "provider-keys.json").readBytes()
+        store = store()
+        assertEquals(listOf(backupId), store.roles.value.mainFallbacks)
+        assertFalse(config.readText().contains("\"backup\""))
+        assertArrayEquals(credentials, File(tmp.root, "provider-keys.json").readBytes())
+        store.modelFor(ModelRole.Main)!!.complete("", emptyList(), emptyList())
+        assertEquals(listOf("synthetic-bad-one", "synthetic-good"), calls)
+        store = store()
+        assertEquals(listOf(backupId), store.roles.value.mainFallbacks)
+        assertEquals(KeyFailure.invalid, store.keySummaries(primary.id).first().status)
+    }
+
     @Test fun ownBackupWorksThroughNormalTaskAssembly() = runTest {
         val store = store()
         val primary = connect(store, "primary", "synthetic-bad-one")
@@ -117,5 +142,39 @@ class ProviderKeysTest {
         assertFalse(store.matchesAllowanceConnection(provider, revision))
         assertNull(store.allowanceKey(provider, revision))
         assertEquals("synthetic-good", store.allowanceKey(provider, store.providerKeyRevisions.value.getValue(provider.id)))
+    }
+
+    @Test fun loopReceivesRawFrozenModelsAndTheFallbackChainSeparately() = runTest {
+        val store = store()
+        val primary = connect(store, "loop-primary", "synthetic-bad-one")
+        val backup = connect(store, "loop-backup", "synthetic-good")
+        store.use(ModelRole.Main, primary.id, "synthetic-model", caps)
+        store.useBackup(backup.id, "backup-model", caps)
+        val frozen = store.freezeModels(ModelSession.fresh(), includeFallbacks = false)
+        try {
+            frozen.main!!.complete("", emptyList(), emptyList())
+            fail("The raw primary must leave model failover to ModelCaller")
+        } catch (_: ModelError.Auth) { }
+        assertEquals(listOf("synthetic-bad-one"), calls)
+        frozen.fallbacks.getValue(ModelRole.Main).single().complete("", emptyList(), emptyList())
+        assertEquals(listOf("synthetic-bad-one", "synthetic-good"), calls)
+        assertEquals(listOf(primary.id, backup.id), frozen.mainChainProviderIds)
+    }
+
+    @Test fun communityUsesTheRunScopedTransportAndRetainsTheOwnFallback() = runTest {
+        val store = store()
+        val provider = store.connect("community", ProviderConfig.Kind.Community, "https://community.invalid", null, emptyList())
+        store.use(ModelRole.Main, provider.id, "compute", caps)
+        val backup = connect(store, "community-backup", "synthetic-good")
+        store.useBackup(backup.id, "backup-model", caps)
+        val transport = object : ChatModel {
+            override val capabilities = caps
+            override suspend fun complete(system: String, messages: List<Message>, tools: List<ToolSpec>) =
+                ModelReply(listOf(Part.Text("community")), StopReason.EndTurn, null)
+        }
+        val frozen = store.freezeModels(ModelSession.fresh(), includeFallbacks = false, communityModel = transport)
+        assertSame(transport, frozen.main)
+        frozen.fallbacks.getValue(ModelRole.Main).single().complete("", emptyList(), emptyList())
+        assertEquals(listOf("synthetic-good"), calls)
     }
 }

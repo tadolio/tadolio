@@ -71,14 +71,14 @@ class MikaLinksTest {
         val folders = java.io.File("src/main/res").listFiles()!!.filter {
             java.io.File(it, "strings_about.xml").isFile
         }
-        assertEquals(11, folders.size)
+        assertEquals(12, folders.size)
         for (folder in folders) {
             val chat = java.io.File(folder, "strings_chat.xml").readText()
             val about = java.io.File(folder, "strings_about.xml").readText()
             val mcp = java.io.File(folder, "strings_mcp.xml").readText()
             assertTrue(folder.name, chat.contains("name=\"setup_follow_x\"") && chat.contains("@tadolio_"))
             assertTrue(folder.name, about.contains("name=\"about_follow_x\""))
-            assertFalse(folder.name, chat.contains("chat_example_github_star"))
+            assertFalse(folder.name, chat.contains("name=\"chat_example_github_star\""))
             assertFalse(folder.name, (chat + about + mcp).contains("github.com/wangzan101", ignoreCase = true))
             val prompt = Regex("<string name=\"mcp_cli_install_prompt\">(.*?)</string>").find(mcp)!!.groupValues[1]
             val fallback = Regex("<string name=\"mcp_cli_install_no_repo\">(.*?)</string>").find(mcp)!!.groupValues[1]

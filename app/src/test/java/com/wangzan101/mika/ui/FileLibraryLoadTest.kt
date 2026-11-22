@@ -28,7 +28,7 @@ class FileLibraryLoadTest {
         failing = true
         fun load() = loadLibraryData(
             snapshot = { FileLibrary(store).snapshot() },
-            titles = { store.list().associate { it.id to it.title } },
+            summaries = { store.list() },
             draftTitles = mapOf("draft" to "Draft"),
             fallbackTitle = store::title,
         )
@@ -51,7 +51,7 @@ class FileLibraryLoadTest {
         var failing = true
         fun load() = loadLibraryData(
             snapshot = { if (failing) throw IOException("index") else FileLibrary(store).snapshot() },
-            titles = { emptyMap() }, draftTitles = emptyMap(), fallbackTitle = { null },
+            summaries = { emptyList() }, draftTitles = emptyMap(), fallbackTitle = { null },
         )
         val failed = load()
         assertNull(failed.snapshot)
@@ -62,9 +62,47 @@ class FileLibraryLoadTest {
         assertFalse(recovered.partial)
     }
 
+    /** 归档状态和标题一起读出来,文件行据此标出「来自已归档对话」。 */
+    @Test fun archivedConversationsAreReportedAlongsideTitles() {
+        val store = ConversationStore(tmp.newFolder())
+        store.append("kept", Turn("message", "", "succeeded"))
+        store.append("old", Turn("message", "", "succeeded"))
+        store.setArchived("old", archived = true)
+        val result = loadLibraryData(
+            snapshot = { FileLibrary(store).snapshot() },
+            summaries = { store.list(includeArchived = true) },
+            draftTitles = emptyMap(),
+            fallbackTitle = { null },
+        )
+        assertEquals(setOf("old"), result.archived)
+        assertTrue(result.titles.containsKey("old"))
+        assertFalse(result.partial)
+    }
+
+    @Test fun projectMembershipIsReturnedAndFormattedAlongsideTitles() {
+        val store = ConversationStore(tmp.newFolder())
+        store.append("c1", Turn("设计评审", "", "succeeded"))
+        store.setProject("c1", "proj-1")
+        val result = loadLibraryData(
+            snapshot = { FileLibrary(store).snapshot() },
+            summaries = { store.list(includeArchived = true) },
+            draftTitles = emptyMap(),
+            fallbackTitle = { null },
+        )
+        assertEquals(mapOf("c1" to "proj-1"), result.projectIds)
+        assertEquals(
+            "工作区项目 / 设计评审",
+            libraryConversationDisplay("c1", result.titles, result.projectIds, mapOf("proj-1" to "工作区项目")),
+        )
+        assertEquals(
+            "设计评审",
+            libraryConversationDisplay("c1", result.titles, result.projectIds, emptyMap()),
+        )
+    }
+
     @Test fun cancellationIsNotConvertedIntoFailure() {
         try {
-            loadLibraryData(snapshot = { throw CancellationException("cancel") }, titles = { emptyMap() },
+            loadLibraryData(snapshot = { throw CancellationException("cancel") }, summaries = { emptyList() },
                 draftTitles = emptyMap(), fallbackTitle = { null })
             fail("Cancellation must propagate")
         } catch (_: CancellationException) {

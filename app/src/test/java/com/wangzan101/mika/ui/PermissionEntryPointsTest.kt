@@ -20,14 +20,15 @@ class PermissionEntryPointsTest {
 
     @Test fun cameraAndWebPermissionsLaunchFromExplicitActions() {
         val attachments = source("ui/ChatAttachments.kt")
-        assertTrue(attachments.contains("AttachCopy.CAMERA, onCamera"))
-        assertFalse(attachments.contains("RequestPermission"))
-        val chat = source("ui/ChatScreen.kt")
-        assertTrue(chat.contains("onCamera = { cameraOpen = true }"))
-        val camera = source("ui/TadolioCamera.kt")
-        assertTrue(camera.contains("internal fun TadolioCamera("))
-        assertTrue(camera.contains("LaunchedEffect(Unit) { if (!granted) permission.launch(Manifest.permission.CAMERA) }"))
-        assertTrue(camera.contains("onPauseOrDispose { active = false }"))
+        val sheet = source("ui/ChatPlusSheet.kt")
+        assertTrue(sheet.contains("rememberAttachLaunchers(onPicked, onToggle, onFull, onDeviceFiles)"))
+        assertTrue(sheet.contains("onClick = attach.camera"))
+        assertTrue(attachments.contains("ActivityResultContracts.TakePicture()"))
+        val action = attachments.substringAfter("return AttachLaunchers(").substringBefore("album = openAlbum")
+        assertTrue(action.contains("camera = {"))
+        assertTrue(action.contains("else cameraPermission.launch(Manifest.permission.CAMERA)"))
+        assertTrue(attachments.contains("if (granted) startCamera()"))
+        assertTrue(attachments.contains("camera.launch(uri)"))
         val browser = source("ui/BrowserScreen.kt")
         for (launcher in listOf("askMediaPermissions.launch", "askLocationPermission.launch")) {
             val at = browser.indexOf(launcher)

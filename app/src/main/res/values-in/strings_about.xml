@@ -3,6 +3,7 @@
 <resources>
     <string name="about_tagline">Asisten pribadi di ponsel Anda, yang mengerjakan banyak hal untuk Anda</string>
     <string name="about_check">Periksa pembaruan</string>
+    <string name="drawer_update">Perbarui</string>
     <string name="about_check_sub">Dapatkan versi baru dari GitHub Releases</string>
     <string name="about_check_sub_new">Versi baru tersedia</string>
     <string name="about_up_to_date">Sudah terbaru</string>
@@ -40,7 +41,6 @@
     <string name="about_update_download_in_app">Unduh pembaruan</string>
     <string name="about_update_downloading">Mengunduh…</string>
     <string name="about_update_progress">Mengunduh %1$d%%</string>
-    <string name="about_update_paused">Unduhan dijeda; akan dilanjutkan otomatis…</string>
     <string name="about_update_install">Instal pembaruan</string>
     <string name="about_update_retry">Unduh lagi</string>
     <string name="about_update_cancel">Hapus unduhan</string>
@@ -77,6 +77,35 @@
     <string name="about_auto_update_confirm_title">Versi baru Tadolio siap</string>
     <string name="about_auto_update_confirm_detail">Pasang %1$s sekarang atau matikan pembaruan otomatis dan periksa secara manual di Pengaturan.</string>
     <string name="about_auto_update_now">Perbarui sekarang</string>
+    <string name="about_mirror_download">Gunakan mirror untuk pembaruan</string>
+    <string name="about_mirror_download_detail">Pemeriksaan pembaruan menggunakan mirror dan GitHub; unduhan mencoba mirror terlebih dahulu. Paket tetap diperiksa tanda tangannya sebelum dipasang.</string>
+    <string name="about_mirror_sources">Mirror pembaruan</string>
+    <string name="about_mirror_sources_detail">Ubah urutan, tambah, atau hapus</string>
+    <string name="about_mirrors_intro">Pemeriksaan pembaruan mencoba mirror dan GitHub secara paralel. Unduhan mencoba mirror secara berurutan, lalu GitHub. Sebelum dipasang, nama paket, versi, dan tanda tangan tetap diperiksa.</string>
+    <string name="about_mirrors_empty">Belum ada mirror</string>
+    <string name="about_mirrors_empty_sub">Tambahkan mirror di bawah, atau tetap gunakan GitHub resmi.</string>
+    <string name="about_mirrors_official">GitHub resmi</string>
+    <string name="about_mirrors_official_sub">Selalu cadangan terakhir; tidak bisa dihapus</string>
+    <string name="about_mirrors_add">Tambah mirror</string>
+    <string name="about_mirrors_edit">Edit mirror</string>
+    <string name="about_mirrors_name">Nama (opsional)</string>
+    <string name="about_mirrors_prefix">Alamat</string>
+    <string name="about_mirrors_invalid_prefix">Gunakan alamat https:// tanpa parameter kueri atau kredensial.</string>
+    <string name="about_mirrors_invalid_name">Nama terlalu panjang.</string>
+    <string name="about_mirrors_duplicate">Mirror ini sudah ada di daftar.</string>
+    <string name="about_mirrors_too_many">Anda dapat menambahkan hingga %1$d mirror.</string>
+    <string name="about_mirrors_save_failed">Gagal menyimpan. Coba lagi.</string>
+    <string name="about_mirrors_unreadable">Daftar mirror tersimpan tidak dapat dibaca. Pulihkan preset untuk melanjutkan.</string>
+    <string name="about_mirrors_delete_title">Hapus mirror ini?</string>
+    <string name="about_mirrors_delete_body">Mirror ini tidak akan dipakai lagi untuk pemeriksaan pembaruan atau unduhan.</string>
+    <string name="about_mirrors_delete">Hapus</string>
+    <string name="about_mirrors_reset">Pulihkan preset</string>
+    <string name="about_mirrors_reset_title">Pulihkan mirror preset?</string>
+    <string name="about_mirrors_reset_body">Mirror kustom akan dihapus dan daftar preset dipulihkan.</string>
+    <string name="about_mirrors_test">Uji</string>
+    <string name="about_mirrors_testing">Menguji…</string>
+    <string name="about_mirrors_test_ok">Berfungsi untuk pemeriksaan pembaruan.</string>
+    <string name="about_mirrors_test_fail">Mirror ini tidak bisa dipakai untuk pemeriksaan pembaruan. Unduhan mungkin masih berfungsi.</string>
     <string name="about_upstream_attribution">Modified from the open-source project Mika (Apache-2.0)</string>
     <string name="about_follow_x">Ikuti kami di X</string>
 </resources>

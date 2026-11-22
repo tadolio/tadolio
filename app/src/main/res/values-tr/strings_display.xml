@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+
+    <string name="hidden_card">[Card number hidden]</string>
+    <string name="hidden_otp">[Verification code hidden]</string>
+    <string name="hidden_id">[ID number hidden]</string>
+    <string name="hidden_password">[Password hidden]</string>
+    <string name="hidden_mnemonic">[Recovery phrase hidden]</string>
+    <string name="hidden_private_key">[Private key hidden]</string>
+</resources>

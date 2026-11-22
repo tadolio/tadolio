@@ -2,6 +2,11 @@
 <!-- Modified by Tadolio contributors (2026) -->
 <resources>
     <string name="language_title">Language</string>
+    <string name="language_prompt_title">Language</string>
+    <string name="language_prompt_hint">Choose the language Tadolio uses for thinking, step narration, and replies.</string>
+    <string name="language_search_hint">Search language</string>
+    <string name="language_prompt_confirm">Confirm</string>
+    <string name="language_prompt_dismiss">Not now</string>
     <string name="language_system">Follow system</string>
     <string name="language_system_detail">Uses your system language when Tadolio has it, English otherwise</string>
     <string name="language_simplified_chinese" translatable="false">简体中文</string>
@@ -15,7 +20,7 @@
     <string name="language_indonesian" translatable="false">Bahasa Indonesia</string>
     <string name="language_arabic" translatable="false">العربية</string>
     <string name="language_persian" translatable="false">فارسی</string>
-    <string name="settings_basic">Common</string>
+    <string name="language_turkish" translatable="false">Türkçe</string>
     <string name="settings_language_appearance">Language &amp; appearance</string>
     <string name="settings_personal_start">Open Personal Assistant on launch</string>
     <string name="settings_personal_start_sub">Use Personal Assistant as your first screen</string>
@@ -26,7 +31,6 @@
     <string name="settings_during_work">Task running</string>
     <string name="settings_during_work_sub">Autonomous mode, pace, step limit &amp; sound</string>
     <string name="settings_notif_sub">When they pop up, change in system settings</string>
-    <string name="settings_privacy">My data</string>
     <string name="settings_memory_data">Memory &amp; data</string>
     <string name="settings_memory_sub">Memories, skills, saved routes &amp; website sign-ins</string>
     <string name="settings_saved_data">Saved data</string>
@@ -35,10 +39,8 @@
         <item quantity="one">%1$d site</item>
         <item quantity="other">%1$d sites</item>
     </plurals>
-    <string name="settings_other">Other</string>
-    <string name="settings_advanced">Advanced &amp; other</string>
-    <string name="settings_advanced_sub">Proxy, computing, connections &amp; repair</string>
-    <string name="settings_connections">Network &amp; connections</string>
+    <string name="settings_advanced">Advanced</string>
+    <string name="settings_advanced_sub">Extensions, network, runtime &amp; maintenance</string>
     <string name="settings_maintenance">Maintenance</string>
     <string name="settings_sandbox">Files &amp; computing environment</string>
     <string name="settings_routes">Saved routes</string>
@@ -68,6 +70,8 @@
     <string name="settings_notif_master">All notifications</string>
     <string name="settings_allowed">Allowed</string>
     <string name="settings_task_notifs">Task notifications</string>
+    <string name="settings_live_task_updates">Live task updates</string>
+    <string name="settings_live_task_updates_detail">Choose whether to show your running tasks in the status bar</string>
     <string name="settings_keep_on">Keep screen on</string>
     <string name="settings_keep_on_sub">The screen stays on while a task runs (it can still dim when you’re not using it), then goes back to normal</string>
     <string name="settings_mute">Mute the app being used</string>
@@ -80,6 +84,15 @@
     <string name="settings_pace_human">Human-like</string>
     <string name="settings_pace_human_detail">Slow in every app, reading each screen before going on</string>
     <string name="settings_pace_foot">Some apps log you out or ask for verification when they are used too fast. The slower the pace, the longer a task takes.</string>
+    <string name="settings_pace_per_app">Per-app pace</string>
+    <string name="settings_pace_per_app_sub">Slow down apps with strict bot checks, or speed up the patient ones; the rest follow the global pace</string>
+    <string name="settings_pace_per_app_intro">Apps in this list use their own pace; everything else follows the global pace (now %1$s).</string>
+    <string name="settings_pace_per_app_empty">No apps are set per-app yet.</string>
+    <string name="settings_pace_per_app_add">Add an app</string>
+    <string name="settings_pace_per_app_search">Search apps</string>
+    <string name="settings_pace_per_app_none">No matching apps</string>
+    <string name="settings_pace_per_app_pick">Pick</string>
+    <string name="settings_pace_per_app_remove">Remove (follow the global pace)</string>
     <string name="settings_parallel">Tasks at once</string>
     <string name="settings_parallel_sub">Tasks from different chats each get their own virtual screen</string>
     <plurals name="settings_count_tasks">
@@ -98,6 +111,12 @@
     <string name="capsule_mode_always_detail">Keeps a Tadolio icon on screen even with no tasks</string>
     <string name="capsule_idle_opacity">Idle opacity</string>
     <string name="capsule_idle_opacity_detail">After a few seconds untouched; anything needing your attention stays fully visible</string>
+    <string name="capsule_card_size">Card size</string>
+    <string name="capsule_card_size_detail">The expanded capsule card and its text scale together; the collapsed capsule keeps its size</string>
+    <string name="capsule_card_size_small">Small</string>
+    <string name="capsule_card_size_normal">Standard</string>
+    <string name="capsule_card_size_large">Large</string>
+    <string name="capsule_card_size_xlarge">Extra large</string>
     <string name="routes_saved">Saved routes</string>
     <string name="loading">Loading</string>
     <plurals name="routes_count">
@@ -112,6 +131,8 @@
     <string name="net_proxy">Network proxy</string>
     <string name="net_proxy_row_sub">For model requests, updates, the in-app browser and commands</string>
     <string name="net_proxy_hint">Used for Tadolio’s model requests (chat, model lists, account sign-in), in-app update downloads, the in-app browser, and commands in Files &amp; computing environment while network access is on there. Addresses on this phone or your local network (localhost, 192.168.x.x, 10.x.x.x, names ending in .local) always connect directly, so local models keep working. It may include user:password@, stored encrypted on this phone. Leave empty for a direct connection.</string>
+    <string name="net_proxy_summary">Model requests, updates, the in-app browser and file-environment commands go through this proxy.</string>
+    <string name="details">Details</string>
     <string name="net_proxy_invalid">Write it as http://host:port (socks5, socks5h and https work too), optionally with user:password@ before the host.</string>
     <string name="net_proxy_container_only">https:// proxies are only used by commands in Files &amp; computing environment; Tadolio’s own connections stay direct. Use http:// or socks5:// to cover everything.</string>
     <string name="net_proxy_browser_unsupported">This phone’s WebView can’t use a separate proxy, so the in-app browser connects directly.</string>
@@ -202,6 +223,8 @@
     <string name="mcp_servers_status_fail">Connection failed: %1$s</string>
     <string name="mcp_servers_refresh_all">Test all</string>
     <string name="mcp_servers_allowlist">Allowed tools (comma separated, empty = all)</string>
+    <string name="settings_show_task_cost">Show task cost</string>
+    <string name="settings_show_task_cost_sub">Estimate DeepSeek API charges in Chinese yuan for new tasks.</string>
     <string name="quit_title">Quit Tadolio completely</string>
     <string name="quit_row_sub">Stops background tasks and hides the floating capsule</string>
     <string name="quit_confirm_body">Tasks that are running will stop, and the floating capsule and notifications will go away. Open Tadolio again and everything comes back.</string>
@@ -212,6 +235,36 @@
     <string name="settings_token_budget_custom">Custom token budget</string>
     <string name="settings_token_budget_apply">Use</string>
     <string name="settings_token_budget_invalid">Enter a whole number from %1$s to %2$s.</string>
+    <string name="settings_auto_archive">Auto-archive chats</string>
+    <string name="settings_auto_archive_sub">Chats without new messages for a while move to the archive</string>
+    <string name="settings_auto_archive_hint">Chats without new messages for the chosen time are moved to the archive.</string>
+    <plurals name="settings_auto_archive_days">
+        <item quantity="one">%1$d day</item>
+        <item quantity="other">%1$d days</item>
+    </plurals>
+    <string name="settings_scheduled_quiet">Scheduled task quiet hours</string>
+    <string name="settings_scheduled_quiet_detail">Scheduled results and reminders appear silently in the notification shade.</string>
+    <string name="settings_scheduled_quiet_start">Start time</string>
+    <string name="settings_scheduled_quiet_end">End time</string>
+    <string name="settings_scheduled_quiet_equal">Choose different start and end times to silence notifications.</string>
+    <string name="settings_capabilities">Capabilities</string>
+    <string name="settings_preferences">Preferences</string>
+    <string name="settings_data">Data</string>
+    <string name="settings_extensions">Extensions &amp; connections</string>
+    <string name="settings_network">Network</string>
+    <string name="settings_runtime">Runtime</string>
+    <string name="settings_trigger_run_limit">Time limit for scheduled tasks</string>
+    <string name="settings_trigger_run_limit_sub">Scheduled tasks run while you’re away. Off means no limit; when time is up, the task stops and says it ran out of time.</string>
+    <plurals name="settings_trigger_run_minutes_n">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
+    <string name="settings_sandbox_budget">Sandbox time limit per task</string>
+    <string name="settings_sandbox_budget_sub">Total time sandbox commands may run in one task (installing dependencies, builds and the like). Default is 30 minutes; a change applies to the next task.</string>
+    <plurals name="settings_sandbox_budget_minutes_n">
+        <item quantity="one">%1$d minute</item>
+        <item quantity="other">%1$d minutes</item>
+    </plurals>
     <string name="settings_advanced_sub_no_sandbox">Proxy, connections &amp; repair</string>
     <string name="net_proxy_hint_no_sandbox">Used for Tadolio’s model requests (chat, model lists, account sign-in), in-app update downloads and the in-app browser. Addresses on this phone or your local network (localhost, 192.168.x.x, 10.x.x.x, names ending in .local) always connect directly, so local models keep working. It may include user:password@, stored encrypted on this phone. Leave empty for a direct connection.</string>
     <string name="net_proxy_container_only_no_sandbox">HTTPS proxies do not apply here. Use http:// or socks5://.</string>

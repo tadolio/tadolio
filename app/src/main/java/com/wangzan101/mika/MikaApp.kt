@@ -13,12 +13,18 @@ import android.app.Application
 import android.net.Uri
 import android.util.Log
 import com.wangzan101.mika.chat.AndroidBranchWorkspace
+import com.wangzan101.mika.chat.AutoArchive
 import com.wangzan101.mika.chat.ConversationDeleter
 import com.wangzan101.mika.chat.ConversationStore
+import com.wangzan101.mika.chat.CurrentChat
+import com.wangzan101.mika.chat.ProjectDeleter
+import com.wangzan101.mika.chat.ProjectStore
 import com.wangzan101.mika.chat.SharedDraftStore
+import com.wangzan101.mika.chat.WorkspaceResolver
 import com.wangzan101.mika.core.cap.sandbox.SandboxStatus
 import com.wangzan101.mika.cap.sandbox.AndroidSandbox
 import com.wangzan101.mika.cap.sandbox.Attachments
+import com.wangzan101.mika.cap.sandbox.WorkspaceKey
 import com.wangzan101.mika.ui.AttachFiles
 import com.wangzan101.mika.cap.sandbox.ShareExporter
 import com.wangzan101.mika.cap.web.WebFiles
@@ -55,6 +61,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
@@ -76,8 +83,12 @@ import com.wangzan101.mika.task.TriggerRuntime
  * 其余代码经构造参数拿到。助手进程(HelperMain、ShellService)没有这个对象,不用这里的任何服务。
  */
 class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, PhoneServices.Owner,
-    MemoryRuntime.Owner, ProviderStore.Owner, FileRouteStore.Owner, TaskRecovery.Owner {
+    MemoryRuntime.Owner, ProviderStore.Owner, FileRouteStore.Owner, TaskRecovery.Owner,
+    com.wangzan101.mika.settings.VoiceSettings.Owner {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+
+    /** 比页面长寿的作用域:页面销毁后仍要跑完的收尾(如通话转写写回)放这里。 */
+    val appScope: CoroutineScope get() = scope
 
     /** 手机能力的服务:内置助手、共用的 shell 连接、配对、「去设置」提示。 */
     override val phone: PhoneServices by lazy { PhoneServices(this) }
@@ -90,10 +101,29 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
     val detailedTraces by lazy { DetailedTraces(this) }
 
     val remoteTasks by lazy { RemoteTaskHub(this) }
+    internal fun workflowInterrupted(attemptId: String) {
+        scope.launch(Dispatchers.IO) { workflows.complete(attemptId, false, "", "interrupted") }
+    }
+    val workflows by lazy {
+        com.wangzan101.mika.workflow.WorkflowRuntime(
+            com.wangzan101.mika.workflow.WorkflowStore(
+                java.io.File(filesDir, com.wangzan101.mika.workflow.WorkflowStore.FILE),
+                com.wangzan101.mika.settings.KeystoreKeyCipher("mika-workflows"),
+            ),
+        ) { dispatch -> TaskService.startWorkflow(this, dispatch.attemptId) }
+    }
+
 
     /** 通话功能：设置页负责开关与凭证；CallRuntime 是本地状态与实时语音的宿主，AndroidPhoneCallPort 是交给模型的工具入口。 */
-    val calls by lazy { com.wangzan101.mika.calls.CallRuntime(this) }
+    private val callRuntime = lazy { com.wangzan101.mika.calls.CallRuntime(this) }
+    val calls by callRuntime
+    internal val runningCalls get() = if (callRuntime.isInitialized()) calls else null
     val callPort by lazy { com.wangzan101.mika.calls.AndroidPhoneCallPort(calls) }
+
+    /** Web 控制台读的对话与运行中任务;只读,不参与任务执行。 */
+    val remoteCompanion by lazy {
+        com.wangzan101.mika.chat.RemoteConversationReader(conversations) { taskState.runs.value }
+    }
 
     /** 微信渠道：凭证、监听和渠道适配器整个进程一份；任务仍由 TaskService 执行。 */
     val wechat by lazy {
@@ -121,7 +151,7 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
                 migrateTaskOwner = remoteTasks::migrateUsbOwner),
             remoteTasks, deviceAccess,
             com.wangzan101.mika.settings.RelaySettings(settingsDir, com.wangzan101.mika.settings.KeystoreKeyCipher("mika-remote-relay")),
-            history, callPort)
+            history, callPort, remoteCompanion)
     }
     val childRuns by lazy { FileChildRunStore(java.io.File(filesDir, "children-v3.json")) }
 
@@ -141,6 +171,14 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
             },
         )
     }
+    /** 已安装的插件:zip 安装、启停与只读技能;任务开始时给技能目录一份固定快照。 */
+    val plugins by lazy {
+        com.wangzan101.mika.plugin.PluginRegistry(filesDir, scope,
+            log = { msg, e -> Log.w("MikaPlugin", msg, e) })
+    }
+
+    /** 人格:命名的自定义提示词层,存在 settings 目录;不加密,不含密钥。 */
+    val personas by lazy { com.wangzan101.mika.settings.PersonaStore(java.io.File(filesDir, "settings")) }
     override val tabBudget get() = resources.tabBudget
 
     /** 任务结束后留在后台接着运行的那一页;关掉时在来源对话那一轮记下原因(对话页那一轮下面显示「后台网页已关闭」)。 */
@@ -165,7 +203,14 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
 
     /** 模型配置与 Key;建出的模型都套上计量,记到 [usage]。 */
     override val providers: ProviderStore by lazy {
-        ProviderStore.create(this, usage, "Tadolio/${BuildConfig.VERSION_NAME}", usage::providerTokensToday)
+        ProviderStore.create(this, usage, "Tadolio/${BuildConfig.VERSION_NAME}", usage::providerTokensToday,
+            proactiveUsage = usage::proactiveTokensToday, proactiveLimit = { FeatureFlags.get(this).proactiveDailyTokenBudget() },
+            proactiveCalls = usage::proactiveCallsToday).also { store ->
+            voiceSettings.reconcileTtsChoice(store)
+            scope.launch(Dispatchers.Main.immediate) {
+                store.providers.collect { voiceSettings.reconcileTtsChoice(store) }
+            }
+        }
     }
 
     /** 语音转文字的选择:整个进程一份,设置页改了输入框立刻看得到(两份实例互相看不到对方的 set)。 */
@@ -201,17 +246,20 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
     /** 没结束的运行的善后(标中断、补送、告知):进程里只做一次,App 启动和任务服务启动都调它。 */
     val runRecovery: RunRecovery by lazy {
         val app = this
-        val local = LocalChannel { _, delivery ->
+        fun localChannel(scheduled: Boolean) = LocalChannel { _, delivery ->
             TaskService.ensureChannels(app)
-            TaskService.notifyDelivery(app, delivery, TaskService.nextResultId())
+            TaskService.notifyDelivery(app, delivery, TaskService.nextResultId(), scheduled)
         }
+        val local = localChannel(scheduled = false)
         val labels = com.wangzan101.mika.ui.ToolLabels(com.wangzan101.mika.core.assembly.knownTools())
         RunRecovery(runStore, outbox, { id -> if (id == LocalChannel.ID) local else wechat.channelFor(id) }, object : TriggerOutcomes {
             override fun interrupted(key: String, reason: String) = TriggerRuntime.interrupted(app, key, reason)
             override fun delivered(key: String) = TriggerRuntime.delivered(app, key)
             override fun actionFailed(key: String, reason: String) = TriggerRuntime.actionFailed(app, key, reason)
         }, conversations, scope, records = com.wangzan101.mika.record.RunStore(app).reader(), label = labels::label,
-            appLabel = { com.wangzan101.mika.confirm.ConfirmationNotifier.appLabel(app, it) })
+            appLabel = { com.wangzan101.mika.confirm.ConfirmationNotifier.appLabel(app, it) },
+            languageTag = { com.wangzan101.mika.i18n.AppLanguage.resolved(app).tag },
+            scheduledLocalChannel = localChannel(scheduled = true))
     }
 
     /** 站点登记表(登录过的网站等):设置页和标签池共用。 */
@@ -229,15 +277,40 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
     /** 对话记录:整个进程一份,任务服务、聊天界面、结果卡片的按钮共用。 */
     val conversations: ConversationStore by lazy { ConversationStore(this) }
 
+    /** 项目定义:整个进程一份。 */
+    val projects: ProjectStore by lazy { ProjectStore(this) }
+
+    /** 对话编号到工作区的解析器(不依赖 [chat] 避免循环 lazy)。 */
+    val workspaceResolver: WorkspaceResolver by lazy { WorkspaceResolver(conversations, projects) }
+
     /** 最近一次系统分享尚未发送的草稿和它的私有图片副本。 */
     val sharedDrafts: SharedDraftStore by lazy { SharedDraftStore(java.io.File(filesDir, "shared-drafts")) }
 
-    /** 用户自己打开的终端(按对话):只从界面进,不交给任何任务,也不写运行记录。 */
+    /** 用户自己打开的终端(按工作区):只从界面进,不交给任何任务,也不写运行记录。 */
     val terminals: com.wangzan101.mika.terminal.TerminalHub by lazy {
-        com.wangzan101.mika.terminal.TerminalHub(this, conversations)
+        com.wangzan101.mika.terminal.TerminalHub(this, conversations, projects)
     }
 
-    /** 删对话(侧栏长按):停掉它的当前任务并删工作区,保留定时任务。 */
+    /** 删项目:停掉旗下对话的当前任务、删除项目内对话与项目定义,并清掉共享工作区 `p-<id>`。 */
+    val projectDeleter: ProjectDeleter by lazy {
+        val app = this
+        ProjectDeleter(
+            projects, conversations, taskState.activeConversations,
+            cancelTasks = { id -> taskState.runs.value.filter { it.conversationId == id }.forEach { TaskService.cancel(app, it.key) } },
+            schedulesOf = { id -> TriggerRuntime.list(app).filter { it.threadId == id }.map { it.id } },
+            deleteProjectWorkspace = { pid -> SandboxDirs(app).deleteWorkspace(WorkspaceKey.Project(pid)) },
+            forgetRemoteTasks = { id ->
+                if (com.wangzan101.mika.core.remote.RemoteTaskService.isConversation(id)) remoteTasks.forget(id)
+            },
+            onDeleted = { pid, ids ->
+                val imports = com.wangzan101.mika.task.DeviceImportStore.get(app)
+                imports.removeWorkspace(WorkspaceKey.Project(pid).wire)
+                ids.forEach(imports::removeConversation)
+            },
+        )
+    }
+
+    /** 删对话(侧栏长按):停掉它的当前任务并删工作区(同项目对话保留共享工作区),保留定时任务。 */
     val conversationDeleter: ConversationDeleter by lazy {
         val app = this
         ConversationDeleter(
@@ -249,8 +322,10 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
             schedulesOf = { id -> TriggerRuntime.list(app).filter { it.threadId == id }.map { it.id } },
             deleteWorkspace = { id ->
                 // 工作区里有附件、用户发来的屏幕、任务写的文件;沙箱里的命令碰得到这里,和命令、导入、重置互斥着删
-                SandboxDirs(app).deleteWorkspace(id)
+                SandboxDirs(app).deleteWorkspace(WorkspaceKey.Conversation(id))
             },
+            isSharedWorkspace = { id -> workspaceResolver.isShared(id) },
+            onDeleted = { id -> com.wangzan101.mika.task.DeviceImportStore.get(app).removeConversation(id) },
         )
     }
 
@@ -264,9 +339,28 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
         com.wangzan101.mika.settings.AppAccessStore(java.io.File(filesDir, "app-access.json"))
     }
 
+    /** 主动能力:通知白名单、监听与本机收件箱。 */
+    val proactive by lazy {
+        com.wangzan101.mika.proactive.ProactiveRuntime.create(this,
+            { com.wangzan101.mika.proactive.AppGate.of(appAccess.current()) },
+            appAccess.state.map { com.wangzan101.mika.proactive.AppGate.of(it) }.distinctUntilChanged(),
+            com.wangzan101.mika.proactive.TriageHooks(
+            target = { providers.proactiveTarget() }, model = { call -> providers.proactiveTargeted(call) },
+            tokensToday = { usage.proactiveTokensToday() }, callsToday = { usage.proactiveCallsToday() },
+            usageVersion = { usage.version }, busy = taskState.busy,
+        )) { phone.shellManager.commandRunner }
+    }
+
     /** 首页推荐任务。文件还不存在时,由界面用当前语言的内置示例初始化一次。 */
     val recommendedTasks: com.wangzan101.mika.settings.RecommendedTaskStore by lazy {
         com.wangzan101.mika.settings.RecommendedTaskStore(java.io.File(filesDir, com.wangzan101.mika.settings.RecommendedTaskStore.FILE))
+    }
+
+    val savedChecklists by lazy {
+        com.wangzan101.mika.chat.SavedChecklistStore(
+            java.io.File(filesDir, com.wangzan101.mika.chat.SavedChecklistStore.FILE),
+            com.wangzan101.mika.settings.KeystoreKeyCipher("mika-saved-checklists"),
+        )
     }
 
     /** 全局的询问 / 自主和各任务自己的那一份;开发者选项里的「自主模式」经它改。 */
@@ -284,17 +378,63 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
     /** 自身操作的进程内 UI 请求(开 Mika 的页/文件);任务服务发,MainActivity 处理。 */
     val selfUi = com.wangzan101.mika.self.SelfUi()
 
+    /** 更新镜像:用户可增删改排序;检查更新和下载都按它走,官方 GitHub 始终兜底。 */
+    val updateMirrors: com.wangzan101.mika.about.UpdateMirrorStore by lazy {
+        com.wangzan101.mika.about.UpdateMirrorStore(java.io.File(filesDir, com.wangzan101.mika.about.UpdateMirrorStore.FILE))
+    }
+
     /** 检查更新:查到的新版本跟进程走,侧栏、设置首页、关于页的红点看同一份。 */
     val updates: com.wangzan101.mika.about.UpdateChecker by lazy {
         com.wangzan101.mika.about.UpdateChecker(java.io.File(filesDir, "update-v1.json"), BuildConfig.VERSION_NAME,
+            mirrorSettings = updateMirrors::snapshot,
             deviceAbis = android.os.Build.SUPPORTED_ABIS.toList())
     }
 
-    internal val apkUpdater by lazy { com.wangzan101.mika.about.ApkUpdater(this) }
+    internal val apkUpdater by lazy {
+        com.wangzan101.mika.about.ApkUpdater(this, mirrorSettings = updateMirrors::snapshot)
+    }
     internal val automaticUpdates by lazy { com.wangzan101.mika.about.AutomaticUpdates(this, apkUpdater) }
 
     /** 浮在别的 App 上的悬浮胶囊。 */
     val capsule: CapsuleController by lazy { CapsuleController(this, taskState, foreground, resources.takeoverQueue) }
+
+    /** Mika 自己的朗读播放器:全进程一个,聊天里的「朗读」和设置页的测试共用。 */
+    val voicePlayer by lazy { com.wangzan101.mika.voice.VoicePlayer(this) }
+    override val voiceSettings by lazy {
+        com.wangzan101.mika.settings.VoiceSettings(getSharedPreferences(FeatureFlags.PREFS, MODE_PRIVATE))
+    }
+
+    /** 播放工作区里的一段音频(生成结果);读不到时什么都不做。 */
+    private suspend fun playWorkspaceAudio(conversationId: String, path: String) {
+        val prefix = com.wangzan101.mika.core.workspace.SandboxPaths.WORKSPACE + "/"
+        if (!path.startsWith(prefix)) return
+        val rel = path.removePrefix(prefix)
+        if (rel.isEmpty() || rel.split('/').any { it.isEmpty() || it == "." || it == ".." }) return
+        val dirs = com.wangzan101.mika.cap.sandbox.SandboxDirs(this)
+        val key = workspaceResolver.resolve(conversationId)
+        val bytes = dirs.tree.shared {
+            dirs.gate.openRead(dirs.workspace(key), rel).use { g ->
+                if (g.size > 20L * 1024 * 1024) null else g.read(0, g.size.toInt())
+            }
+        } ?: return
+        val mime = android.webkit.MimeTypeMap.getSingleton()
+            .getMimeTypeFromExtension(path.substringAfterLast('.', "").lowercase())
+            ?.takeIf { it.startsWith("audio/") } ?: "audio/wav"
+        voicePlayer.play(bytes, mime)
+    }
+
+    /** 合成一句话并在本机播放;关闭或未配置时跳过,失败交给聊天页显示。 */
+    internal suspend fun speak(
+        text: String,
+        synthesize: suspend (String) -> Unit = { words ->
+            com.wangzan101.mika.media.readAloud(
+                words,
+                voiceSettings,
+                model = { choice, caps -> ProviderStore.get(this).ttsModel(choice, caps) },
+                play = { model, requests, streaming -> voicePlayer.playRequests(model, requests, streaming) },
+            )
+        },
+    ) = synthesize(text)
 
     /** 人工示范。onCreate 里建好；在那之前的无障碍事件不采集。 */
     lateinit var teach: TeachRuntime
@@ -339,7 +479,7 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
                 override fun answerIn(conversationId: String, text: String) { key(conversationId)?.let { TaskService.answer(app, text, it) } }
                 override fun approveIn(conversationId: String, key: Int) { key(conversationId)?.let { TaskService.approve(app, key, it) } }
                 override fun declineIn(conversationId: String, key: Int) { key(conversationId)?.let { TaskService.decline(app, key, it) } }
-                override fun unmuteIn(conversationId: String) { taskState.run(conversationId)?.unmute() }
+                override fun togglePipSoundIn(conversationId: String) { taskState.run(conversationId)?.togglePipSound() }
             },
             conversations,
             followUps = followUpQueue.changes,
@@ -364,13 +504,17 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
             sandboxReady = SandboxState.get(app).status.map { !BuildConfig.SANDBOX_ENABLED || it !is SandboxStatus.Unsupported }
                 .stateIn(scope, SharingStarted.Eagerly, !BuildConfig.SANDBOX_ENABLED || SandboxState.get(app).status.value !is SandboxStatus.Unsupported),
             sharedFiles = taskState.sharedFiles,
+            generatedAudios = taskState.audios,
+            playAudio = { id, path -> playWorkspaceAudio(id, path) },
+            generatedPhotos = taskState.photos,
             activities = taskState.activities,
             steers = taskState.steers,
             summarizing = taskState.summarizing,
             importAttachments = { id, uris ->
                 val sandbox = AndroidSandbox(app, SandboxState.get(app))
                 val dirs = SandboxDirs(app)
-                Attachments.importInto(app, uris.map(Uri::parse), dirs.workspace(id), dirs.gate, dirs.tree, sandbox::freeBytes) { sandbox.workspaceBytes(id) }
+                val key = workspaceResolver.resolve(id)
+                Attachments.importInto(app, uris.map(Uri::parse), dirs.workspace(key), dirs.gate, dirs.tree, sandbox::freeBytes) { sandbox.workspaceBytes(key) }
             },
             describeAttachments = { uris -> AttachFiles.describe(app, uris) },
             imageSupported = {
@@ -402,6 +546,21 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
             onTeachingBlocked = {
                 android.widget.Toast.makeText(app, tr(R.string.teach_blocked_task), android.widget.Toast.LENGTH_LONG).show()
             },
+            voiceReady = voiceSettings.state.map { it.enabled && it.choice != null }
+                .stateIn(scope, SharingStarted.Eagerly, voiceSettings.state.value.enabled && voiceSettings.state.value.choice != null),
+            autoRead = voiceSettings.state.map { it.enabled && it.autoRead }
+                .stateIn(scope, SharingStarted.Eagerly, voiceSettings.state.value.let { it.enabled && it.autoRead }),
+            voicePlayback = voicePlayer.state,
+            speakText = { text -> speak(text) },
+            stopVoice = { voicePlayer.stop() },
+            voiceFailed = voicePlayer::fail,
+            projectStore = projects,
+            projectDeletionImpact = projectDeleter::impact,
+            removeProject = { pid ->
+                projectDeleter.memberConversationIds(pid).forEach(followUpQueue::dropConversation)
+                projectDeleter.delete(pid)
+            },
+            workspaceResolver = workspaceResolver,
         )
     }
 
@@ -421,6 +580,11 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
         }
         // 上次进程在复制或绑定分享草稿途中退出时留下的临时文件;目录至多保留一份有效草稿。
         runCatching { sharedDrafts.cleanup() }
+        scope.launch(Dispatchers.IO) {
+            runCatching { updateMirrors.ensureLoaded() }
+            runCatching { com.wangzan101.mika.task.AndroidDeviceFiles.cleanupStaging(SandboxDirs(this@MikaApp)) }
+                .onFailure { Log.w("MikaImport", "Could not clean device import staging", it) }
+        }
         // 界面以外的文字(通知、服务、悬浮胶囊)按 App 语言取
         AppLanguage.applyDefaultLocale(this)
         UiText.source = ResourceTexts { AppLanguage.resources(this) }
@@ -465,12 +629,22 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
         if (!quit) runRecovery.recover().let { if (it.isNotEmpty()) Log.w("MikaTask", "${it.size} runs interrupted by process restart") }
         // 用户已绑定并打开微信渠道时恢复监听；完全退出期间由各运行入口统一拒绝补起
         wechat.ensureRunning()
+        if (flags.proactive()) proactive.start(paused = quit)
         // 先对一下设备时区;退出期间不排闹钟,重新打开时再补排
         if (!quit) scope.launch(Dispatchers.IO) { runCatching { TriggerRuntime.syncTimeZone(this@MikaApp); TriggerRuntime.rearm(this@MikaApp) } }
+        // 自动归档:太久没新消息的对话收进归档(设置里开着才跑);退出期间等下次打开再补
+        if (!quit) autoArchiveNow()
         // 给电脑跑的「经 USB 连接」脚本;顺带清掉上次开机留下的 USB 连接信息
         scope.launch(Dispatchers.IO) { runCatching { mcp.writeUsbScript() }.onFailure { Log.w("MikaMcp", "cannot write USB script", it) } }
         // 上次导出写到一半被杀留下的空壳条目
         scope.launch { runCatching { ShareExporter(this@MikaApp).cleanPending() } }
+        // 上次存音乐库写到一半被杀留下的空壳条目
+        scope.launch { runCatching { com.wangzan101.mika.cap.audio.AudioExporter(this@MikaApp).cleanPending() } }
+        scope.launch { runCatching { com.wangzan101.mika.media.AudioShareExporter(this@MikaApp).cleanPending() } }
+        // 上次存相册写到一半被杀留下的空壳条目
+        scope.launch { runCatching { com.wangzan101.mika.cap.image.ImageExporter(this@MikaApp).cleanPending() } }
+        // 上次分享图片复制到一半被杀留下的空壳条目
+        scope.launch { runCatching { com.wangzan101.mika.media.ShareFileExporter(this@MikaApp).cleanPending() } }
         // 上次进程留下的网页上传副本
         scope.launch { runCatching { WebFiles.clearStale(this@MikaApp, SandboxDirs(this@MikaApp).gate) } }
         // 更新已经装上后,关于页下好的安装包
@@ -485,12 +659,33 @@ class MikaApp : Application(), WebOwner, SandboxOwner, TaskEnvironment.Owner, Ph
         }
     }
 
+    /**
+     * 按设置把太久没有新消息的对话收进归档:启动时跑一次,设置里改了天数也跑一次。
+     * 正在跑任务的对话和用户此刻在看的对话不动;之后再有新的一轮写进来会自动取消归档。
+     */
+    fun autoArchiveNow() {
+        val days = FeatureFlags.get(this).autoArchiveDays()
+        if (days <= 0) return
+        scope.launch(Dispatchers.IO) {
+            runCatching {
+                AutoArchive.run(
+                    conversations, days,
+                    running = taskState.activeConversations.value,
+                    currentId = (conversations.currentChat() as? CurrentChat.Open)?.id,
+                    isRunning = { it in taskState.activeConversations.value },
+                )
+            }.onFailure { Log.w("MikaChat", "could not auto archive conversations", it) }
+        }
+    }
+
     /** 用户重新打开 Mika:补上退出时略过的启动工作(见 [com.wangzan101.mika.quit.MikaQuit])。 */
     fun resumeAfterQuit() {
         runRecovery.recover()
         RuntimePreparer.ensure(this)
+        autoArchiveNow()
         mcp.ensureRunning()
         wechat.ensureRunning()
+        if (FeatureFlags.get(this).proactive()) proactive.start(paused = false)
         scope.launch(Dispatchers.IO) {
             runCatching {
                 TriggerRuntime.syncTimeZone(this@MikaApp)

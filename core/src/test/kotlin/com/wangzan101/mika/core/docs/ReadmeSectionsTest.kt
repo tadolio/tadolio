@@ -11,16 +11,16 @@ import java.io.File
 class ReadmeSectionsTest {
     private val root = File("..").canonicalFile
 
-    // Product decision: retain upstream README prose; normalize only the renamed skill description.
+    // Validate the current upstream archives against the product's generated knowledge and platform lists.
     @Test fun readmeMatchesGenerated() {
         val readme = File(root, ReadmeSections.README).readText()
-        val expected = ReadmeSections.render(readme, ReadmeSections.sections(root, english = true).mapValues { (_, text) -> text.replace("Tadolio", "Mika") })
+        val expected = ReadmeSections.render(readme, ReadmeSections.sections(root, english = true))
         assertEquals("README.md 里生成的段落过期了,运行 ./gradlew updateReadme", expected, readme)
     }
 
     @Test fun chineseReadmeMatchesGenerated() {
         val readme = File(root, ReadmeSections.README_ZH).readText()
-        val expected = ReadmeSections.render(readme, ReadmeSections.sections(root, english = false).mapValues { (_, text) -> text.replace("Tadolio", "Mika") })
+        val expected = ReadmeSections.render(readme, ReadmeSections.sections(root, english = false))
         assertEquals("${ReadmeSections.README_ZH} 里生成的段落过期了,运行 ./gradlew updateReadme", expected, readme)
     }
 

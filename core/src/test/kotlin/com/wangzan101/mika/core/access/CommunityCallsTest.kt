@@ -27,16 +27,16 @@ class CommunityCallsTest {
         override suspend fun takeover() = result()
     }
 
-    @Test fun communityCannotListOrExecuteAnyCallToolEvenWhenPortIsSupplied() = runTest {
+    @Test fun communityListsAndExecutesCallToolsWhenPortIsSupplied() = runTest {
         val calls = Calls()
         val tools = toolDispatcher(FakeScreen(), phoneCalls = calls,
             runSpec = RunSpec(RunId("community"), "test", "test", computeMode = ComputeMode.Community))
-        assertTrue(tools.definitions().none { it.name.startsWith("phone_call_") })
+        assertEquals(5, tools.definitions().count { it.name.startsWith("phone_call_") })
         for ((name, args) in listOf("state" to "{}", "dial" to """{"number":"123456"}""",
             "answer" to """{"call_id":"call-1"}""", "hangup" to """{"call_id":"call-1"}""", "takeover" to "{}")) {
             tools.execute(Part.ToolCall("call", "phone_call_$name", args), ActionPass())
         }
-        assertEquals(0, calls.requests)
+        assertEquals(5, calls.requests)
     }
 
     @Test fun ownModeRetainsNativeCallTools() = runTest {

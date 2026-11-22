@@ -220,7 +220,7 @@ class AnthropicModelTest {
     // 别的 400 照常报错;签名本身坏了(只有前半句)不重发;这次没带思考块(关掉了思考)时不重发;去掉以后还被拒的不再发第三次
     @Test fun otherRejectionsAreNotSentAgain() = runTest {
         suspend fun rejected(m: AnthropicModel) =
-            try { m.complete("s", signedHistory(endpoint), emptyList()); null } catch (e: ModelError.BadResponse) { e }
+            try { m.complete("s", signedHistory(endpoint), emptyList()); null } catch (e: ModelError.Server) { e }
         server.enqueue(MockResponse().setResponseCode(400).setBody("""{"type":"error","error":{"type":"invalid_request_error","message":"tools.0.name: invalid"}}"""))
         assertTrue(rejected(model(reasoningEffort = "high")) != null)
         assertEquals(1, server.requestCount)
@@ -259,6 +259,24 @@ class AnthropicModelTest {
         server.enqueue(MockResponse().setHeader("Content-Type", "text/event-stream").setBody(sse))
         val r = model(reasoningEffort = "high").completeStreaming("s", user, emptyList()) {}
         assertEquals(listOf(Part.Thinking("想", SignedThinking.signed(endpoint, "sig"))), r.parts)
+    }
+
+    @Test fun streamingRateLimitAndOverloadErrorsAreClassified() = runTest {
+        suspend fun streamError(type: String): ModelError {
+            server.enqueue(MockResponse().setHeader("Content-Type", "text/event-stream").setBody(
+                "event: error\ndata: {\"type\":\"error\",\"error\":{\"type\":\"$type\",\"message\":\"busy\"}}\n\n",
+            ))
+            return try {
+                model().completeStreaming("s", user, emptyList()) {}
+                fail("expected ModelError")
+                error("unreachable")
+            } catch (e: ModelError) { e }
+        }
+
+        assertTrue(streamError("rate_limit_error") is ModelError.RateLimited)
+        val overloaded = streamError("overloaded_error") as ModelError.Server
+        assertEquals(529, overloaded.status)
+        assertTrue(overloaded.message.orEmpty().contains("busy"))
     }
 
     @Test fun marksCacheOnSystemAndTools() = runTest {

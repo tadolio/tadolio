@@ -1,10 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Modified by Tadolio contributors (2026) -->
 <resources>
-    <!-- Chat composer: hold to talk -->
-    <string name="voice_placeholder_idle">長押しで話す、タップで入力</string>
-    <string name="voice_placeholder_busy">長押しでタスクに話す、タップで入力</string>
-    <string name="voice_placeholder_answer">長押しで答える、タップで入力</string>
+    <string name="voice_placeholder_idle">入力、または長押しで話す</string>
+    <string name="voice_placeholder_busy">タスクに入力、または長押しで話す</string>
+    <string name="voice_placeholder_answer">回答を入力、または長押しで話す</string>
     <string name="voice_listening">聞き取り中</string>
     <string name="voice_steer_to">「%1$s」に伝える</string>
     <string name="voice_engine_phone">スマホ</string>
@@ -32,13 +31,16 @@
     <string name="voice_unavailable_no_engine">このスマホには内蔵の音声認識がなく、音声文字変換のモデルも選ばれていません。「設定 › モデル › 音声文字変換」でプロバイダーの音声モデルを選ぶと使えます。</string>
     <string name="voice_unavailable_system_gone">音声文字変換はスマホ内蔵の音声認識に設定されていますが、このスマホには今はありません。「設定 › モデル › 音声文字変換」で別のものを選んでください。</string>
     <string name="voice_unavailable_system_silent">スマホ内蔵の音声認識が応答せず、言葉が届きませんでした。「設定 › モデル › 音声文字変換」でプロバイダーの音声モデルを選ぶと使えます。</string>
+    <string name="voice_unavailable_system_failed">スマホ内蔵の音声認識を開始できませんでした。もう一度試すか、「設定 › モデル › 音声文字変換」で別の認識方法を選んでください。</string>
+    <string name="voice_service_permission_title">スマホの音声認識がまだ録音できません</string>
+    <string name="voice_service_permission_body">「%1$s」はこのスマホで音声認識を担当するアプリですが、録音がまだ許可されていないため、あなたの声を聞き取れません。Tadolio 自身のマイク権限には問題ありません。このアプリの権限ページでマイクをオンにしてから、戻ってもう一度長押しで話してください。「設定 › モデル › 音声文字変換」で別の認識方法を選ぶこともできます。</string>
+    <string name="voice_service_settings_failed">「%1$s」の設定ページを開けませんでした。システムのアプリ一覧から探して、マイクをオンにしてください。</string>
     <string name="voice_unavailable_provider_gone">選んだ音声モデルのプロバイダーは削除されました。「設定 › モデル › 音声文字変換」で別のものを選んでください。</string>
     <string name="voice_unavailable_off">音声文字変換がオフです。「設定 › モデル › 音声文字変換」で選んでください。</string>
     <string name="voice_go_pick">選ぶ</string>
     <string name="voice_permission_title">Tadolio にマイクが必要です</string>
     <string name="voice_permission_body">長押しして話している間あなたの声を聞くために、Tadolio は録音が必要です。以前に拒否されたため、スマホは再度確認しません。システム設定の Tadolio の権限ページで、マイクをオンにしてください。</string>
     <string name="voice_permission_open">設定を開く</string>
-    <!-- Floating capsule: long press to talk -->
     <string name="capsule_voice_talk">話す</string>
     <string name="capsule_voice_send">送信</string>
     <string name="capsule_voice_answer_title">Tadolio に答える</string>
@@ -57,5 +59,6 @@
     <string name="capsule_voice_sent">送信しました: %1$s</string>
     <string name="capsule_voice_need_mic">タップして Tadolio のマイクを許可</string>
     <string name="capsule_voice_not_ready">音声入力の準備ができていません · タップ</string>
+    <string name="capsule_voice_service_need_mic">音声認識がまだ録音できません · タップ</string>
     <string name="capsule_voice_open">Tadolio を開く</string>
 </resources>

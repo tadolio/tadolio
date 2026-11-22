@@ -53,6 +53,8 @@ internal class CallTaskDraft {
         simOverride = null
     }
 
+    fun snapshotFields(): List<String> = listOf(number, goal, questions, context, constraints, simOverride.orEmpty())
+
     companion object {
         val Saver = listSaver<CallTaskDraft, String>(
             save = { draft -> listOf(draft.number, draft.goal, draft.questions, draft.context,
@@ -74,7 +76,7 @@ internal class CallTaskDraft {
 }
 
 internal data class CallTaskSubmission(
-    val number: String, val simId: String?, val simLabel: String, val brief: CallTaskBrief,
+    val number: String, val simId: String?, val simLabel: String, val voiceName: String, val brief: CallTaskBrief,
 ) {
     override fun toString(): String = "CallTaskSubmission(redacted)"
 }
@@ -85,7 +87,11 @@ internal fun CallTaskScreen(
     editable: Boolean, canDial: Boolean, feedback: CallActionResult?,
     onSetup: () -> Unit, onConfirm: (CallTaskSubmission) -> Unit,
     onConfirmLocked: (CallTaskSubmission) -> Unit,
+    voiceProfile: com.wangzan101.mika.calls.CallVoiceProfile,
+    onVoiceProfiles: () -> Unit,
+    voiceBriefing: VoiceBriefingLauncher? = null,
 ) {
+    var questionsOpen by rememberSaveable { mutableStateOf(false) }
     var contextOpen by rememberSaveable { mutableStateOf(false) }
     var constraintsOpen by rememberSaveable { mutableStateOf(false) }
     var showSims by rememberSaveable { mutableStateOf(false) }
@@ -128,19 +134,12 @@ internal fun CallTaskScreen(
                 Text(stringResource(R.string.calls_task_limit, goalLength, maxGoal))
             }) else null,
         )
-        OutlinedTextField(
-            draft.questions, { draft.questions = it }, enabled = editable,
-            label = { Text(stringResource(R.string.calls_task_questions)) },
-            placeholder = { Text(stringResource(R.string.calls_task_questions_hint)) },
-            modifier = Modifier.fillMaxWidth().testTag("call-task-questions"), minLines = 2, maxLines = 4,
-            isError = badQuestions,
-            supportingText = if (badQuestions) ({
-                Text(stringResource(R.string.calls_task_questions_limit, CallTaskBrief.MAX_QUESTIONS, CallTaskBrief.MAX_QUESTION_CHARS))
-            }) else null,
-        )
     }
     Spacer(Modifier.height(8.dp))
     GroupCard {
+        ListRow(MikaIcons.Mic, stringResource(R.string.calls_voice_service), voiceProfile.name, first = true,
+            onClick = onVoiceProfiles.takeIf { editable }) { RowChevron() }
+        HorizontalDivider()
         val simSummary = when {
             sim != null && draft.simOverride == null && sim.id == config.defaultOutgoingSimId ->
                 stringResource(R.string.calls_sim_preferred, sim.label)
@@ -150,11 +149,27 @@ internal fun CallTaskScreen(
             config.defaultOutgoingSimId != null && draft.simOverride == null -> stringResource(R.string.calls_sim_unavailable)
             else -> missingSim
         }
-        ListRow(MikaIcons.Phone, stringResource(R.string.calls_sim), simSummary, first = true,
+        ListRow(MikaIcons.Phone, stringResource(R.string.calls_sim), simSummary,
             onClick = if (editable) ({ showSims = true }) else null) { RowChevron() }
     }
 
     GroupCard {
+        CallFoldRow(MikaIcons.Doc, stringResource(R.string.calls_task_questions), questionsOpen, "call-task-questions-fold",
+            subtitle = stringResource(if (draft.questions.isBlank()) R.string.calls_task_optional else R.string.calls_task_filled)) {
+            questionsOpen = !questionsOpen
+        }
+        if (questionsOpen) OutlinedTextField(
+            draft.questions, { draft.questions = it }, enabled = editable,
+            label = { Text(stringResource(R.string.calls_task_questions)) },
+            placeholder = { Text(stringResource(R.string.calls_task_questions_hint)) },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp).padding(bottom = 8.dp).testTag("call-task-questions"),
+            minLines = 2, maxLines = 4,
+            isError = badQuestions,
+            supportingText = if (badQuestions) ({
+                Text(stringResource(R.string.calls_task_questions_limit, CallTaskBrief.MAX_QUESTIONS, CallTaskBrief.MAX_QUESTION_CHARS))
+            }) else null,
+        )
+        HorizontalDivider()
         CallFoldRow(MikaIcons.Doc, stringResource(R.string.calls_task_context), contextOpen, "call-task-context-fold",
             subtitle = stringResource(if (draft.context.isBlank()) R.string.calls_task_optional else R.string.calls_task_filled)) {
             contextOpen = !contextOpen
@@ -183,11 +198,18 @@ internal fun CallTaskScreen(
         stringResource(R.string.calls_task_review), editable && number != null && brief != null,
         {
             if (number != null && brief != null) {
-                review = CallTaskSubmission(number, sim?.id, sim?.label ?: missingSim, brief)
+                review = CallTaskSubmission(number, sim?.id, sim?.label ?: missingSim, voiceProfile.name, brief)
             }
         },
         Modifier.testTag("call-task-review"),
     )
+    voiceBriefing?.let { voice ->
+        OutlinedButton(
+            onClick = { if (number != null && sim != null) voice.start(number, sim.id, sim.label) },
+            enabled = ready && canDial && editable && !voice.busy && number != null && sim != null,
+            modifier = Modifier.fillMaxWidth().testTag("call-task-voice"),
+        ) { Text(stringResource(R.string.calls_voice_briefing_start)) }
+    }
     Spacer(Modifier.height(8.dp))
     FooterNote(stringResource(R.string.calls_task_one_off))
 
@@ -265,6 +287,7 @@ private fun CallTaskReviewDialog(submission: CallTaskSubmission, canDial: Boolea
                 verticalArrangement = Arrangement.spacedBy(9.dp)) {
                 TaskReviewField(stringResource(R.string.calls_number), "\u2066${submission.number}\u2069")
                 TaskReviewField(stringResource(R.string.calls_sim), submission.simLabel)
+                TaskReviewField(stringResource(R.string.calls_voice_service), submission.voiceName)
                 TaskReviewField(stringResource(R.string.calls_task_goal), submission.brief.goal)
                 if (submission.brief.questions.isNotEmpty()) {
                     TaskReviewField(stringResource(R.string.calls_task_questions),

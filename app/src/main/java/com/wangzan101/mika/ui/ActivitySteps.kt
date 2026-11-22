@@ -19,18 +19,22 @@ internal fun activityStepRows(
     for (a in activities) {
         if (!includeNotices && a.kind == "notice") continue
         val where = a.target?.let { where(it, appLabel) }
-        if (a.kind == "observe") {
+        val failed = if (a.failed) ChatCopy.declinedLabel(a.effect) ?: tr(R.string.step_failed) else ""
+        val mcp = a.mcpConnector?.let(StatusCopy::calledMcp)
+        if (mcp != null) {
+            out += StepRow(a.step, mcp, failed, StepState.Ok)
+        } else if (a.kind == "observe") {
             // 读成功了却不知道读的是哪里:不列;没读成的照样列出来
             if (where == null && !a.failed) continue
             val text = if (where == null) toolLabel(a.label)
                 else a.title?.takeIf(String::isNotBlank)?.let { tr(R.string.step_viewed_part, where, it) } ?: tr(R.string.step_viewed, where)
-            val subtitle = if (a.failed) tr(R.string.step_failed) else ""
+            val subtitle = failed
             val last = out.lastOrNull()
             if (last?.title != text || last.subtitle != subtitle) out += StepRow(a.step, text, subtitle, StepState.Ok)
         } else {
             val reason = if (said.add(a.step)) notes[a.step].orEmpty() else ""
             val title = listOfNotNull(toolLabel(a.label), where).joinToString(" · ")
-            out += StepRow(a.step, title, if (a.failed) tr(R.string.step_failed) else "", StepState.Ok, reason)
+            out += StepRow(a.step, title, failed, StepState.Ok, reason)
         }
     }
     return out

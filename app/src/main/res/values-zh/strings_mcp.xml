@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Modified by Tadolio contributors (2026) -->
-
 <resources>
     <string name="mcp_title">连接电脑</string>
     <string name="mcp_starting">正在开启…</string>
@@ -73,5 +72,7 @@
     <string name="mcp_cli_connection_check">connect 会验证连接，成功后顶部显示最近请求。</string>
     <string name="mcp_history_title">允许电脑查看历史记录</string>
     <string name="mcp_history_detail">连接的电脑可读取所有对话、运行记录和已录制的 Trace 正文，包括脱敏后的模型请求与回复。适用于 USB 和私有网络连接。</string>
+    <string name="progress_calling_mcp">正在调用 %1$s MCP…</string>
+    <string name="progress_called_mcp">已调用 %1$s MCP</string>
     <string name="mcp_cli_install_no_repo">请向 Tadolio 发布者索取 CLI 或 Skill 安装说明。使用手机选定的连接方式，通过 connect 验证连接，妥善保管令牌。 USB 使用已授权的 ADB，Wi-Fi 或私有 VPN 使用 HTTP 地址和私有令牌文件。只装 Skill 时使用自带脚本。不要提交手机任务，也不要在对话中输出令牌。</string>
 </resources>

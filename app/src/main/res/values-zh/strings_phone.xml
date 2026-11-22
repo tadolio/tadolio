@@ -1,16 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Modified by Tadolio contributors (2026) -->
-
 <resources>
     <string name="phone_title">设置手机操作</string>
     <string name="phone_intro">Tadolio 在一块单独的虚拟屏上替你操作 App,你可以照常用手机。为此要借用安卓自带的「USB 调试」和「无线调试」:配对一次就行,之后 Tadolio 会自动连接,不需要电脑。网页和文件类的事不受影响,不设置也能做。开发者选项里 Tadolio 没提到的开关都不要动,有的会清除手机数据。</string>
-    <string name="phone_intro_no_sandbox">Tadolio 在一块单独的虚拟屏上替你操作 App,你可以照常用手机。为此要借用安卓自带的「USB 调试」和「无线调试」:配对一次就行,之后 Tadolio 会自动连接,不需要电脑。网页类的事不受影响,不设置也能做。开发者选项里 Tadolio 没提到的开关都不要动,有的会清除手机数据。</string>
     <string name="phone_later">稍后再说</string>
     <string name="phone_bar_title">手机操作</string>
     <string name="phone_skip_note">也可以先跳过,只用上网、文件和聊天;第一次要操作 App 时会再提醒。</string>
-    <string name="phone_skip_note_no_sandbox">也可以先跳过,只用上网和聊天;第一次要操作 App 时会再提醒。</string>
     <string name="phone_unavailable">这个环境不能操作手机里的 App;聊天、网页、文件和计算照常可用。</string>
-    <string name="phone_unavailable_no_sandbox">这个环境不能操作手机里的 App;聊天和网页照常可用。</string>
     <string name="phone_unavailable_reason">操作手机 App 要用到安卓的「开发者选项」和「无线调试」,这里两样都没有。</string>
     <string name="phone_step_dev">打开开发者选项</string>
     <string name="phone_step_dev_body">打开手机设置里的「关于手机」,连续点「版本号」7 次,看到「你已处于开发者模式」的提示就好。有的手机「版本号」在「软件信息」里面。</string>
@@ -92,6 +88,7 @@
     <string name="phone_reconnect">重新连接</string>
     <string name="phone_row_sub">借用无线调试,在虚拟屏上操作 App</string>
     <string name="phone_usage_note">配对一次之后,Tadolio 的内置助手会常驻后台,断开 Wi-Fi 也能继续操作手机。「USB 调试」(在开发者选项里)要一直开着,关掉后手机操作会停下。手机重启后,连上 Wi-Fi 并打开「无线调试」,Tadolio 会自己重新连上,不用再输配对码。</string>
+    <string name="phone_usage_summary">「USB 调试」要一直开着；重启后 Tadolio 会自动重连</string>
     <string name="phone_wireless_off">无线调试已关</string>
     <string name="phone_connecting">正在连接</string>
     <string name="phone_error">出错了</string>
@@ -107,10 +104,8 @@
     <string name="phone_unpair_sub">删除配对,停止手机操作</string>
     <string name="phone_unpair_title">解除配对?</string>
     <string name="phone_unpair_body">Tadolio 会删掉配对信息,停止在虚拟屏上操作 App,并收回下面那几项开关给过的授权。网页和文件类的事不受影响。以后要操作手机 App,需要重新配对一次。你也可以到系统的「无线调试 → 已配对的设备」里把 Tadolio 删掉。</string>
-    <string name="phone_unpair_body_no_sandbox">Tadolio 会删掉配对信息,停止在虚拟屏上操作 App,并收回下面那几项开关给过的授权。网页类的事不受影响。以后要操作手机 App,需要重新配对一次。你也可以到系统的「无线调试 → 已配对的设备」里把 Tadolio 删掉。</string>
     <string name="phone_unpair_confirm">解除</string>
     <string name="phone_degraded">手机操作还没准备好,这次没法操作手机 App;网页和文件照常。</string>
-    <string name="phone_degraded_no_sandbox">手机操作还没准备好,这次没法操作手机 App;网页照常。</string>
     <string name="phone_channel">配对</string>
     <string name="phone_notify_enter_title">在这里填 6 位配对码</string>
     <string name="phone_notify_enter_text">点下面的「填配对码」。看不到就把这条通知往下拉开。</string>
@@ -145,6 +140,7 @@
     <string name="phone_usb_again_body">用数据线连上电脑，在电脑上运行这条命令（在手机上能跑 adb 命令的其他方式也行）。多数手机拔掉数据线后还能继续用；如果停止，插回数据线再运行一次即可恢复。每次手机重启后也要再运行一次。</string>
     <string name="phone_success_note_usb">请保持 USB 调试开启;助手是用 USB 命令启动的,多数手机拔掉数据线后还能继续用;如果停止,插回数据线再运行一次命令即可恢复。手机重启后,先打开 Tadolio,再运行一次命令</string>
     <string name="phone_usage_note_usb">Tadolio 的内置助手是用 USB 启动命令启动的,多数手机拔掉数据线后还能继续运行;部分系统会在拔线时停止助手,插回数据线再运行一次命令即可恢复。「USB 调试」(在开发者选项里)要一直开着,关掉后手机操作会停下。手机重启后助手不会自己回来:打开 Tadolio,再运行一次启动命令(在「设置手机操作」里可以复制)。如果这台手机有能用的「无线调试」,配对一次之后,重启后 Tadolio 就能自己重新连上。</string>
+    <string name="phone_usage_summary_usb">「USB 调试」要一直开着；重启后需再运行一次启动命令</string>
     <string name="fail_root_denied">root 授权被拒绝了</string>
     <string name="fail_root_denied_body">Tadolio 没能用 root 启动手机助手。点「重试」并在授权弹框里允许 Tadolio,或改用无线调试。</string>
     <string name="fail_root_no_answer">root 没有回应</string>
@@ -179,4 +175,45 @@
     <string name="phone_root_note">检测到这台手机上有 su。用 root 启动的手机助手仍以同样的受限身份运行,权限和经无线调试启动时一样。</string>
     <string name="phone_root_entry_on">自动启动助手;root 命令已开启</string>
     <string name="phone_root_entry_off">自动启动助手;root 命令已关闭</string>
+    <string name="fail_shizuku_not_installed">未安装 Shizuku</string>
+    <string name="fail_shizuku_not_installed_body">请安装并启动 Shizuku、给 Tadolio 授权，或在「手机控制」里改回无线调试。</string>
+    <string name="fail_shizuku_not_running">Shizuku 未运行</string>
+    <string name="fail_shizuku_not_running_body">已安装 Shizuku，但它的服务没有运行（例如手机重启后）。请打开 Shizuku 启动它并点「重试」，或在「手机控制」里配对无线调试。</string>
+    <string name="fail_shizuku_permission">需要 Shizuku 授权</string>
+    <string name="fail_shizuku_permission_body">Shizuku 正在运行，但 Tadolio 还没有拿到授权。请打开「手机控制」给 Shizuku 授权，或改用无线调试。</string>
+    <string name="fail_shizuku_bind_failed">无法通过 Shizuku 启动助手</string>
+    <string name="fail_shizuku_bind_failed_body">Shizuku 已运行且已授权，但手机助手没有连上。请点「重试」，或重启 Shizuku 后再试。</string>
+    <string name="phone_shizuku_line_starting">手机助手未运行，正在通过 Shizuku 启动…</string>
+    <string name="phone_shizuku_line_running">已通过 Shizuku 连接，Wi-Fi 或移动数据下都能用</string>
+    <string name="phone_success_note_shizuku">已通过 Shizuku 启动。无需 Wi-Fi，移动数据下也能用；手机重启后请再次启动 Shizuku，Tadolio 会自动重连。</string>
+    <string name="phone_usage_note_shizuku">用 Shizuku 启动 Tadolio 内置的手机助手。启动后，手机控制无需无线调试，在 Wi-Fi 或移动数据下都能用。Tadolio 不会自行启动 Shizuku；手机重启后请打开 Shizuku 再次启动它（仅当这台设备启动 Shizuku 只能用无线调试时才开无线调试），Tadolio 会自动重连。</string>
+    <string name="phone_shizuku_group">Shizuku</string>
+    <string name="phone_shizuku_not_installed">未安装</string>
+    <string name="phone_shizuku_not_running">已安装 · 未运行</string>
+    <string name="phone_shizuku_perm_needed">运行中 · 待授权</string>
+    <string name="phone_shizuku_ready">运行中 · 已授权</string>
+    <string name="phone_shizuku_detail">已安装：%1$s · 运行中：%2$s · 授权：%3$s</string>
+    <string name="phone_shizuku_yes">是</string>
+    <string name="phone_shizuku_no">否</string>
+    <string name="phone_shizuku_perm_granted">已授权</string>
+    <string name="phone_shizuku_perm_missing">未授权</string>
+    <string name="phone_shizuku_grant">给 Shizuku 授权</string>
+    <string name="phone_shizuku_open_app">打开 Shizuku</string>
+    <string name="phone_shizuku_action_install_sub">尚未安装 Shizuku；打开安装说明</string>
+    <string name="phone_shizuku_action_start_sub">打开 Shizuku 以启动它的服务</string>
+    <string name="phone_shizuku_action_grant_sub">在 Shizuku 里请求授权，让 Tadolio 能使用它</string>
+    <string name="phone_shizuku_action_ready_sub">已授权；打开 Shizuku 设置</string>
+    <string name="phone_shizuku_guide">如何启动 Shizuku</string>
+    <string name="phone_shizuku_guide_sub">在浏览器里打开 Shizuku 的启动指南</string>
+    <string name="phone_shizuku_footer">Tadolio 不会自行启动 Shizuku。如果你的设备启动 Shizuku 只能用无线调试，请仅在启动 Shizuku 期间开启无线调试。</string>
+    <string name="phone_transport_title">Shell 传输</string>
+    <string name="phone_transport_sub">自动模式在 Shizuku 就绪时优先用它，否则回退到无线调试。选择 Shizuku 时不会使用无线调试。</string>
+    <string name="phone_transport_auto">自动</string>
+    <string name="phone_transport_wireless">无线调试</string>
+    <string name="phone_transport_shizuku">Shizuku</string>
+    <string name="phone_intro_no_sandbox">Tadolio 在一块单独的虚拟屏上替你操作 App,你可以照常用手机。为此要借用安卓自带的「USB 调试」和「无线调试」:配对一次就行,之后 Tadolio 会自动连接,不需要电脑。网页类的事不受影响,不设置也能做。开发者选项里 Tadolio 没提到的开关都不要动,有的会清除手机数据。</string>
+    <string name="phone_skip_note_no_sandbox">也可以先跳过,只用上网和聊天;第一次要操作 App 时会再提醒。</string>
+    <string name="phone_unavailable_no_sandbox">这个环境不能操作手机里的 App;聊天和网页照常可用。</string>
+    <string name="phone_unpair_body_no_sandbox">Tadolio 会删掉配对信息,停止在虚拟屏上操作 App,并收回下面那几项开关给过的授权。网页类的事不受影响。以后要操作手机 App,需要重新配对一次。你也可以到系统的「无线调试 → 已配对的设备」里把 Tadolio 删掉。</string>
+    <string name="phone_degraded_no_sandbox">手机操作还没准备好,这次没法操作手机 App;网页照常。</string>
 </resources>

@@ -1,4 +1,4 @@
 # Modified by Tadolio contributors (2026)
-own-default: system 18147 bytes, calls 0/0 bytes, task-memory 3/2357 bytes, terminal 0/0 bytes
-own-calls-enabled: system 18538 bytes, calls 5/4132 bytes, task-memory 3/2357 bytes, terminal 0/0 bytes
-community: system 18888 bytes, calls 0/0 bytes, task-memory 0/0 bytes, terminal 0/0 bytes
+own-default: system 18228 bytes, calls 0/0 bytes, task-memory 3/2357 bytes, terminal 0/0 bytes, all-tools 13/10996 bytes, total 29224 bytes
+own-calls-enabled: system 18619 bytes, calls 5/4132 bytes, task-memory 3/2357 bytes, terminal 0/0 bytes, all-tools 18/15128 bytes, total 33747 bytes
+community: system 19309 bytes, calls 5/4132 bytes, task-memory 3/2357 bytes, terminal 0/0 bytes, all-tools 18/14459 bytes, total 33768 bytes

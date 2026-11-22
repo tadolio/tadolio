@@ -91,6 +91,7 @@ import com.wangzan101.mika.ui.theme.MikaIcons
 import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
+import com.wangzan101.mika.ui.theme.MikaRadius
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.math.BigDecimal
@@ -156,13 +157,23 @@ object UsageCopy {
             val yi = round3(BigDecimal(n).divide(BigDecimal(100_000_000)))
             return "${yi.stripTrailingZeros().toPlainString()} ${tr(R.string.hivo_token_yi)}"
         }
-        // 英文按千、百万、十亿写:12.3K、1.5M
-        for ((unit, size) in listOf("K" to 1_000L, "M" to 1_000_000L, "B" to 1_000_000_000L)) {
-            val v = round3(BigDecimal(n).divide(BigDecimal(size)))
-            if (v < BigDecimal(1_000) || unit == "B") return "${v.stripTrailingZeros().toPlainString()}$unit"
+        return formatMetricTokens(n, ::round3)
+    }
+
+    /** Chat usage shares the same K/M/B units in every language. Round only for display. */
+    fun compactTokens(n: Long): String =
+        if (n < 1_000) n.toString() else formatMetricTokens(n) { it.setScale(1, RoundingMode.HALF_UP) }
+
+    private fun formatMetricTokens(n: Long, round: (BigDecimal) -> BigDecimal): String {
+        for ((unit, size) in TOKEN_UNITS) {
+            val v = round(BigDecimal.valueOf(n).divide(size))
+            if (v < BigDecimal.valueOf(1_000) || unit == "B") return "${v.stripTrailingZeros().toPlainString()}$unit"
         }
         return n.toString()
     }
+
+    private val TOKEN_UNITS = listOf("K" to BigDecimal.valueOf(1_000),
+        "M" to BigDecimal.valueOf(1_000_000), "B" to BigDecimal.valueOf(1_000_000_000))
 
     private fun round3(v: BigDecimal): BigDecimal = v.setScale(
         when {
@@ -180,8 +191,8 @@ object UsageCopy {
 
     /** 占比:不到 1% 但不是 0 时写「<1%」。 */
     fun percent(share: Double): String {
-        val p = (share * 100).roundToInt()
-        return if (p == 0 && share > 0) "<1%" else "$p%"
+        if (share > 0 && share < 0.01) return "<1%"
+        return "${(share * 100).roundToInt()}%"
     }
 
     fun missing(n: Long) = trPlural(R.plurals.usage_missing, n.toInt())
@@ -249,12 +260,13 @@ object UsageCopy {
 }
 
 /**
- * 设置 › Token 用量。先显示当前额度，再选时间和查看总用量及三张图：用量趋势(按服务商叠起来)、
+ * 设置 › Token 用量。选时间和查看总用量及三张图：用量趋势(按服务商叠起来)、
  * 按服务商排行(点一家选中,再点取消)、按模型排行(可切服务商)。选中的服务商只影响图里亮哪家、模型列哪家的,
  * 总用量始终是全部。账本每记一笔([UsageLedger.version])就重新统计;本地时区在统计时换算。
+ * 服务商的当前额度在服务商页面上看([UsageAllowanceCard])。
  */
 @Composable
-fun UsageScreen(ledger: UsageLedger, store: ProviderStore, onBack: () -> Unit, onOpenUrl: (String) -> Unit) {
+fun UsageScreen(ledger: UsageLedger, store: ProviderStore, onBack: () -> Unit) {
     var preset by rememberSaveable { mutableStateOf(UsagePreset.Week) }
     // 自定义范围的两头,存成纪元日(rememberSaveable 能存的类型)
     var customFrom by rememberSaveable { mutableStateOf<Long?>(null) }
@@ -283,7 +295,6 @@ fun UsageScreen(ledger: UsageLedger, store: ProviderStore, onBack: () -> Unit, o
         onPickCustom = { picking = true },
         onSelect = { selected = it },
         onBack = onBack,
-        currentAllowance = { UsageAllowanceCard(live, store, onOpenUrl) },
     )
 
     if (picking) {
@@ -315,11 +326,9 @@ fun UsageContent(
     onPickCustom: () -> Unit,
     onSelect: (String?) -> Unit,
     onBack: () -> Unit,
-    currentAllowance: @Composable () -> Unit = {},
 ) {
     val c = MikaTheme.colors
     PageScaffold(UsageCopy.TITLE, onBack) {
-        currentAllowance()
         SegmentedControl(
             UsagePreset.entries.map { it.label }, preset.ordinal, { onPreset(UsagePreset.entries[it]) },
             tags = UsagePreset.entries.map { "usage-range-${it.name}" },
@@ -415,7 +424,7 @@ private fun TotalsCard(t: UsageTotals) {
     }
 }
 
-private val TotalStyle = TextStyle(fontSize = 34.sp, lineHeight = 40.sp, fontWeight = FontWeight.Bold)
+private val TotalStyle = MikaType.Display
 
 @Composable
 private fun Stat(label: String, value: String, modifier: Modifier) {
@@ -443,7 +452,7 @@ private fun ChartCard(title: String, hint: String, content: @Composable () -> Un
     }
 }
 
-private val CardTitle = TextStyle(fontSize = 15.sp, lineHeight = 20.sp, fontWeight = FontWeight.SemiBold)
+private val CardTitle = MikaType.Value.copy(fontWeight = FontWeight.SemiBold)
 
 /** 没有用量时:一张居中的说明卡。 */
 @Composable
@@ -502,11 +511,11 @@ private fun RankRow(
     }
 }
 
-private val RowShape = RoundedCornerShape(8.dp)
-private val RankText = TextStyle(fontSize = 13.5.sp, lineHeight = 18.sp)
-private val RankMono = TextStyle(fontSize = 12.5.sp, lineHeight = 18.sp, fontFamily = FontFamily.Monospace, fontWeight = FontWeight.Medium)
-private val RankValue = TextStyle(fontSize = 13.sp, lineHeight = 17.sp)
-private val RankShare = TextStyle(fontSize = 11.sp, lineHeight = 14.sp)
+private val RowShape = MikaShapes.Tile
+private val RankText = MikaType.Caption
+private val RankMono = MikaType.Hint.copy(fontWeight = FontWeight.Medium, fontFamily = FontFamily.Monospace)
+private val RankValue = MikaType.Caption
+private val RankShare = MikaType.Micro
 
 /** 切换服务商的胶囊:选中时强调色实底;[deleted] 的名字变淡、后面写「（已删除）」。 */
 @Composable
@@ -530,7 +539,7 @@ private fun UsageChip(text: String, selected: Boolean, onClick: () -> Unit, dele
     }
 }
 
-private val ChipText = TextStyle(fontSize = 14.sp, lineHeight = 18.sp, fontWeight = FontWeight.Medium)
+private val ChipText = MikaType.Body.copy(fontWeight = FontWeight.Medium)
 
 /** 趋势图里的一段:有自己颜色的服务商各一段([slot] 是颜色序号),其余合成「其他」([slot] 为 null)。 */
 private data class StackPart(val slot: Int?, val tokens: Long)
@@ -638,14 +647,14 @@ private fun LegendItem(color: Color, name: String) {
     }
 }
 
-private val LegendShape = RoundedCornerShape(3.dp)
+private val LegendShape = MikaShapes.Micro
 
 @Composable
 private fun GridLabel(text: String, modifier: Modifier) {
     Text(text, modifier.width(34.dp), style = GridText, color = MikaTheme.colors.ink3, textAlign = TextAlign.End, maxLines = 1)
 }
 
-private val GridText = TextStyle(fontSize = 10.5.sp, lineHeight = 14.sp)
+private val GridText = MikaType.Micro
 
 /** 点中一根柱子时的说明:哪段时间、合计,下面各家服务商各一行(按用量从多到少);横向对着那根柱子,不出图的左右边。 */
 @Composable
@@ -675,8 +684,8 @@ private fun TrendTip(b: UsageBucket, report: UsageReport, index: Int, gutter: Dp
     }
 }
 
-private val TipShape = RoundedCornerShape(8.dp)
-private val TipText = TextStyle(fontSize = 11.5.sp, lineHeight = 18.sp)
+private val TipShape = MikaShapes.Tile
+private val TipText = MikaType.Micro
 
 /** 自定义范围的日期选择:只能选账本还留着的日子(最近 [UsageLedger.KEEP_DAYS] 天)到今天,两头都选了才可查看。 */
 @OptIn(ExperimentalMaterial3Api::class)

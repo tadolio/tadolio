@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    // 插件 manifest/注册表用 kotlinx.serialization(依赖已经在 libs 里,core 也在用)
     alias(libs.plugins.kotlin.serialization)
 }
 
@@ -32,8 +33,8 @@ android {
         applicationId = "com.tadolio.app"
         minSdk = 30
         targetSdk = 35
-        versionCode = 44
-        versionName = "0.1.43"
+        versionCode = 51
+        versionName = "0.1.50"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "POINTS_URL", "\"" + providers.gradleProperty("pointsUrl").getOrElse("").replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") + "\"")
         buildConfigField("String", "HUB_URL", "\"" + providers.gradleProperty("hubUrl").getOrElse("").replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") + "\"")
@@ -109,6 +110,11 @@ android {
             signingConfig = signingConfigs.getByName("debug")
             isProfileable = true
             matchingFallbacks += "release"
+            // 真机比较滑动手感也用优化包,仍覆盖 .dev 测试版并保留它的数据。
+            if (providers.gradleProperty("devInstall").isPresent) {
+                applicationIdSuffix = ".dev"
+                resValue("string", "app_name", "Tadolio Dev")
+            }
         }
         // 本地日志检查包：并排安装，允许 adb run-as，首次启动即记录详细 Trace。
         create("logs") {
@@ -161,6 +167,7 @@ dependencies {
     implementation(libs.compose.ui)
     implementation(libs.compose.material3)
     implementation(libs.androidx.activity.compose)
+    implementation(libs.androidx.window)
     implementation(libs.androidx.webkit)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.okhttp)
@@ -174,6 +181,8 @@ dependencies {
     implementation(libs.mlkit.text.recognition.chinese)
     // 微信绑定二维码只在本机编码，不调用在线图片服务。
     implementation(libs.zxing.core)
+    implementation(libs.shizuku.api)
+    implementation(libs.shizuku.provider)
 
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
@@ -184,9 +193,13 @@ dependencies {
 
     androidTestImplementation(platform(libs.compose.bom))
     androidTestImplementation(libs.compose.ui.test.junit4)
+    // Older transitive Espresso reflects on InputManager.getInstance(), removed on newer devices.
+    androidTestImplementation(libs.androidx.test.espresso)
     debugImplementation(libs.compose.ui.test.manifest)
     androidTestImplementation(libs.androidx.test.runner)
     androidTestImplementation(libs.androidx.test.ext.junit)
+    // Compose BOM 的旧传递版本在 Android 17 上调用已移除的 InputManager.getInstance。
+    androidTestImplementation(libs.androidx.test.espresso)
     androidTestImplementation(libs.okhttp.mockwebserver)
     androidTestImplementation(libs.junit)
 }

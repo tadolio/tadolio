@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Modified by Tadolio contributors (2026) -->
 <resources>
     <string name="ok_yes">حسنًا</string>
@@ -26,6 +26,8 @@
     <string name="memory_use_sub">عند إيقافه، لا يقرأ Tadolio الذاكرة ولا يحفظ فيها</string>
     <string name="memory_auto">تذكّر ما أقوله</string>
     <string name="memory_auto_sub">تُنظّم من كلماتك بعد كل مهمة</string>
+    <string name="memory_infer">السماح لـ Tadolio بحفظ استنتاجاته</string>
+    <string name="memory_infer_sub">عندما تطلب منه التذكّر، تُحفظ استنتاجاته أيضًا مع الإشارة إلى أنها ليست كلامك</string>
     <string name="memory_learn">التعلّم من المهام السابقة (المهارات وملاحظات التطبيقات)</string>
     <string name="memory_learn_sub">لا يستخدم Tadolio ما يتعلّمه إلا بعد موافقتك</string>
     <string name="memory_tasks">تذكّر المهام السابقة</string>
@@ -60,6 +62,7 @@
     <string name="date_pattern_md">MMM d</string>
     <string name="memory_said_via">قلت في %1$s عبر %2$s: «%3$s»</string>
     <string name="memory_said">قلت في %1$s: «%2$s»</string>
+    <string name="memory_inferred">استنتاج Tadolio في %1$s بطلب منك: «%2$s»</string>
     <string name="verify_returned">أعادها التحقق</string>
     <string name="skills_drafts">مسودات مهارات جديدة — تُجرّب بعد موافقتك</string>
     <string name="skills_accept_try">قبول وتجربة</string>
@@ -92,5 +95,10 @@
     <string name="skills_imported">مستوردة</string>
     <string name="skill_builtin_name">توجد مهارة مدمجة بهذا الاسم بالفعل. غيّر الاسم وحاول مجددًا.</string>
     <string name="skill_draft_pending">توجد مسودة بهذا الاسم بانتظار المراجعة بالفعل. تعامل معها أولًا.</string>
-
+    <string name="market_title">سوق المهارات</string>
+    <string name="market_sub">تصفح المهارات المشتركة على GitHub</string>
+    <string name="market_source">مصدر المهارات</string>
+    <string name="market_add">إضافة للمراجعة</string>
+    <string name="market_network_error">تعذر التنزيل. تحقق من المستودع والاتصال ثم حاول مجدداً.</string>
+    <string name="market_invalid">المحتوى غير صالح أو تغير. أعد فتح السوق لتحديث القائمة.</string>
 </resources>

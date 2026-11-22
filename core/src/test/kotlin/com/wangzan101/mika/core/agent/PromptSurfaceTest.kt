@@ -134,7 +134,7 @@ class PromptSurfaceTest {
     }
 
     /** Product defaults keep task memory on, calls opt-in and the Linux runtime disabled. */
-    @Test fun productToolCostsAndCommunityExclusions() {
+    @Test fun productToolCostsAndCommunityParity() {
         val tasks = com.wangzan101.mika.core.memory.TaskMemoryStore(
             object : com.wangzan101.mika.core.memory.TaskMemoryPersistence {
                 override fun load() = emptyList<com.wangzan101.mika.core.memory.TaskMemory>()
@@ -162,16 +162,41 @@ class PromptSurfaceTest {
             val callTools = captured.tools.filter { it.name.startsWith("phone_call_") }
             val memoryTools = captured.tools.filter { it.name.startsWith("task_memory_") }
             val terminalTools = captured.tools.filter { it.name in setOf("run_command", "run_script", "open_terminal") }
-            org.junit.Assert.assertEquals(if (mode == "own-calls-enabled") 5 else 0, callTools.size)
-            org.junit.Assert.assertEquals(if (community) 0 else 3, memoryTools.size)
+            org.junit.Assert.assertEquals(if (mode != "own-default") 5 else 0, callTools.size)
+            org.junit.Assert.assertEquals(3, memoryTools.size)
             org.junit.Assert.assertTrue(terminalTools.isEmpty())
             fun bytes(tools: List<com.wangzan101.mika.core.model.ToolSpec>) =
                 tools.sumOf { (it.name + it.description + it.parametersJsonSchema).toByteArray(Charsets.UTF_8).size }
             sizes.appendLine("$mode: system ${captured.system!!.toByteArray(Charsets.UTF_8).size} bytes, " +
                 "calls ${callTools.size}/${bytes(callTools)} bytes, task-memory ${memoryTools.size}/${bytes(memoryTools)} bytes, " +
-                "terminal ${terminalTools.size}/${bytes(terminalTools)} bytes")
+                "terminal ${terminalTools.size}/${bytes(terminalTools)} bytes, " +
+                "all-tools ${captured.tools.size}/${bytes(captured.tools)} bytes, " +
+                "total ${captured.system!!.toByteArray(Charsets.UTF_8).size + bytes(captured.tools)} bytes")
         }
         PromptSurface.check("product-tool-costs", sizes.toString())
+    }
+
+    /** 人格层:固定头尾和正文的全文,审改动时直接看差在哪。没有人格时其余金样不受影响。 */
+    @Test fun personaLayer() {
+        PromptSurface.check("persona/layer", com.wangzan101.mika.core.prompt.PersonaPrompt.layer("测试人格", "先给结论,再展开;少用感叹号。")!!)
+    }
+
+    /** 改了称呼之后模型多看到、看到不一样的那几段:身份那一段、「Mika 是 App 的名字」的说明、人格层的固定头。 */
+    @Test fun personaRenamed() {
+        val identity = SystemPrompt.identity("辉夜").substringBefore("\n\nPrinciples:")
+        val layer = com.wangzan101.mika.core.prompt.PersonaPrompt.layer("测试人格", "先给结论。", assistant = "辉夜")!!.substringBefore("\n\nWhat the persona may change")
+        PromptSurface.check("persona/renamed", identity + "\n\n---\n\n" + layer)
+    }
+
+    /** 带选项的人格层:固定头尾 + 选项的句子 + 用户写的。 */
+    @Test fun personaLayerWithOptions() {
+        val style = com.wangzan101.mika.core.prompt.PersonaStyle(
+            base = com.wangzan101.mika.core.prompt.PersonaStyle.Base.Crisp,
+            emoji = com.wangzan101.mika.core.prompt.PersonaStyle.Level.Less,
+            length = com.wangzan101.mika.core.prompt.PersonaStyle.Level.Less,
+            progress = com.wangzan101.mika.core.prompt.PersonaStyle.Level.Less,
+        )
+        PromptSurface.check("persona/layer-options", com.wangzan101.mika.core.prompt.PersonaPrompt.layer("测试人格", "先给结论,再展开;少用感叹号。", style)!!)
     }
 
     @Test fun feedbackFromTools() {

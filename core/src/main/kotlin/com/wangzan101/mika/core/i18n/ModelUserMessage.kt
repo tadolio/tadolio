@@ -6,6 +6,8 @@ import com.wangzan101.mika.core.net.ProxyFailure
 
 /** User-facing rendering only. Original exceptions and model/tool feedback stay unchanged. */
 fun modelUserMessage(error: ModelError): String = if (UserText.source == null) error.message.orEmpty() else when (error) {
+    is ModelError.IllegalHeader, is ModelError.ProactiveBudgetExceeded, is ModelError.ServiceTierRejected,
+    is ModelError.ChainFailed, is ModelError.GroupUnavailable, is ModelError.GroupExhausted,
     is ModelError.TaskBudgetExceeded, is ModelError.DailyBudgetExceeded -> error.message.orEmpty()
     is ModelError.Auth -> UserText.get("hivo_error_auth")
     is ModelError.QuotaExceeded -> UserText.get("hivo_error_quota")

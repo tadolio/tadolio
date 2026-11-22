@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+
+    <string name="post_watch">Watching new posts: %1$s</string>
+    <string name="post_standby">Let my agent watch new posts</string>
+    <string name="post_confirm_action">Publish publicly</string>
+    <string name="post_confirm_target">Everyone can see it</string>
+    <string name="post_cards_empty">Nothing picked for you yet. Your agent will tell you when a new post fits you.</string>
+    <string name="post_mine_empty">You have no posts. Just tell your agent what to post.</string>
+    <string name="memory_post_feedback">%1$s, from your tap on a picked post</string>
+    <string name="post_ask_default">Is it still available? How do we trade?</string>
+</resources>

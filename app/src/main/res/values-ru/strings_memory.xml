@@ -26,6 +26,8 @@
     <string name="memory_use_sub">Когда выключено, Tadolio не читает память и ничего в неё не сохраняет</string>
     <string name="memory_auto">Запоминать то, что я говорю</string>
     <string name="memory_auto_sub">Составляется из ваших слов после каждой задачи</string>
+    <string name="memory_infer">Разрешить Tadolio запоминать собственные выводы</string>
+    <string name="memory_infer_sub">Когда вы просите запомнить, сохраняются и собственные выводы Tadolio — с пометкой, что это не ваши слова</string>
     <string name="memory_learn">Учиться на прошлых задачах (навыки и заметки о приложениях)</string>
     <string name="memory_learn_sub">Чему Tadolio научилась, используется только после вашего одобрения</string>
     <string name="memory_tasks">Помнить прошлые задачи</string>
@@ -60,6 +62,7 @@
     <string name="date_pattern_md">d MMM</string>
     <string name="memory_said_via">Вы сказали %1$s через «%2$s»: «%3$s»</string>
     <string name="memory_said">Вы сказали %1$s: «%2$s»</string>
+    <string name="memory_inferred">Вывод Tadolio от %1$s по вашей просьбе: «%2$s»</string>
     <string name="verify_returned">Возвращено проверкой</string>
     <string name="skills_drafts">Черновики новых навыков: проверяются в деле после вашего одобрения</string>
     <string name="skills_accept_try">Принять и попробовать</string>
@@ -92,5 +95,10 @@
     <string name="skills_imported">Импортирован</string>
     <string name="skill_builtin_name">Встроенный навык с таким названием уже есть. Переименуйте и попробуйте снова.</string>
     <string name="skill_draft_pending">Черновик с таким названием уже ждёт проверки. Сначала разберитесь с ним.</string>
-
+    <string name="market_title">Каталог навыков</string>
+    <string name="market_sub">Просмотр навыков из GitHub</string>
+    <string name="market_source">Источник навыков</string>
+    <string name="market_add">Добавить на проверку</string>
+    <string name="market_network_error">Не удалось загрузить. Проверьте репозиторий и подключение.</string>
+    <string name="market_invalid">Содержимое недопустимо или изменилось. Откройте каталог заново.</string>
 </resources>

@@ -3,6 +3,7 @@ package com.wangzan101.mika.core.record
 
 import com.wangzan101.mika.core.replay.Anchors
 import com.wangzan101.mika.core.replay.Selector
+import com.wangzan101.mika.core.usage.DeepSeekCost
 import kotlinx.serialization.SerialName
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
@@ -53,6 +54,7 @@ sealed interface RunEvent {
         val fallback: Boolean = false,
         val progress: Progress? = null,
         val complete: Boolean = false,
+        val confirmedIds: Set<Int>? = null,
     ) : RunEvent
 
     /** [tool]/[argsJson] 是本轮实际执行的那一个调用;参数已脱敏。 */
@@ -72,6 +74,8 @@ sealed interface RunEvent {
         val model: String? = null,
         /** 大小模型分工起作用时:main / light / light_rejected(轻量模型的回复没执行,改问了主模型);否则 null。 */
         val role: String? = null,
+        /** 实际回答的成员属于哪个模型组;单模型为 null。 */
+        val group: String? = null,
         /** 重试前花掉的时间:失败的那几次请求加退避等待。 */
         val retryWaitMs: Long = 0,
         /**
@@ -181,6 +185,8 @@ sealed interface RunEvent {
         val failed: Boolean = false,
         /** 不可逆判定认出这是一次对外动作(发送、提交);停止后交代做了什么时按它数发出了几次。 */
         val outward: Boolean = false,
+        /** 这次调用走过的外部 MCP 连接器(配置里的名字);没走 MCP 为 null。 */
+        val mcpConnector: String? = null,
     ) : RunEvent
 
     @Serializable @SerialName("state")
@@ -261,6 +267,7 @@ sealed interface RunEvent {
     data class ModelCalls(
         override val atMs: Long, val calls: Int, val unreported: Int, val inputTokens: Long, val outputTokens: Long, val cachedTokens: Long,
         val httpCalls: Int? = null, val httpUnreported: Int? = null,
+        val deepSeekCost: DeepSeekCost? = null,
     ) : RunEvent
 
     /**

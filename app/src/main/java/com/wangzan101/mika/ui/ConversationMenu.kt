@@ -45,6 +45,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
 import com.wangzan101.mika.R
+import com.wangzan101.mika.chat.Project
 import com.wangzan101.mika.ui.components.GlassBlurSupported
 import com.wangzan101.mika.ui.components.floatShadow
 import com.wangzan101.mika.ui.theme.MikaIcons
@@ -73,7 +74,8 @@ internal fun placeMenu(rowTop: Float, rowHeight: Float, menuHeight: Float, gap: 
 }
 
 /**
- * 侧栏里长按一条对话后的菜单(见 [LongPressMenu]):那一行抬起成一张白卡,菜单里是置顶 / 取消置顶、改名、红字删除。
+ * 侧栏里长按一条对话后的菜单(见 [LongPressMenu]):那一行抬起成一张白卡,菜单里是置顶 / 取消置顶、
+ * 归档 / 取消归档、改名、红字删除。归档了的对话不在主列表里,没有置顶可谈;还没存过的草稿和正在跑任务的不能归档。
  * [bounds] 是那一行在窗口里的位置和大小。
  */
 @Composable
@@ -82,6 +84,42 @@ internal fun ConversationMenu(
     bounds: Rect,
     progress: () -> Float,
     onPin: () -> Unit,
+    onArchive: () -> Unit,
+    onUnarchive: () -> Unit,
+    onRename: () -> Unit,
+    onTerminal: () -> Unit,
+    onExport: () -> Unit,
+    onDelete: () -> Unit,
+    onSelect: () -> Unit,
+    onDismiss: () -> Unit,
+) {
+    val c = MikaTheme.colors
+    LongPressMenu(
+        bounds, progress, pane = stringResource(R.string.drawer_actions), tag = "drawer-menu",
+        entries = listOfNotNull(
+            MenuEntry(stringResource(R.string.drawer_select), MikaIcons.ListChecks, "drawer-menu-select", onClick = onSelect),
+            if (item.archived) null else MenuEntry(stringResource(if (item.pinned) R.string.unpin else R.string.pin), MikaIcons.Pin, "drawer-menu-pin", onClick = onPin),
+            when {
+                item.archived -> MenuEntry(stringResource(R.string.drawer_unarchive), MikaIcons.Archive, "drawer-menu-unarchive", onClick = onUnarchive)
+                item.saved && !item.running -> MenuEntry(stringResource(R.string.drawer_archive), MikaIcons.Archive, "drawer-menu-archive", onClick = onArchive)
+                else -> null
+            },
+            MenuEntry(stringResource(R.string.drawer_rename), MikaIcons.Edit, "drawer-menu-rename", onClick = onRename),
+            *if (com.wangzan101.mika.BuildConfig.SANDBOX_ENABLED) arrayOf(MenuEntry(stringResource(R.string.terminal_open), MikaIcons.Terminal, "drawer-menu-terminal", onClick = onTerminal)) else emptyArray(),
+            MenuEntry(stringResource(R.string.export_conversation), MikaIcons.Share, "drawer-menu-export", onClick = onExport),
+            MenuEntry(stringResource(R.string.confirm_delete), MikaIcons.Trash, "drawer-menu-delete", c.bad, onDelete),
+        ),
+        onDismiss = onDismiss,
+    ) { LiftedRow(item) }
+}
+
+/** 长按侧栏项目分组头后的菜单:在项目里新对话、重命名、打开终端、删除项目。 */
+@Composable
+internal fun ProjectMenu(
+    project: Project,
+    bounds: Rect,
+    progress: () -> Float,
+    onNewChat: () -> Unit,
     onRename: () -> Unit,
     onTerminal: () -> Unit,
     onDelete: () -> Unit,
@@ -89,17 +127,28 @@ internal fun ConversationMenu(
 ) {
     val c = MikaTheme.colors
     LongPressMenu(
-        bounds, progress, pane = stringResource(R.string.drawer_actions), tag = "drawer-menu",
-        entries = buildList {
-            add(MenuEntry(stringResource(if (item.pinned) R.string.unpin else R.string.pin), MikaIcons.Pin, "drawer-menu-pin", onClick = onPin))
-            add(MenuEntry(stringResource(R.string.drawer_rename), MikaIcons.Edit, "drawer-menu-rename", onClick = onRename))
-            if (com.wangzan101.mika.BuildConfig.SANDBOX_ENABLED) {
-                add(MenuEntry(stringResource(R.string.terminal_open), MikaIcons.Terminal, "drawer-menu-terminal", onClick = onTerminal))
-            }
-            add(MenuEntry(stringResource(R.string.confirm_delete), MikaIcons.Trash, "drawer-menu-delete", c.bad, onDelete))
-        },
+        bounds, progress, pane = stringResource(R.string.drawer_project_actions), tag = "drawer-project-menu",
+        entries = listOf(
+            MenuEntry(stringResource(R.string.drawer_project_new_chat), MikaIcons.New, "project-menu-new-chat", onClick = onNewChat),
+            MenuEntry(stringResource(R.string.drawer_project_rename_title), MikaIcons.Edit, "project-menu-rename", onClick = onRename),
+            *if (com.wangzan101.mika.BuildConfig.SANDBOX_ENABLED) arrayOf(MenuEntry(stringResource(R.string.terminal_open), MikaIcons.Terminal, "project-menu-terminal", onClick = onTerminal)) else emptyArray(),
+            MenuEntry(stringResource(R.string.confirm_delete), MikaIcons.Trash, "project-menu-delete", c.bad, onDelete),
+        ),
         onDismiss = onDismiss,
-    ) { LiftedRow(item) }
+    ) {
+        Box(
+            Modifier
+                .floatShadow(c, NavShape)
+                .background(c.surface, NavShape)
+                .clip(NavShape)
+                .padding(horizontal = 14.dp, vertical = 10.dp),
+        ) {
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)) {
+                Icon(MikaIcons.Folder, null, Modifier.size(16.dp), tint = c.ink2)
+                Text(project.name, style = MikaType.Body, color = c.ink, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            }
+        }
+    }
 }
 
 /** 长按菜单里的一项:文字、右边的图标、测试标签、颜色(为 null 是正文色)。 */

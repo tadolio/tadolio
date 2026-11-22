@@ -131,8 +131,30 @@ class LocatorTest {
             val m = says(reply, "是")
             val r = notFound(locator(LocScreen(), m).locate("某个图标", null))
             assertEquals(reply, "not_found", r.reason)
-            assertEquals(reply, 1, m.requests.size)
+            assertEquals(reply, 2, m.requests.size)
         }
+    }
+
+    @Test fun visionLocateRetriesOnceOnNotFounded() = runTest {
+        // 第一次框选给出坏框(not_found)，重试一次就命中——模型定位本身会抖，一次瞬态失败不该直接判死
+        val m = says(
+            """{"bbox_2d":[0.1,0.2,0.3,0.4],"seen":"x"}""",
+            """{"bbox_2d":[0,100,1000,161],"seen":"WLAN"}""",
+            "是",
+        )
+        val r = found(locator(LocScreen(), m).locate("WLAN", null))
+        assertEquals("vision", r.source)
+        assertEquals(3, m.requests.size)
+    }
+
+    @Test fun visionLocateRetriesOnceOnNotConfirmed() = runTest {
+        val m = says(
+            """{"bbox_2d":[0,100,1000,161],"seen":"WLAN"}""", "否",
+            """{"bbox_2d":[0,100,1000,161],"seen":"WLAN"}""", "是",
+        )
+        val r = found(locator(LocScreen(), m).locate("WLAN", null))
+        assertEquals("vision", r.source)
+        assertEquals(4, m.requests.size)
     }
 
     @Test fun scalesTo999() = runTest {
@@ -165,7 +187,7 @@ class LocatorTest {
     @Test fun notConfirmedUnlessYes() = runTest {
         val box = """{"bbox_2d":[0,100,1000,161],"seen":"WLAN"}"""
         for (answer in listOf("否", "不是", "可能是", "No", "yesterday")) {
-            val r = notFound(locator(LocScreen(), says(box, answer)).locate("WLAN", null))
+            val r = notFound(locator(LocScreen(), says(box, answer, box, answer)).locate("WLAN", null))
             assertEquals(answer, "not_confirmed", r.reason)
         }
         for (answer in listOf("是", "是的", "Yes", " yes, it is")) {
@@ -254,6 +276,25 @@ class LocatorTest {
     /** 树够用的一屏:八个有名字的按钮,都不在要找的框里。 */
     private fun adequate() = LocScreen((1..8).map { uiEl("@e$it", "设置项$it", listOf(0, 300 + it * 70, 999, 360 + it * 70)) })
 
+    @Test fun verifiedConfirmationCannotCertifyUnverifiedCoordinates() = runTest {
+        val box = ModelReply(listOf(Part.Text("""{"bbox_2d":[0,100,1000,161],"seen":"WLAN"}""")), StopReason.EndTurn, null)
+        val primary = FakeModel(box, ModelError.Auth(), box, ModelError.Auth(), groundingVerified = false)
+        val backup = says("是", "是")
+        val service = VisionService(primary, JvmTestImageOps, listOf(backup))
+        found(Locator(adequate(), service, LocateRegistry(), ScreenFamily("phone", "p")).locate("WLAN 那一行", null))
+        assertEquals(4, primary.requests.size)
+        assertEquals(2, backup.requests.size)
+    }
+
+    @Test fun unusedUnverifiedBackupDoesNotDowngradeVerifiedCoordinates() = runTest {
+        val primary = says("""{"bbox_2d":[0,100,1000,161],"seen":"WLAN"}""", "是")
+        val backup = unverified()
+        val service = VisionService(primary, JvmTestImageOps, listOf(backup))
+        found(Locator(adequate(), service, LocateRegistry(), ScreenFamily("phone", "p")).locate("WLAN 那一行", null))
+        assertEquals(2, primary.requests.size)
+        assertTrue(backup.requests.isEmpty())
+    }
+
     @Test fun unverifiedVisionBoxNeedsSecondConsistentLook() = runTest {
         val box = """{"bbox_2d":[0,100,1000,161],"seen":"WLAN"}"""
         // 再框一次、看到的一致、两次复看都确认:交出去
@@ -286,7 +327,7 @@ class LocatorTest {
         assertEquals(2, m.requests.size)
         assertTrue(r.note!!, "no_effect" in r.note!!)
         // 复看不确认的照旧不交
-        assertEquals("not_confirmed", notFound(locator(LocScreen(), unverified("""{"bbox_2d":[0,880,1000,940]}""", "否")).locate("输入框", null)).reason)
+        assertEquals("not_confirmed", notFound(locator(LocScreen(), unverified("""{"bbox_2d":[0,880,1000,940]}""", "否", """{"bbox_2d":[0,880,1000,940]}""", "否")).locate("输入框", null)).reason)
     }
 
     @Test fun partialTreeNeedsBackingOnlyWhenTheTargetIsInIt() = runTest {

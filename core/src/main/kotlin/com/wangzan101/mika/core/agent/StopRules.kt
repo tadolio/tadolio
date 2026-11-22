@@ -48,7 +48,8 @@ internal object StopRules {
         else if (generateSequence(e) { it.cause }.take(32).any { it.message?.startsWith("community_") == true })
             TaskState.Failed(com.wangzan101.mika.core.i18n.UserText.get("hivo_community_unavailable"), FailKind.Model)
         else when (e) {
-            is ModelError.TaskBudgetExceeded, is ModelError.DailyBudgetExceeded -> TaskState.Failed(userReason(e), FailKind.TokenLimit)
+            is ModelError.TaskBudgetExceeded, is ModelError.DailyBudgetExceeded, is ModelError.ProactiveBudgetExceeded -> TaskState.Failed(userReason(e), FailKind.TokenLimit)
+            is ModelError.RateLimited -> TaskState.Failed(userReason(e), FailKind.Model, FailureCode.ModelRateLimited)
             is ModelError -> TaskState.Failed(userReason(e), FailKind.Model)
             else -> TaskState.Failed(com.wangzan101.mika.core.i18n.UserText.get("hivo_core_3", e.message ?: e::class.simpleName), FailKind.Model)
         }
@@ -57,7 +58,7 @@ internal object StopRules {
         val treeBlind = v.evidence["treeBlind"] == JsonPrimitive(true)
         val why = when (v.code) {
             "repeating_action" -> com.wangzan101.mika.core.i18n.UserText.get("hivo_core_4")
-            "no_progress" -> if (treeBlind) "控件树读不到操作位置,连续操作后画面仍无可见变化,无法确认操作是否生效,已停止重试" else com.wangzan101.mika.core.i18n.UserText.get("hivo_core_5")
+            "no_progress" -> if (treeBlind) "读不到这个界面的控件,点击和滑动画面也没有反应,该应用可能不响应 Tadolio 的自动化操作" else com.wangzan101.mika.core.i18n.UserText.get("hivo_core_5")
             "read_loop" -> com.wangzan101.mika.core.i18n.UserText.get("hivo_core_6")
             "too_many_failures" -> com.wangzan101.mika.core.i18n.UserText.get("hivo_core_7")
             "sandbox_loop" -> com.wangzan101.mika.core.i18n.UserText.get("hivo_core_8")
@@ -70,9 +71,12 @@ internal object StopRules {
 internal fun userReason(e: ModelError): String = when (e) {
     is ModelError.Auth -> com.wangzan101.mika.core.i18n.UserText.get("hivo_core_11")
     is ModelError.QuotaExceeded -> com.wangzan101.mika.core.i18n.UserText.get("hivo_core_12")
+    is ModelError.IllegalHeader -> "API Key 含有无法使用的字符。请在设置 › 模型里只粘贴密钥本身，不要带说明文字、换行或表情。"
     is ModelError.TaskBudgetExceeded -> "已达到本任务 ${e.limit} Token 的预算上限,任务没有完成。"
     is ModelError.DailyBudgetExceeded ->
         "服务商「${e.providerName}」已达到今天 ${e.limit} Token 的预算上限,任务没有完成。本地日期变更后会自动恢复。"
+    // 主动能力的调用不在任务里发,正常不会走到这里;万一走到,只如实说明,不提示用户去改什么
+    is ModelError.ProactiveBudgetExceeded -> "主动能力已达到今天的预算上限。本地日期变更后会自动恢复。"
     is ModelError.ModelNotFound -> {
         // 404 不一定是模型名不对(地址不对,或网关、中转服务说的别的情况):有原话时照原话说,不断定模型不存在
         val check = if (e.model.isEmpty()) com.wangzan101.mika.core.i18n.UserText.get("hivo_core_13")
@@ -95,6 +99,10 @@ internal fun userReason(e: ModelError): String = when (e) {
     is ModelError.Network -> com.wangzan101.mika.core.i18n.UserText.get("hivo_core_22")
     is ModelError.ReasoningEffortRejected ->
         "模型不接受所选的思考强度。服务端回复：${quoted(e.detail)}。请到设置 › 模型,把思考强度改为默认或服务端支持的档位。"
+    is ModelError.ServiceTierRejected ->
+        "OpenAI 不接受所选的响应速度。" +
+            (if (e.detail.isBlank()) "" else "服务端回复：${quoted(e.detail)}。") +
+            "请到设置 › 模型 › 服务商，打开该模型，将响应速度改为默认或其他可用档位。"
     is ModelError.Proxy -> when (e.failure) {
         ProxyFailure.Unreachable ->
             com.wangzan101.mika.core.i18n.UserText.get("hivo_core_23")
@@ -111,6 +119,25 @@ internal fun userReason(e: ModelError): String = when (e) {
     is ModelError.SignInExpired -> com.wangzan101.mika.core.i18n.UserText.get("hivo_core_29", e.account, e.account)
     is ModelError.AccountPlanNotAllowed ->
         com.wangzan101.mika.core.i18n.UserText.get("hivo_account_plan", e.account, (if (e.detail.isEmpty()) "" else com.wangzan101.mika.core.i18n.UserText.get("hivo_core_33", quoted(e.detail))), e.account)
+    is ModelError.ChainFailed -> {
+        // 主消息是主模型最初的错误(上面按它的类型生成),后面附整条链每个模型的状态码与一行摘要(MK-1 第 2 批)
+        val trail = e.entries.joinToString("；") { (name, err) ->
+            "「$name」${chainErrorTag(err)}：${err.message.orEmpty().lineSequence().firstOrNull().orEmpty().take(80)}"
+        }
+        userReason(e.primary) + "本任务把整条备援链都试过了，全部失败：$trail。"
+    }
+    is ModelError.GroupUnavailable ->
+        "模型组「${e.group}」没有可用的模型${if (e.detail.isEmpty()) "" else "(${e.detail})"}。请到设置 › 模型检查组成员是否启用、能力是否符合,或稍后再试。"
+    is ModelError.GroupExhausted ->
+        "模型组「${e.group}」的模型都达到限额了${if (e.detail.isEmpty()) "" else "(${e.detail})"}。请稍后再试或调整组设置。"
+}
+
+/** 链失败记录里每个错误的短标签:认得出的写 HTTP 状态码,其余写故障名。 */
+private fun chainErrorTag(e: ModelError): String = when (e) {
+    is ModelError.Server -> " HTTP ${e.status}"
+    is ModelError.RateLimited -> " HTTP 429"
+    is ModelError.Auth -> " " + RetryPolicy.label(e)
+    else -> " ${RetryPolicy.label(e)}"
 }
 
 /** 引在句中的服务端原话:去掉末尾一个句号(原话自带的),由引它的句子补上自己的「。」;省略号(截短的「…」、「...」)不动。 */

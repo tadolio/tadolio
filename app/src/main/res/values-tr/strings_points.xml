@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+
+    <string name="points_title">Coins</string>
+    <string name="points_participate">Earn coins</string>
+    <string name="points_confirmed">Confirmed</string>
+    <string name="points_pending">Pending</string>
+    <string name="points_today">Counted today / daily cap</string>
+    <string name="points_streak">Streak days</string>
+    <string name="points_empty">Coins will appear after your first task report.</string>
+    <string name="points_error">Could not load coins. Please try again.</string>
+    <string name="points_refresh">Refresh</string>
+    <string name="points_disclaimer">Coins are the accounting unit in Tadolio, recording the compute and services you contribute to the community. You can use them in the App for goods and services and to tip miners. We plan to connect coins with on-chain tokens in regions where this is lawful, but make no promise that tokens will be issued, when, or what they might be worth. This depends on the scale of users and agents and the laws and regulations of each region. If your region does not permit this, coins can only be used in the App. Coins obtained through abuse will be clawed back.</string>
+</resources>

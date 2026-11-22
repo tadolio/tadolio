@@ -53,29 +53,24 @@ internal class ToolConfig(
     val posts: com.wangzan101.mika.core.post.PostPort? = null,
     val governance: com.wangzan101.mika.core.number.GovernancePort? = ownNumber?.governance,
     /** 读 Mika 自己的状态;只对手机上、有用户的 UI 主任务给。 */
-    self: com.wangzan101.mika.core.self.SelfPort? = null,
+    val self: com.wangzan101.mika.core.self.SelfPort? = null,
     /** 操作 Mika 自己的界面/文件/通知/剪贴板;用户打开「允许 Mika 操作自己的界面」时才给。 */
-    selfOperate: com.wangzan101.mika.core.self.SelfPort? = null,
+    val selfOperate: com.wangzan101.mika.core.self.SelfPort? = null,
     /** Save a captured PNG in this task's workspace; screen tools do not depend on the sandbox capability. */
     val saveScreenshot: (suspend (String, ByteArray) -> String)? = null,
     /** 跨会话任务摘要;给了才提供 task_memory_search / task_memory_timeline / task_memory_step。 */
-    taskMemory: com.wangzan101.mika.core.memory.TaskMemoryStore? = null,
+    val taskMemory: com.wangzan101.mika.core.memory.TaskMemoryStore? = null,
+    /** 这两天的通知原文和存着的各天、各周、各月的归纳(主动能力攒下的);给了才提供 notices_read。 */
+    val notices: com.wangzan101.mika.core.proactive.NoticeSource? = null,
 ) {
     var cosignModel: String = ""
-    // Retain frozen Own resources locally; community consumers cannot observe them.
-    val number: com.wangzan101.mika.core.number.NumberPort? get() = if (community) null else ownNumber
-
-
-    private val ownSelf = self
-    val self: com.wangzan101.mika.core.self.SelfPort? get() = if (community) null else ownSelf
-    private val ownSelfOperate = selfOperate
-    val selfOperate: com.wangzan101.mika.core.self.SelfPort? get() = if (community) null else ownSelfOperate
-    private val ownTaskMemory = taskMemory
-    val taskMemory: com.wangzan101.mika.core.memory.TaskMemoryStore? get() = if (community) null else ownTaskMemory
-
-    /** Compute mode frozen at task creation. */
+    val number: com.wangzan101.mika.core.number.NumberPort? get() = ownNumber
+    /** Compute-source metadata; it does not hide ordinary task capabilities. */
     val community: Boolean get() = runSpec?.computeMode == com.wangzan101.mika.core.run.ComputeMode.Community
 }
+
+/** 一个任务里按规矩不收的记忆写入,到这么多条为止不计入连续失败;再多就照常计(见 [ToolContext.noteMemoryRefusal])。 */
+internal const val MAX_QUIET_MEMORY_REFUSALS = 12
 
 /**
  * 工具执行时共用的东西:配置、核查材料、能力放进来的东西([get]),以及跨工具的少量状态(被拒的付款申报、允许打开的链接……)。
@@ -106,6 +101,10 @@ internal class ToolContext(
     var appOpened = false
     /** 本次调用的编号;页面脚本里的动作按它编号。 */
     var callId = ""
+    /** 这次调用走到了哪个外部 MCP 连接器(配置里的名字);只在分发进入 MCP 操作期间非空,进运行记录。 */
+    var mcpConnector: String? = null
+    /** MCP 调用开始时通知一次(界面把任务标成「正在调用 X MCP」);返回的闭包在调用结束时收回。 */
+    var onMcpCallStarted: ((String) -> (() -> Unit))? = null
     /** 自己不动界面的工具(页面脚本)里的动作经它回到执行入口;只读调用、测试里不给时里面的动作一律不做。 */
     var sub: SubActions? = null
     /** 自身工具的当次同意;由 AgentLoop 把等用户回答的那条路接进来,测试里换成假实现。 */
@@ -130,6 +129,15 @@ internal class ToolContext(
     @Volatile private var memoryCandidates: List<String>? = null
     fun noteMemorySearch(ids: List<String>) { memoryCandidates = ids }
     fun memorySearchCandidates(): List<String>? = memoryCandidates
+
+    private val memoryRefusals = mutableSetOf<String>()
+    /**
+     * 记一次按规矩不收的记忆写入;返回这一次还算不算「只是答复、不计入连续失败」:头一回不收这一条,
+     * 而且本任务不收的还没超过 [MAX_QUIET_MEMORY_REFUSALS] 条。同一条被原样再提(答复里说了别再试)、或者不收的攒得太多,
+     * 就照常计失败,交给连续失败的守卫去停——手机上默认不限步数,不能指望步数上限兜底。
+     */
+    fun noteMemoryRefusal(key: String): Boolean =
+        synchronized(memoryRefusals) { memoryRefusals.add(key) && memoryRefusals.size <= MAX_QUIET_MEMORY_REFUSALS }
 
     /** 这次调用的工具会由分发器报实际效果(effect):「没变化」由效果来说,这里不另提示。 */
     var reportsEffect = false

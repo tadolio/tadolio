@@ -359,9 +359,22 @@ def recent_tasks(client, limit):
     return result
 
 
+def incompatible(info, capability, remedy):
+    """Fail a capability-gated action with the phone version, the missing capability and a remedy."""
+    version = info.get("server_version")
+    if not isinstance(version, str) or not version:
+        version = None
+    details = {"capability": capability}
+    if version:
+        details["server_version"] = version
+    raise CliError("incompatible_api",
+                   "The Mika app on the phone%s does not advertise '%s'. %s"
+                   % ((" (version %s)" % version) if version else "", capability, remedy), **details)
+
+
 def require_files(info):
     if "task_files" not in info["capabilities"]:
-        raise CliError("incompatible_api", "This phone does not support task files. Update Mika to use attachments and downloads.")
+        incompatible(info, "task_files", "Update Mika on the phone to attach and download files.")
 
 
 def discard_upload(client, upload_id):
@@ -440,7 +453,8 @@ def run_with_files(client, args, info):
     if "task_recovery" in info["capabilities"]:
         request_id = request_id or str(uuid.uuid4())
     elif request_id is not None:
-        raise CliError("incompatible_api", "Update the phone app to submit a recoverable request.")
+        incompatible(info, "task_recovery",
+                     "Rerun without --request-id to submit anyway, or update Mika on the phone to keep requests recoverable.")
     ids = list(getattr(args, "attachments", []))  # The local desk has already staged these.
     paths = [Path(name) for name in getattr(args, "attach", [])]
     if ids or paths:
@@ -561,7 +575,7 @@ def execute(args, secrets):
             return {"connection": "ok", **transport, "api_version": 1, "device_state": device, "model_configuration": "unverified"}
         action = args.action
         if action == "steer" and "task_steer" not in info.get("capabilities", []):
-            raise CliError("incompatible_api", "This Tadolio APK does not support task steering; update the phone app.")
+            incompatible(info, "task_steer", "Update Tadolio on the phone to steer a running task.")
         path = "/tasks" + ("/" + args.task_id if hasattr(args, "task_id") else "")
         if action == "run":
             return run_with_files(client, args, info)
@@ -570,7 +584,7 @@ def execute(args, secrets):
             return save_result(client, args.task_id, args.file_id, args.output)
         if action == "export":
             if "run_export" not in info.get("capabilities", []):
-                raise CliError("incompatible_api", "This Mika APK does not support run export.")
+                incompatible(info, "run_export", "Update Mika on the phone to export runs.")
             return export_record(client, args.task_id, args.events)
         if action == "list":
             return recent_tasks(client, args.limit)
@@ -598,7 +612,8 @@ def export_record(client, task_id, events):
     if events:
         text = client.request("GET", "/tasks/" + task_id + "/export?events=jsonl",
                               accept="application/x-ndjson, application/json", expect="application/x-ndjson", max_bytes=limit)
-        lines = [line for line in text.splitlines() if line.strip()]
+        # Only LF separates records. Other line separators can occur inside JSON strings.
+        lines = [line for line in text.split("\n") if line.strip(" \t\r")]
         if not lines:
             raise CliError("protocol", "Mika returned an invalid run export.")
         try:
@@ -775,7 +790,10 @@ def main(argv=None):
         text = result
         for secret in secrets:
             text = text.replace(secret, "[redacted]")
-        print(text, end="" if text.endswith("\n") else "\n")
+        # Keep the phone's JSONL delimiters intact when stdout is redirected on Windows.
+        if hasattr(sys.stdout, "reconfigure"):
+            sys.stdout.reconfigure(newline="\n")
+        sys.stdout.write(text)
         return code
     redacted = redact(result, secrets)
     style = {"separators": (",", ":") if compact else None, "indent": None if compact else 2}

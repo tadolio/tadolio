@@ -21,7 +21,7 @@
     <string name="hivo_token_yi">100M</string>
     <string name="hivo_license_0">PRoot (GPL-2.0-or-later) and talloc (LGPL-3.0-or-later) are separate programs; Mika does not link them. Complete sources, patches and build scripts are provided on the Mika release page as mika-&lt;version&gt;-gpl-sources.tar.gz and in tools/sandbox/.</string>
     <string name="hivo_license_1">The runtime for Python and Node is based on Alpine Linux 3.22. Sources and build recipes for GPL, LGPL and MPL packages are included in mika-&lt;version&gt;-gpl-sources.tar.gz.</string>
-    <string name="hivo_license_2">Mika itself, including the runtime launcher, mika command and skill scripts. See the license text above.</string>
+    <string name="hivo_license_2">Tadolio itself, including the runtime launcher, mika command and skill scripts. See the license text above.</string>
     <string name="hivo_license_3">Runtime for Python and Node, version 5.4.0, patched to terminate child processes when PRoot exits. %1$s</string>
     <string name="hivo_license_4">Version 2.4.3, unmodified, statically linked into PRoot. Sources and scripts in tools/sandbox/ allow relinking.</string>
     <string name="hivo_license_5">Unpacks the bundled runtime on first launch. Copyright 2002-2025 The Apache Software Foundation.</string>

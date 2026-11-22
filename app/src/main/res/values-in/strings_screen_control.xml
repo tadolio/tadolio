@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+    <string name="screen_control_hint">Tadolio mengontrol · Ketuk untuk ambil alih</string>
+    <string name="screen_control_wait">Menunggu tindakan saat ini selesai…</string>
+    <string name="screen_control_active">Anda mengontrol · Ketuk untuk kembalikan</string>
+    <string name="screen_control_failed">Kendali tidak tersedia atau layar berubah. Coba lagi.</string>
+    <string name="screen_control_resume">Lanjutkan Tadolio</string>
+    <string name="screen_control_start">Ambil kendali</string>
+    <string name="screen_control_text">Teks untuk kolom yang dipilih</string>
+    <string name="screen_control_send_text">Masukkan teks</string>
+    <string name="screen_resize_panes">Ubah ukuran panel</string>
+</resources>

@@ -54,7 +54,7 @@ class SystemPromptTest {
     // 结局的约定只说一次:不带调用的回复就是最终回答;做不成、要问、要用户亲手做各有工具;不再写依据行
     @Test fun endingContractStatedOnce() {
         val p = flat()
-        assertTrue("a reply without any tool call is your final answer to the user and ends the task" in p)
+        assertTrue("a reply without any tool call is your final answer and ends the task" in p)
         assertTrue("call end_not_done" in p && "call ask_user" in p && "calling hand_to_user" in p)
         assertTrue("Do not write a separate evidence or sources line" in p)
         assertFalse("依据" in p)
@@ -182,6 +182,9 @@ class SystemPromptTest {
         val on = SandboxCapability.section(SandboxStatus.Ready(network = true), true)
         assertTrue(SandboxCapability.NETWORK_OFF in off && SandboxCapability.NETWORK_ON !in off)
         assertTrue(SandboxCapability.NETWORK_ON in on && SandboxCapability.NETWORK_OFF !in on)
+        assertFalse(SandboxCapability.SHARED_WORKSPACE in off)
+        val shared = SandboxCapability.section(SandboxStatus.Ready(network = false), false, sharedWorkspace = true)
+        assertTrue(SandboxCapability.SHARED_WORKSPACE in shared)
     }
 }
 
@@ -221,9 +224,9 @@ class SystemPromptAssemblyTest {
             val (d, flags) = make()
             val actual = promptOf(d, flags) + "\n"
             val file = File(dir, "$name.txt")
-            if (update) { dir.mkdirs(); file.writeText(actual); continue }
+            if (update) { dir.mkdirs(); file.writeText("# Modified by Tadolio contributors (2026)\n" + actual); continue }
             val expected = javaClass.getResourceAsStream("/prompts/golden/$name.txt")?.bufferedReader(Charsets.UTF_8)?.use { it.readText() }
-            if (expected != actual) drift += name
+            if (expected?.removePrefix("# Modified by Tadolio contributors (2026)\n") != actual) drift += name
         }
         assertTrue("system prompt drifted for $drift; rerun with UPDATE_GOLDEN=1 if intended", drift.isEmpty())
     }
@@ -261,6 +264,9 @@ class SystemPromptAssemblyTest {
         val with = promptOf(toolDispatcher(FakeScreen(), sandbox = sb, workspace = { "w" }))
         assertTrue(with.startsWith(SystemPrompt.identity()))
         assertTrue(with.contains(SandboxCapability.NETWORK_OFF))
+        assertFalse(with.contains(SandboxCapability.SHARED_WORKSPACE))
+        val withProject = promptOf(toolDispatcher(FakeScreen(), sandbox = sb, workspace = { "p:proj-1" }))
+        assertTrue(withProject.contains(SandboxCapability.SHARED_WORKSPACE))
         sb.status = SandboxStatus.Unsupported("x86")
         assertFalse(promptOf(toolDispatcher(FakeScreen(), sandbox = sb, workspace = { "w" })).contains(SandboxCapability.NETWORK_OFF))
     }

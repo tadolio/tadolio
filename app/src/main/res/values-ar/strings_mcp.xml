@@ -1,4 +1,4 @@
-<?xml version='1.0' encoding='utf-8'?>
+<?xml version="1.0" encoding="utf-8"?>
 <!-- Modified by Tadolio contributors (2026) -->
 <resources>
     <string name="mcp_title">توصيل كمبيوتر</string>
@@ -72,5 +72,7 @@
     <string name="mcp_cli_connection_check">يتحقق connect من الاتصال. يؤدي نجاح الطلب إلى تحديث الوقت أعلاه.</string>
     <string name="mcp_history_title">السماح بعرض السجل</string>
     <string name="mcp_history_detail">السماح لأجهزة الكمبيوتر الموثقة عبر USB والشبكة الخاصة بقراءة المحادثات والتتبع التفصيلي. الإعداد متوقف افتراضيًا.</string>
+    <string name="progress_calling_mcp">جارٍ استدعاء %1$s عبر MCP…</string>
+    <string name="progress_called_mcp">تم استدعاء %1$s عبر MCP</string>
     <string name="mcp_cli_install_no_repo">اطلب من موزع Tadolio دليل تثبيت CLI أو Skill. استخدم طريقة الاتصال المحددة على الهاتف وتحقق من الاتصال باستخدام connect. حافظ على سرية الرموز. يستخدم USB اتصال ADB المصرح به. تستخدم Wi-Fi أو VPN الخاصة عنوان HTTP وملف رموز خاصا. عند تثبيت Skill فقط استخدم البرنامج النصي المرفق. لا ترسل مهام الهاتف ولا تطبع الرموز في المحادثة.</string>
 </resources>

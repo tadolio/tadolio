@@ -70,8 +70,9 @@
     <string name="speech_doubao_plan">计费方式</string>
     <string name="speech_doubao_duration_note">按识别时长计费</string>
     <string name="speech_doubao_concurrent_note">按同时连接数计费</string>
-    <string name="speech_funasr_model">Fun-ASR（自建）</string>
-    <string name="speech_funasr_setup_hint">边说边出字，由你自己部署的 Fun-ASR 实时服务识别（Fun-ASR 项目里的 serve_realtime_ws.py），通常在局域网里。不需要账号和密钥。</string>
+    <string name="speech_funasr_model">千问（自建）</string>
+    <string name="speech_funasr_setup_hint">边说边出字，由你自己部署的实时识别服务识别，通常在局域网里。不需要账号和密钥。支持 Fun-ASR-Nano 和 Qwen3-ASR。</string>
+    <string name="speech_funasr_deploy_guide">部署说明</string>
     <string name="speech_funasr_server">服务</string>
     <string name="speech_funasr_address">地址</string>
     <string name="speech_funasr_enter_address">例如 192.168.1.10:10095</string>
@@ -93,7 +94,7 @@
     <string name="speech_live_auth">服务拒绝了这个 Key。检查 Key 是否正确、是否属于所选地域。</string>
     <string name="speech_live_refused">服务拒绝了请求（%1$s）。</string>
     <string name="speech_live_unreachable">连不上服务。检查地址，以及服务是否在运行。</string>
-    <string name="speech_funasr_service">Fun-ASR实时语音识别</string>
+    <string name="speech_funasr_service">千问实时语音识别</string>
     <string name="speech_funasr_choose_note">自建服务或阿里云百炼</string>
     <string name="speech_funasr_tab_local">自建</string>
     <string name="speech_bailian_tab">百炼·%1$s</string>
@@ -131,6 +132,27 @@
     <string name="terminal_task_running">Tadolio 也在这个工作区里工作，两边同时改可能互相影响。</string>
     <string name="terminal_copy_all">复制全部</string>
     <string name="terminal_copied">已复制</string>
+    <string name="personal_replay_title">手机画面</string>
+    <string name="personal_replay_close">关闭</string>
+    <string name="personal_replay_live_screen">实时手机画面</string>
+    <string name="personal_replay_recorded_screen">录制的任务画面</string>
+    <string name="personal_replay_loading">正在加载画面…</string>
+    <string name="personal_replay_empty">还没有可播放的画面。</string>
+    <string name="personal_replay_live">实时</string>
+    <string name="personal_replay_pause">暂停</string>
+    <string name="personal_replay_play">播放</string>
+    <string name="personal_replay_return_live">回到实时</string>
+    <string name="drawer_projects">项目</string>
+    <string name="drawer_new_project">新建项目</string>
+    <string name="drawer_project_new_title">新建项目</string>
+    <string name="drawer_project_name_hint">项目名称</string>
+    <string name="drawer_project_rename_title">重命名项目</string>
+    <string name="drawer_project_new_chat">在项目里新对话</string>
+    <string name="drawer_project_empty">暂无对话</string>
+    <string name="drawer_project_delete_title">删除这个项目？</string>
+    <string name="drawer_project_delete_body">项目「%1$s」里的全部对话和共享工作区文件都会被删掉，没法找回。</string>
+    <string name="drawer_project_actions">项目操作</string>
+    <string name="chat_project_shared">项目</string>
     <string name="app_name">Tadolio</string>
     <string name="standby_title">随时待命</string>
     <string name="standby_sms">新短信来了，自动帮你看是不是骗子</string>
@@ -203,8 +225,6 @@
     <string name="number_provider_source">来自你的服务商 %1$s</string>
     <string name="number_provider_counts">已绑定 %1$d 位用户，其中 %2$d 位暂无号码</string>
     <string name="number_provider_usage">绑定时间 %1$s · 最近使用 %2$s · 近 30 天请求 %3$d</string>
-
-    <!-- Modified by Tadolio contributors (2026) -->
     <string name="move_title">换手机与找回号码</string>
     <string name="move_moved">这个号码已经转到另一台手机。</string>
     <string name="move_new_number">在这台手机重新领号</string>

@@ -54,11 +54,11 @@ class NumberToolsTest {
         val names = toolDispatcher(FakeScreen(), number = Port(), runSpec = spec).definitions().map { it.name }
         assertFalse("hivo_number_send" in names)
     }
-    @Test fun communityNeverOffersMailboxTools() {
+    @Test fun communityOffersMailboxToolsWithOwnerConsent() {
         val spec = RunSpec(RunId("r"), "inspect", "c", computeMode = ComputeMode.Community)
         val names = toolDispatcher(FakeScreen(), number = Port(), runSpec = spec).definitions().map { it.name }
-        assertFalse("hivo_number_send" in names)
-        assertFalse("hivo_number_inbox" in names)
+        assertTrue("hivo_number_send" in names)
+        assertTrue("hivo_number_inbox" in names)
     }
     @Test fun autonomousStillNeedsExactOneUseOwnerConsent() = runTest {
         val port = Port()
@@ -98,13 +98,17 @@ class NumberToolsTest {
                 .judge("hivo_number_send", args, Origin.Model(1)))
         }
     }
-    @Test fun communityDoesNotUseKnownContactExemption() = runTest {
+    @Test fun communityUsesTheSameKnownContactConsentPolicy() = runTest {
         val port = Port().apply { known = true }
         val spec = RunSpec(RunId("r"), "inspect", "c", computeMode = ComputeMode.Community)
         val tools = toolDispatcher(FakeScreen(), number = port, runSpec = spec)
         val risk = NumberSend.approvalRisk(args, tools.ctx)
-        assertTrue(risk.alwaysConfirm)
-        assertEquals(Approval.Ask, ApprovalPolicy.decide(risk))
-        assertFalse(tools.definitions().any { it.name == "hivo_number_send" })
+        assertFalse(risk.alwaysConfirm)
+        assertNull(risk.ask)
+        assertTrue(tools.definitions().any { it.name == "hivo_number_send" })
+        port.known = false
+        val unknown = NumberSend.approvalRisk(args, tools.ctx)
+        assertTrue(unknown.alwaysConfirm)
+        assertEquals(Approval.Ask, ApprovalPolicy.decide(unknown))
     }
 }

@@ -1,5 +1,5 @@
 # Modified by Tadolio contributors (2026)
-chat: system 20448 bytes, 22 tools 20069 bytes, total 40517 bytes, ~10126 tokens
-phone: system 35128 bytes, 54 tools 60590 bytes, total 95718 bytes, ~23923 tokens
-web: system 35675 bytes, 49 tools 52947 bytes, total 88622 bytes, ~22145 tokens
-all: system 49835 bytes, 82 tools 91175 bytes, total 141010 bytes, ~35240 tokens
+chat: system 20529 bytes, 22 tools 20363 bytes, total 40892 bytes, ~10219 tokens
+phone: system 35538 bytes, 55 tools 64019 bytes, total 99557 bytes, ~24879 tokens
+web: system 35791 bytes, 49 tools 53244 bytes, total 89035 bytes, ~22247 tokens
+all: system 50294 bytes, 84 tools 96335 bytes, total 146629 bytes, ~36640 tokens

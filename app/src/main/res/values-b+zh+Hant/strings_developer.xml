@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
 <resources>
     <string name="dev_adaptive">先讀元素，必要時看圖</string>
     <string name="dev_adaptive_sub">控制項資訊夠用時不把圖片交給模型，讀不清時再補圖</string>
@@ -25,4 +26,8 @@
     <string name="dev_speed">速度</string>
     <string name="dev_experiments">實驗</string>
     <string name="dev_run_log">執行記錄</string>
+    <string name="dev_screen_tables">新畫面元素表格</string>
+    <string name="dev_screen_tables_sub">首次讀取畫面時，將重複欄位寫成表格；保留元素參照和完整介面樹。</string>
+    <string name="dev_device_files">匯入手機檔案</string>
+    <string name="dev_device_files_sub">允許 Tadolio 將手機共用儲存空間中的檔案複製到工作區。變更對新任務生效。</string>
 </resources>

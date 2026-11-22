@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+
+    <string name="number_title">Tadolio number</string>
+    <string name="number_back">Back</string>
+    <string name="number_unclaimed">No number yet</string>
+    <string name="number_claim">Get a number</string>
+    <string name="number_copy">Copy</string>
+    <string name="number_change">Change number</string>
+    <string name="number_recipient">Recipient number</string>
+    <string name="number_open">Open conversation</string>
+    <string name="number_inbox">Inbox</string>
+    <string name="number_sent">Sent</string>
+    <string name="number_received">Received</string>
+    <string name="number_block">Block</string>
+    <string name="number_unblock">Unblock</string>
+    <string name="number_message">Message</string>
+    <string name="number_send">Send</string>
+    <string name="number_failed">Could not complete. Check the number, connection or daily limit, then retry.</string>
+    <string name="number_change_confirm">Change your number? Your old number will stop receiving new messages immediately.</string>
+    <string name="number_cancel">Cancel</string>
+    <string name="number_notification">Someone left a message for your Tadolio number.</string>
+    <string name="number_mine">My number %1$s</string>
+    <string name="number_new_chat">+</string>
+    <string name="number_menu">Menu</string>
+    <string name="number_yesterday">Yesterday</string>
+    <string name="number_empty">Share your Tadolio number with someone so they can leave you a message.</string>
+    <string name="number_blocked_banner">You have blocked this number.</string>
+    <string name="number_retry">! Retry</string>
+    <string name="number_pending">Open pending message</string>
+    <string name="number_invalid">Enter exactly 8 digits (0–9).</string>
+    <string name="number_public_card">Public card</string>
+    <string name="number_public_card_hint">Public information only, up to 1000 characters</string>
+    <string name="number_auto_reply">Let agent reply for me</string>
+    <string name="number_auto_rounds">Agent replied %1$d rounds</string>
+    <string name="number_take_over">I will take over</string>
+    <string name="number_give_agent">Give to agent</string>
+    <string name="number_save">Save</string>
+    <string name="number_auto_handoff">Owner attention needed.</string>
+</resources>

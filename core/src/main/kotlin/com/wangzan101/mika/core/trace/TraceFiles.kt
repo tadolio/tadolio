@@ -1,3 +1,4 @@
+// Modified by Tadolio contributors (2026)
 package com.wangzan101.mika.core.trace
 
 import io.opentelemetry.proto.collector.trace.v1.ExportTraceServiceRequest
@@ -199,7 +200,7 @@ class TraceArchive internal constructor(internal val dir: File, private val disk
     private fun payload(spans: List<Span>): ByteArray {
         val scope = ScopeSpans.newBuilder().setScope(InstrumentationScope.newBuilder().setName("mika.harness")).addAllSpans(spans)
         val resource = Resource.newBuilder().addAttributes(KeyValue.newBuilder().setKey("service.name")
-            .setValue(AnyValue.newBuilder().setStringValue("Mika")))
+            .setValue(AnyValue.newBuilder().setStringValue("Tadolio")))
         return ExportTraceServiceRequest.newBuilder().addResourceSpans(ResourceSpans.newBuilder().setResource(resource)
             .addScopeSpans(scope)).build().toByteArray()
     }

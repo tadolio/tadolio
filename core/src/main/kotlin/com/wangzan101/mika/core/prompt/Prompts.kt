@@ -15,7 +15,8 @@ object Prompts {
     /** 资源原文(去掉首尾空白)。 */
     fun read(path: String): String = cache.getOrPut(path) {
         checkNotNull(Prompts::class.java.getResourceAsStream("/prompts/$path")) { "missing prompts/$path" }
-            .bufferedReader(Charsets.UTF_8).use { it.readText() }.trim().let { text ->
+            .bufferedReader(Charsets.UTF_8).use { it.readText() }.trim()
+            .removePrefix("<!-- Modified by Tadolio contributors (2026) -->").trim().let { text ->
                 if (com.wangzan101.mika.core.HivoFeatures.SANDBOX_ENABLED) text else text
                     .replace(" or sandbox tools", " tools")
                     .replace("web and sandbox tools", "web tools")

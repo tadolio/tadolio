@@ -71,6 +71,7 @@ object Licenses {
         Entry("ZXing", "Apache-2.0", "3.5.3. https://github.com/zxing/zxing"),
         Entry("通话功能（calls/）实现", "Apache-2.0", "通话功能（拨号、接听、挂断、AI 接听、人工接管、PCM 音频桥、实时语音客户端）按 Apache-2.0 许可并入;实时语音经火山引擎（Volcengine）的 WebSocket 接口。"),
         Entry("xterm.js", "MIT", "版本 5.5.0(及 @xterm/addon-fit 0.10.0),用户终端页的终端仿真器。https://github.com/xtermjs/xterm.js"),
+        Entry("Shizuku API", "Apache-2.0", "版本 13.1.5(api 与 provider),仅在设备已安装、启动并授权 Shizuku 时按官方 API 绑定本地助手服务。https://github.com/RikkaApps/Shizuku-API"),
         Entry("commonmark-java", "BSD-2-Clause", tr(R.string.hivo_license_23)),
     ).filter { com.wangzan101.mika.BuildConfig.SANDBOX_ENABLED || it.name !in setOf("PRoot", "talloc", "Alpine Linux") }
 }
@@ -97,7 +98,7 @@ fun LicensesScreen(onBack: () -> Unit) {
             MikaCard(Modifier.padding(bottom = 12.dp).testTag("license-text")) {
                 Text(
                     licenseText.trimEnd(), Modifier.padding(16.dp),
-                    style = MikaType.Hint.copy(fontFamily = FontFamily.Monospace, fontSize = 11.5.sp, lineHeight = 19.sp),
+                    style = MikaType.Micro.copy(fontFamily = FontFamily.Monospace),
                     color = MikaTheme.colors.ink2,
                 )
             }

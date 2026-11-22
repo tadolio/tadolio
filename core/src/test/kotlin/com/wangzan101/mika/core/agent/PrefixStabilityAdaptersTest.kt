@@ -135,8 +135,8 @@ class PrefixStabilityAdaptersTest {
         override val keys = setOf("systemInstruction", "tools", "contents")
         override val replay = "TS"
         // 请求字节比另外三种略少,离触发点只差一点:提示词或工具说明长短一变,越过触发点的那一步就可能和另外三种差一步
-        // 当前 Gemini 在 12、22 步越过，另外三种在 12、21、30 步越过。
-        override val compactions = listOf(12, 22)
+        // Tadolio 的提示词与工具说明增量让 Gemini 也在 12、21、30 步越过。
+        override val compactions = listOf(12, 21, 30)
         override fun zone0(body: JsonObject) = body["systemInstruction"].toString() + body["tools"]
         override fun messages(body: JsonObject) = body["contents"]!!.jsonArray.map { it.toString() }
         override fun tools(body: JsonObject) = body["tools"]!!.jsonArray.flatMap { t ->

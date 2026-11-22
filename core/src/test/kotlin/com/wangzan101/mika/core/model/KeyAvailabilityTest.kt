@@ -71,6 +71,21 @@ class KeyAvailabilityTest {
         }
     }
 
+    @Test fun pooledRequestsRotateHealthyKeysAndSkipPersistedFailures() = runTest {
+        val attempts = mutableListOf<String>()
+        val health = KeyAvailability()
+        val model = KeyFailoverModel(listOf(
+            "one" to fake { attempts += "one"; reply },
+            "two" to fake { attempts += "two"; reply },
+            "three" to fake { attempts += "three"; reply },
+        ), health, rotate = true)
+        repeat(3) { model.complete("", emptyList(), emptyList()) }
+        assertEquals(listOf("one", "two", "three"), attempts)
+        health.fail("one", KeyFailure.invalid)
+        model.complete("", emptyList(), emptyList())
+        assertEquals(listOf("one", "two", "three", "two"), attempts)
+    }
+
     @Test fun preservesStreamingOnEachAttempt() = runTest {
         var streamingCalls = 0
         val stream = object : StreamingChatModel {

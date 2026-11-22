@@ -35,8 +35,7 @@ object ExternalSchedule {
     @Synchronized
     fun accept(context: Context, prompt: String?, at: String?): Outcome {
         val app = context.applicationContext
-        if (!FeatureFlags.get(app).externalSchedule() ||
-            com.wangzan101.mika.settings.CommunityRestrictions.active(app)) {
+        if (!FeatureFlags.get(app).externalSchedule()) {
             Log.w("MikaExternal", "external schedule rejected: disabled")
             return Outcome.Disabled
         }

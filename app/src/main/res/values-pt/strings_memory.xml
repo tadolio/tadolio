@@ -26,6 +26,8 @@
     <string name="memory_use_sub">Desativado, o Tadolio não lê nem salva memória</string>
     <string name="memory_auto">Lembrar o que eu disser</string>
     <string name="memory_auto_sub">Organizado a partir das suas próprias palavras após cada tarefa</string>
+    <string name="memory_infer">Deixar o Tadolio guardar as próprias conclusões</string>
+    <string name="memory_infer_sub">Quando você pedir para lembrar, também guarda as próprias conclusões, marcadas como não suas</string>
     <string name="memory_learn">Aprender com tarefas anteriores (habilidades e notas de apps)</string>
     <string name="memory_learn_sub">O que o Tadolio aprende só é usado depois que você aceitar</string>
     <string name="memory_tasks">Lembrar tarefas anteriores</string>
@@ -60,6 +62,7 @@
     <string name="date_pattern_md">d MMM</string>
     <string name="memory_said_via">Você disse em %1$s por %2$s: “%3$s”</string>
     <string name="memory_said">Você disse em %1$s: “%2$s”</string>
+    <string name="memory_inferred">Conclusão do Tadolio em %1$s, a seu pedido: “%2$s”</string>
     <string name="verify_returned">Devolvida pela verificação</string>
     <string name="skills_drafts">Rascunhos de novas habilidades — testados depois que você aceitar</string>
     <string name="skills_accept_try">Aceitar e testar</string>
@@ -92,5 +95,10 @@
     <string name="skills_imported">Importada</string>
     <string name="skill_builtin_name">Já existe uma habilidade integrada com esse nome. Mude o nome e tente de novo.</string>
     <string name="skill_draft_pending">Já há um rascunho com esse nome esperando revisão. Resolva esse primeiro.</string>
-
+    <string name="market_title">Mercado de habilidades</string>
+    <string name="market_sub">Explore habilidades compartilhadas no GitHub</string>
+    <string name="market_source">Fonte das habilidades</string>
+    <string name="market_add">Adicionar para revisão</string>
+    <string name="market_network_error">Não foi possível baixar. Verifique o repositório e a conexão.</string>
+    <string name="market_invalid">O conteúdo é inválido ou mudou. Reabra o mercado para atualizar a lista.</string>
 </resources>

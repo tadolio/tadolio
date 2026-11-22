@@ -34,11 +34,12 @@ class SandboxDirs internal constructor(
     val skills: File get() = File(root, "skills")
     val procStandIns: File get() = File(root, "proc")
 
-    /** 一个对话一个工作区:简单名字的 ID 为 c-<ID>,其余为 h-<哈希>(不让 ID 拼出别的路径,两类也不会撞名)。 */
-    fun workspace(conversationId: String): File {
-        val legacy = File(File(root, "work"), dirName(conversationId))
-        return if (attachmentWork != null && legacy.exists()) legacy else File(work, dirName(conversationId))
+    /** 一个工作区对应一个目录:项目为 `p-<ID>`,对话为 `c-<ID>` 或 `h-<哈希>`(与 `p-` 永不撞名)。 */
+    fun workspace(key: WorkspaceKey): File {
+        val legacy = File(File(root, "work"), dirName(key))
+        return if (attachmentWork != null && legacy.exists()) legacy else File(work, dirName(key))
     }
+    fun workspace(conversationId: String): File = workspace(WorkspaceKey.Conversation(conversationId))
 
     fun lib(name: String): File = File(nativeDir, name)
 
@@ -50,12 +51,13 @@ class SandboxDirs internal constructor(
      */
     suspend fun <T> exclusiveWrite(block: suspend () -> T): T = tree.exclusive { withContext(Dispatchers.IO) { block() } }
 
-    /** 删掉对话 [conversationId] 的整个工作区(按句柄删、不跟进链接,见 [exclusiveWrite])。 */
-    suspend fun deleteWorkspace(conversationId: String) {
-        val folder = workspace(conversationId)
+    /** 删掉 [key] 对应的整个工作区(按句柄删、不跟进链接,见 [exclusiveWrite])。 */
+    suspend fun deleteWorkspace(key: WorkspaceKey) {
+        val folder = workspace(key)
         if (folder.parentFile == work) deleteWorkDir(folder.name)
         else exclusiveWrite { gate.deleteTree(folder.parentFile!!, folder.name) }
     }
+    suspend fun deleteWorkspace(conversationId: String) = deleteWorkspace(WorkspaceKey.Conversation(conversationId))
 
     /**
      * 删掉 `work/` 下名为 [dirName] 的工作区。本来就没有(没往里写过东西)时直接返回,不拿独占许可:
@@ -76,7 +78,12 @@ class SandboxDirs internal constructor(
         for (d in listOf(workspace, skills, tmp)) d.mkdirs()
     }
 
-    private fun dirName(id: String): String =
+    private fun dirName(key: WorkspaceKey): String = when (key) {
+        is WorkspaceKey.Project -> "p-${key.id}"
+        is WorkspaceKey.Conversation -> conversationDirName(key.id)
+    }
+
+    private fun conversationDirName(id: String): String =
         if (SAFE_ID.matches(id)) "c-$id"
         else "h-" + MessageDigest.getInstance("SHA-256").digest(id.toByteArray()).joinToString("") { "%02x".format(it) }.take(32)
 

@@ -4,7 +4,11 @@ package com.wangzan101.mika.voice
 import android.Manifest
 import android.content.Context
 import android.content.pm.PackageManager
+import com.wangzan101.mika.R
+import com.wangzan101.mika.core.model.ModelError
 import com.wangzan101.mika.i18n.AppLanguage
+import com.wangzan101.mika.i18n.tr
+import com.wangzan101.mika.settings.ModelOptions
 import com.wangzan101.mika.settings.Provider
 import com.wangzan101.mika.settings.ProviderStore
 
@@ -56,17 +60,27 @@ class VoiceInput(
                     LiveAsrTransport().connect(spec.region.endpoint(spec.workspace), mapOf("Authorization" to "Bearer $key"))
                 })
             }
-            is SpeechEngineSpec.System -> SystemSpeechSession(
-                context, spec.onDevice, tag,
-                onNoResponse = settings::noteSystemSilent, onAnswered = settings::noteSystemAnswered,
-                attempts = SystemSpeech.attempts(SystemSpeech.services(context), settings.systemService),
-            )
+            is SpeechEngineSpec.System -> {
+                val compatibility = SystemSpeech.serviceCompatibility()
+                SystemSpeechSession(
+                    context, spec.onDevice, tag,
+                    onNoResponse = settings::noteSystemSilent, onAnswered = settings::noteSystemAnswered,
+                    attempts = SystemSpeech.attempts(SystemSpeech.services(context), settings.systemService, compatibility),
+                    compatibility = compatibility,
+                    serviceWithoutMic = { named, onDevice -> SpeechServiceMic.missing(context, named, onDevice) },
+                )
+            }
             is SpeechEngineSpec.Provider -> {
-                val p = spec.provider
-                val t = transcriber(p)
                 val iso = SystemSpeech.isoCode(tag)
                 ProviderSpeech(PcmRecorder(), { wav ->
-                    providers.withProviderKey(p.id) { key -> t.transcribe(p, key, spec.model, spec.method, wav, iso) }
+                    val provider = providers.provider(spec.provider.id)
+                        ?: throw ModelError.BadResponse(tr(R.string.voice_unavailable_provider_gone))
+                    if (ModelOptions.isTtsOnly(provider, spec.model)) {
+                        throw ModelError.BadResponse(tr(R.string.model_tts_only_not_supported))
+                    }
+                    providers.withProviderKey(provider.id) { key ->
+                        transcriber(provider).transcribe(provider, key, spec.model, spec.method, wav, iso)
+                    }
                 })
             }
             is SpeechEngineSpec.Unavailable -> FailedSession(SpeechFailure.Unavailable(spec.why))

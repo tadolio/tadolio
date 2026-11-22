@@ -12,7 +12,7 @@ class OptionalSandboxBoundaryTest {
         val menu = source("ui/ConversationMenu.kt")
         assertTrue(menu.contains("if (com.wangzan101.mika.BuildConfig.SANDBOX_ENABLED)"))
         assertTrue(menu.indexOf("BuildConfig.SANDBOX_ENABLED") < menu.indexOf("R.string.terminal_open"))
-        assertTrue(source("ui/AdvancedSection.kt").contains("BuildConfig.SANDBOX_ENABLED && w.conversationId != null"))
+        assertTrue(source("ui/AdvancedSection.kt").contains("BuildConfig.SANDBOX_ENABLED && (w.conversationId != null || w.projectId != null)"))
         assertTrue(source("ui/SettingsScreen.kt").contains("BuildConfig.SANDBOX_ENABLED && it !is SandboxStatus.Unsupported"))
     }
 
@@ -21,8 +21,10 @@ class OptionalSandboxBoundaryTest {
         assertTrue(activity.indexOf("if (!com.wangzan101.mika.BuildConfig.SANDBOX_ENABLED)") < activity.indexOf("setContent {"))
         val launcher = activity.substringAfter("object TerminalLauncher")
         assertTrue(launcher.indexOf("BuildConfig.SANDBOX_ENABLED") < launcher.indexOf("Intent(context"))
-        val runtime = source("terminal/TerminalHub.kt").substringAfter("suspend fun open(")
-        assertTrue(runtime.indexOf("check(com.wangzan101.mika.BuildConfig.SANDBOX_ENABLED)") < runtime.indexOf("_sessions.value"))
+        val terminal = source("terminal/TerminalHub.kt")
+        assertTrue(terminal.contains("sandboxEnabled: Boolean = com.wangzan101.mika.BuildConfig.SANDBOX_ENABLED"))
+        val runtime = terminal.substringAfter("suspend fun openWorkspace(")
+        assertTrue(runtime.indexOf("check(sandboxEnabled)") < runtime.indexOf("_sessions.value"))
     }
 
     @Test fun disabledSandboxExcludesNewRootfsAndNativePtyHostFromPackaging() {

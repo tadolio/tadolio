@@ -17,7 +17,7 @@ import java.io.File
 object ReadmeSections {
     /** 仓库首页,英文,也是各份译文的原文。 */
     const val README = "README.upstream.md"
-    const val README_ZH = "docs/readme/README.zh-CN.md"
+    const val README_ZH = "docs/readme/README.zh-CN.upstream.md"
     const val KNOWLEDGE = "knowledge"
     const val PROVIDERS = "providers"
     const val RESOURCES = "core/src/main/resources"

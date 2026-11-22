@@ -1,14 +1,28 @@
 // Modified by Tadolio contributors (2026)
 package com.wangzan101.mika.ui
 
+import android.app.TimePickerDialog
+import android.text.format.DateFormat
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import com.wangzan101.mika.i18n.tr
 import com.wangzan101.mika.i18n.trPlural
 import com.wangzan101.mika.R
+import androidx.compose.animation.animateContentSize
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
+import com.wangzan101.mika.settings.DeviceAccessSettings
 import com.wangzan101.mika.settings.FeatureFlags
 import com.wangzan101.mika.settings.ThemeAccent
 import com.wangzan101.mika.settings.ThemeMode
@@ -29,9 +43,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import kotlinx.coroutines.launch
 import com.wangzan101.mika.ui.components.MikaSwitch
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import com.wangzan101.mika.core.shell.ShellTransport
+import com.wangzan101.mika.ui.components.SelectChip
 import com.wangzan101.mika.ui.components.MikaDialog
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Slider
@@ -47,16 +68,29 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.wangzan101.mika.capsule.CapsuleCardScale
 import com.wangzan101.mika.capsule.CapsuleIdleOpacity
 import com.wangzan101.mika.capsule.CapsuleMode
+import com.wangzan101.mika.capsule.CapsuleTileService
 import com.wangzan101.mika.core.shell.BuiltinShellStatus
 import com.wangzan101.mika.settings.ChannelRow
 import com.wangzan101.mika.settings.Prerequisites
 import com.wangzan101.mika.settings.Problem
+import com.wangzan101.mika.settings.ScheduledQuietHours
 import com.wangzan101.mika.settings.SystemStatus
 import com.wangzan101.mika.settings.notificationOverview
 import com.wangzan101.mika.task.ParallelLimit
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.material3.Icon
+import com.wangzan101.mika.ui.theme.MikaShapes
 import com.wangzan101.mika.ui.components.FooterNote
+import com.wangzan101.mika.ui.components.DetailNote
 import com.wangzan101.mika.ui.components.GroupCard
 import com.wangzan101.mika.ui.components.GroupLabel
 import com.wangzan101.mika.ui.components.ListRow
@@ -71,11 +105,14 @@ import com.wangzan101.mika.ui.theme.MikaTheme
 import com.wangzan101.mika.ui.theme.MikaType
 import com.wangzan101.mika.core.cap.phone.OperatingPace
 import com.wangzan101.mika.core.usage.TokenBudgetLimits
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
 import kotlin.math.roundToInt
 
 // ---------- 手机操作 ----------
 
 /** 设置 › 手机操作:权限与配对的状态,重新配对、解除配对。Root 能力集中在高级与其他的独立页面。 */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun PhoneOpsScreen(
     status: SystemStatus,
@@ -84,7 +121,12 @@ fun PhoneOpsScreen(
     onRepair: () -> Unit,
     onUnpair: () -> Unit,
     onBack: () -> Unit,
+    onSelectTransport: (ShellTransport) -> Unit = {},
+    onGrantShizuku: () -> Unit = {},
+    onOpenShizukuGuide: () -> Unit = {},
+    onRefreshShizuku: () -> Unit = {},
 ) {
+    LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { onRefreshShizuku() }
     val check = Prerequisites.check(status, hasMainModel = true)
     var confirmUnpair by remember { mutableStateOf(false) }
     PageScaffold(stringResource(R.string.settings_phone_ops), onBack) {
@@ -103,9 +145,40 @@ fun PhoneOpsScreen(
                 ListRow(
                     MikaIcons.Link, PhoneSetupCopy.ROW_TITLE,
                     if (reconnect && helper is BuiltinShellStatus.Failed) PhoneSetupCopy.failure(helper.reason).title
-                    else PhoneSetupCopy.statusLine(helper, status.usbDebugging, status.rootStart),
+                    else PhoneSetupCopy.statusLine(helper, status.usbDebugging, status.rootStart, status.shizukuStart),
                     onClick = { onProblem(Problem.PhoneHelper(helper)) },
                 ) { if (reconnect) RowValue(PhoneSetupCopy.RECONNECT, ValueTone.Link) else RowValue(hText, hTone) }
+                val shizuku = status.shizuku
+                val shizukuValue = stringResource(
+                    when {
+                        !shizuku.installed -> R.string.phone_shizuku_not_installed
+                        !shizuku.running -> R.string.phone_shizuku_not_running
+                        !shizuku.permissionGranted -> R.string.phone_shizuku_perm_needed
+                        else -> R.string.phone_shizuku_ready
+                    }
+                )
+                val shizukuTone = when {
+                    shizuku.ready -> ValueTone.Ok
+                    !shizuku.permissionGranted && shizuku.running -> ValueTone.Bad
+                    status.shellTransport == ShellTransport.Shizuku -> ValueTone.Bad
+                    else -> ValueTone.Plain
+                }
+                val yes = stringResource(R.string.phone_shizuku_yes)
+                val no = stringResource(R.string.phone_shizuku_no)
+                val shizukuDetail = stringResource(
+                    R.string.phone_shizuku_detail,
+                    if (shizuku.installed) yes else no,
+                    if (shizuku.running) yes else no,
+                    if (shizuku.permissionGranted) stringResource(R.string.phone_shizuku_perm_granted)
+                    else stringResource(R.string.phone_shizuku_perm_missing),
+                )
+                ListRow(
+                    MikaIcons.Shield,
+                    stringResource(R.string.phone_shizuku_group),
+                    shizukuDetail,
+                    onClick = if (shizuku.installed || shizuku.running) onGrantShizuku else onOpenShizukuGuide,
+                    modifier = Modifier.testTag("phone-shizuku-status"),
+                ) { RowValue(shizukuValue, shizukuTone) }
             }
             val tooOld = status.sdkInt < Prerequisites.MIN_SDK
             val focusWarning = Problem.FocusMayLeak in check.problems
@@ -126,12 +199,72 @@ fun PhoneOpsScreen(
             }
         }
         if (status.sdkInt >= Prerequisites.MIN_SDK) {
+            GroupLabel(stringResource(R.string.phone_transport_title))
+            GroupCard {
+                Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 14.dp)) {
+                    FlowRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        val options = listOf(
+                            ShellTransport.Auto to stringResource(R.string.phone_transport_auto),
+                            ShellTransport.WirelessDebugging to stringResource(R.string.phone_transport_wireless),
+                            ShellTransport.Shizuku to stringResource(R.string.phone_transport_shizuku),
+                        )
+                        options.forEach { (transport, label) ->
+                            SelectChip(
+                                label,
+                                status.shellTransport == transport,
+                                { onSelectTransport(transport) },
+                                Modifier.testTag("phone-transport-${transport.name}"),
+                            )
+                        }
+                    }
+                }
+            }
+            FooterNote(stringResource(R.string.phone_transport_sub))
+
+            val shizuku = status.shizuku
+            GroupLabel(stringResource(R.string.phone_shizuku_group))
+            GroupCard {
+                val actionTitle = stringResource(
+                    if (shizuku.running && !shizuku.permissionGranted) R.string.phone_shizuku_grant
+                    else R.string.phone_shizuku_open_app
+                )
+                val actionSub = stringResource(
+                    when {
+                        !shizuku.installed -> R.string.phone_shizuku_action_install_sub
+                        !shizuku.running -> R.string.phone_shizuku_action_start_sub
+                        !shizuku.permissionGranted -> R.string.phone_shizuku_action_grant_sub
+                        else -> R.string.phone_shizuku_action_ready_sub
+                    }
+                )
+                ListRow(
+                    MikaIcons.Shield,
+                    actionTitle,
+                    actionSub,
+                    first = true,
+                    onClick = if (shizuku.installed || shizuku.running) onGrantShizuku else onOpenShizukuGuide,
+                    modifier = Modifier.testTag("phone-shizuku-action"),
+                ) { RowChevron() }
+                if (!shizuku.installed || !shizuku.running) {
+                    ListRow(
+                        MikaIcons.Book,
+                        stringResource(R.string.phone_shizuku_guide),
+                        stringResource(R.string.phone_shizuku_guide_sub),
+                        onClick = onOpenShizukuGuide,
+                        modifier = Modifier.testTag("phone-shizuku-guide"),
+                    ) { RowChevron() }
+                }
+            }
+            FooterNote(stringResource(R.string.phone_shizuku_footer))
+
             GroupLabel(stringResource(R.string.phone_channel))
             GroupCard {
                 ListRow(MikaIcons.Link, PhoneSetupCopy.REPAIR, PhoneSetupCopy.REPAIR_SUBTITLE, first = true, onClick = onRepair) {
                     RowChevron()
                 }
-                val paired = status.builtinShell != BuiltinShellStatus.NotPaired
+                val paired = status.wirelessPaired ?: (status.builtinShell != BuiltinShellStatus.NotPaired)
                 ListRow(
                     MikaIcons.Close, PhoneSetupCopy.UNPAIR, PhoneSetupCopy.UNPAIR_SUBTITLE,
                     titleColor = if (paired) MikaTheme.colors.bad else MikaTheme.colors.ink3,
@@ -139,7 +272,11 @@ fun PhoneOpsScreen(
                     onClick = if (paired) ({ confirmUnpair = true }) else null,
                 )
             }
-            FooterNote(PhoneSetupCopy.usageNote(status.helperRestart))
+            DetailNote(
+                PhoneSetupCopy.usageSummary(status.helperRestart),
+                PhoneSetupCopy.usageNote(status.helperRestart),
+                Modifier.padding(start = 16.dp, end = 16.dp, bottom = 12.dp),
+            )
         }
     }
     if (confirmUnpair) {
@@ -158,12 +295,18 @@ fun PhoneOpsScreen(
 // ---------- 通知 ----------
 
 /**
- * 设置 › 通知:只看状态、去系统里改。顶上是 App 通知总开关,下面三个任务通知频道各一行(什么时候发 + 现在会不会弹出),
- * 点哪一行都由 [onFix] 打开对应的系统设置页(总开关没开时先请求权限或打开应用通知页)。
+ * 设置 › 通知:显示系统通知频道状态，并设置定时任务的免打扰时段。
  */
 @Composable
 fun NotificationsScreen(status: SystemStatus, onFix: (Fix) -> Unit, onBack: () -> Unit) {
     val o = status.notificationOverview()
+    val context = LocalContext.current
+    val flags = remember(context) { FeatureFlags.get(context) }
+    var quietHours by remember(flags) { mutableStateOf(flags.scheduledQuietHours()) }
+    fun updateQuietHours(hours: ScheduledQuietHours) {
+        flags.setScheduledQuietHours(hours)
+        quietHours = hours
+    }
     PageScaffold(StatusCopy.NOTIFICATIONS, onBack) {
         GroupCard {
             ListRow(
@@ -180,8 +323,54 @@ fun NotificationsScreen(status: SystemStatus, onFix: (Fix) -> Unit, onBack: () -
             ChannelRowItem(StatusCopy.ATTENTION_CHANNEL, StatusCopy.NOTIF_ATTENTION_WHEN, o.attention, Fix.OpenAttentionChannel, onFix, first = true)
             ChannelRowItem(StatusCopy.RESULT_CHANNEL, StatusCopy.NOTIF_RESULT_WHEN, o.result, Fix.OpenResultChannel, onFix)
             ChannelRowItem(StatusCopy.PROGRESS_CHANNEL, StatusCopy.NOTIF_PROGRESS_WHEN, o.progress, Fix.OpenProgressChannel, onFix)
+            if (status.sdkInt >= 36) {
+                ListRow(MikaIcons.Bell, stringResource(R.string.settings_live_task_updates),
+                    stringResource(R.string.settings_live_task_updates_detail), onClick = { onFix(Fix.OpenLiveTaskSettings) }) {
+                    RowChevron()
+                }
+            }
         }
         FooterNote(StatusCopy.NOTIF_FOOTER)
+        GroupCard {
+            ListRow(
+                MikaIcons.Mute, stringResource(R.string.settings_scheduled_quiet),
+                stringResource(R.string.settings_scheduled_quiet_detail), first = true,
+                onClick = { updateQuietHours(quietHours.copy(enabled = !quietHours.enabled)) },
+            ) {
+                MikaSwitch(quietHours.enabled, { updateQuietHours(quietHours.copy(enabled = it)) },
+                    Modifier.testTag("scheduled-quiet-switch"))
+            }
+            if (quietHours.enabled) {
+                QuietHoursTimeRow(R.string.settings_scheduled_quiet_start, quietHours.start) {
+                    updateQuietHours(quietHours.copy(start = it))
+                }
+                QuietHoursTimeRow(R.string.settings_scheduled_quiet_end, quietHours.end) {
+                    updateQuietHours(quietHours.copy(end = it))
+                }
+            }
+        }
+        if (quietHours.enabled && quietHours.start == quietHours.end) {
+            FooterNote(stringResource(R.string.settings_scheduled_quiet_equal))
+        }
+    }
+}
+
+@Composable
+private fun QuietHoursTimeRow(label: Int, time: LocalTime, onChange: (LocalTime) -> Unit) {
+    val context = LocalContext.current
+    val title = stringResource(label)
+    val use24HourClock = DateFormat.is24HourFormat(context)
+    val locale = context.resources.configuration.locales[0]
+    val pattern = DateFormat.getBestDateTimePattern(locale, if (use24HourClock) "Hm" else "hm")
+    ListRow(MikaIcons.Clock, title, onClick = {
+        TimePickerDialog(context, { _, hour, minute -> onChange(LocalTime.of(hour, minute)) },
+            time.hour, time.minute, use24HourClock).apply {
+            setTitle(title)
+            show()
+        }
+    }) {
+        RowValue(DateTimeFormatter.ofPattern(pattern, locale).format(time))
+        RowChevron()
     }
 }
 
@@ -206,22 +395,33 @@ data class ParallelSetting(val max: Int, val limit: ParallelLimit)
 /**
  * 设置 › 任务运行:自主模式默认关;屏幕常亮、被操作的 App 静音默认开,可以关;[parallel] 不为空(实验开关打开了)时多一行同时进行的任务数。
  * 下面一组是操作节奏:快 / 标准(默认) / 像人,选了下一个任务起生效。
+ * [deviceAccess] 非空时挂「锁屏时运行本机任务」一组:与「连接电脑」的远程开关互不影响,凭据编辑区共用。
  */
 @Composable
 fun DuringWorkScreen(
     keepScreenOn: Boolean, onKeepScreenOn: (Boolean) -> Unit,
     muteTarget: Boolean, onMuteTarget: (Boolean) -> Unit,
     parallel: ParallelSetting?, onParallelMax: (Int) -> Unit, onBack: () -> Unit,
+    pocketGuard: Boolean = false, onPocketGuard: (Boolean) -> Unit = {},
+    pocketCompletionLock: Boolean = false, onPocketCompletionLock: (Boolean) -> Unit = {},
     autonomous: Boolean = false, onAutonomous: (Boolean) -> Unit = {},
     operatingPace: OperatingPace = OperatingPace.DEFAULT, onOperatingPace: (OperatingPace) -> Unit = {},
+    onOpenAppPace: () -> Unit = {},
     selfConfig: Boolean = false, onSelfConfig: (Boolean) -> Unit = {},
     selfOperate: Boolean = false, onSelfOperate: (Boolean) -> Unit = {},
     pipOperate: Boolean = false, onPipOperate: (Boolean) -> Unit = {},
     externalSchedule: Boolean = false, onExternalSchedule: (Boolean) -> Unit = {},
     stepLimit: Int? = null, onStepLimit: (Int?) -> Unit = {},
+    triggerRunMinutes: Int? = null, onTriggerRunMinutes: (Int?) -> Unit = {},
+    sandboxBudgetMinutes: Int = 30, onSandboxBudgetMinutes: (Int) -> Unit = {},
     tokenBudget: Long? = null, onTokenBudget: (Long?) -> Unit = {},
+    showTaskCost: Boolean = false, onShowTaskCost: (Boolean) -> Unit = {},
+    deviceAccess: DeviceAccessSettings? = null,
 ) {
+    val context = LocalContext.current
     var editingLimit by remember { mutableStateOf(false) }
+    var editingTriggerLimit by remember { mutableStateOf(false) }
+    var editingSandboxBudget by remember { mutableStateOf(false) }
     var customLimit by remember { mutableStateOf("") }
     var editingTokenBudget by remember { mutableStateOf(false) }
     var customTokenBudget by remember { mutableStateOf("") }
@@ -236,6 +436,13 @@ fun DuringWorkScreen(
             ListRow(MikaIcons.Sun, stringResource(R.string.settings_keep_on), stringResource(R.string.settings_keep_on_sub), first = true, onClick = { onKeepScreenOn(!keepScreenOn) }) {
                 MikaSwitch(keepScreenOn, onKeepScreenOn, Modifier.testTag("work-keep-screen-on"))
             }
+            val pocketAvailable = remember { com.wangzan101.mika.pocket.PocketGuardManager.sensorsAvailable(context) }
+            ListRow(MikaIcons.Shield, stringResource(R.string.pocket_guard_title), stringResource(if (pocketAvailable) R.string.pocket_guard_summary else R.string.pocket_guard_unavailable), onClick = { if (pocketAvailable || pocketGuard) onPocketGuard(!pocketGuard) }) {
+                MikaSwitch(pocketGuard, onPocketGuard, Modifier.testTag("work-pocket-guard"), enabled = pocketAvailable || pocketGuard)
+            }
+            ListRow(MikaIcons.Lock, stringResource(R.string.pocket_completion_lock_title), stringResource(if (pocketAvailable) R.string.pocket_completion_lock_summary else R.string.pocket_guard_unavailable), onClick = { if (pocketAvailable || pocketCompletionLock) onPocketCompletionLock(!pocketCompletionLock) }) {
+                MikaSwitch(pocketCompletionLock, onPocketCompletionLock, Modifier.testTag("work-pocket-completion-lock"), enabled = pocketAvailable || pocketCompletionLock)
+            }
             ListRow(MikaIcons.Mute, stringResource(R.string.settings_mute), stringResource(R.string.settings_mute_sub), onClick = { onMuteTarget(!muteTarget) }) {
                 MikaSwitch(muteTarget, onMuteTarget, Modifier.testTag("work-mute-target"))
             }
@@ -247,6 +454,17 @@ fun DuringWorkScreen(
                 onClick = { customLimit = stepLimit?.takeIf { it !in STEP_LIMIT_PRESETS }?.toString().orEmpty(); editingLimit = true },
             )
             ListRow(
+                MikaIcons.Clock, stringResource(R.string.settings_trigger_run_limit),
+                triggerRunMinutes?.let { trPlural(R.plurals.settings_trigger_run_minutes_n, it) }
+                    ?: stringResource(R.string.settings_step_limit_off),
+                onClick = { editingTriggerLimit = true },
+            )
+            ListRow(
+                MikaIcons.Clock, stringResource(R.string.settings_sandbox_budget),
+                trPlural(R.plurals.settings_sandbox_budget_minutes_n, sandboxBudgetMinutes),
+                onClick = { editingSandboxBudget = true },
+            )
+            ListRow(
                 MikaIcons.Clock, stringResource(R.string.settings_task_token_budget),
                 tokenBudget?.let(::tokenBudgetNumber) ?: stringResource(R.string.settings_token_budget_unlimited),
                 onClick = {
@@ -254,14 +472,32 @@ fun DuringWorkScreen(
                     editingTokenBudget = true
                 },
             )
+            ListRow(
+                null, stringResource(R.string.settings_show_task_cost), stringResource(R.string.settings_show_task_cost_sub),
+                onClick = { onShowTaskCost(!showTaskCost) },
+            ) {
+                MikaSwitch(showTaskCost, onShowTaskCost, Modifier.testTag("work-show-task-cost"))
+            }
             parallel?.let { ParallelRow(it, onParallelMax) }
         }
+        // 锁屏时运行本机任务:独立开关 + 共用的锁屏凭据编辑区(组名/脚注说清与远程开关互不影响)
+        deviceAccess?.let { DeviceAccessSection(it, localTasks = true) }
         if (editingLimit) StepLimitDialog(
             current = stepLimit,
             custom = customLimit,
             onCustom = { customLimit = it.filter(Char::isDigit).take(3) },
             onPick = { onStepLimit(it); editingLimit = false },
             onDismiss = { editingLimit = false },
+        )
+        if (editingTriggerLimit) TriggerRunLimitDialog(
+            current = triggerRunMinutes,
+            onPick = { onTriggerRunMinutes(it); editingTriggerLimit = false },
+            onDismiss = { editingTriggerLimit = false },
+        )
+        if (editingSandboxBudget) SandboxBudgetDialog(
+            current = sandboxBudgetMinutes,
+            onPick = { onSandboxBudgetMinutes(it); editingSandboxBudget = false },
+            onDismiss = { editingSandboxBudget = false },
         )
         if (editingTokenBudget) TokenBudgetDialog(
             title = stringResource(R.string.settings_task_token_budget),
@@ -321,6 +557,11 @@ fun DuringWorkScreen(
             OperatingPace.entries.forEachIndexed { i, p ->
                 RadioRow(paceLabel(p), selected = p == operatingPace, onClick = { onOperatingPace(p) }, subtitle = paceDetail(p), first = i == 0)
             }
+            // 按应用覆盖:单个 App 单独设快慢,没设的跟着上面选的全局档
+            ListRow(
+                null, stringResource(R.string.settings_pace_per_app), stringResource(R.string.settings_pace_per_app_sub),
+                onClick = onOpenAppPace,
+            )
         }
         FooterNote(stringResource(R.string.settings_pace_foot))
     }
@@ -328,6 +569,45 @@ fun DuringWorkScreen(
 
 /** 步数上限的几个现成选项;别的数在输入框里填。 */
 private val STEP_LIMIT_PRESETS = listOf(30, 60, 120, 240)
+
+/** 定时任务最长运行时间:不限制或几档分钟数,选了就生效。 */
+@Composable
+private fun TriggerRunLimitDialog(current: Int?, onPick: (Int?) -> Unit, onDismiss: () -> Unit) {
+    MikaDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_trigger_run_limit)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.settings_trigger_run_limit_sub), Modifier.padding(bottom = 8.dp))
+                RadioRow(stringResource(R.string.settings_step_limit_off), selected = current == null, onClick = { onPick(null) }, first = true)
+                FeatureFlags.TRIGGER_RUN_MINUTES.forEach { m ->
+                    RadioRow(trPlural(R.plurals.settings_trigger_run_minutes_n, m), selected = current == m, onClick = { onPick(m) })
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
+}
+
+/** 每任务沙箱命令累计时长:只认几档,默认 30 分钟,没有「不限制」。 */
+@Composable
+private fun SandboxBudgetDialog(current: Int, onPick: (Int) -> Unit, onDismiss: () -> Unit) {
+    MikaDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(R.string.settings_sandbox_budget)) },
+        text = {
+            Column {
+                Text(stringResource(R.string.settings_sandbox_budget_sub), Modifier.padding(bottom = 8.dp))
+                FeatureFlags.SANDBOX_BUDGET_MINUTES.forEachIndexed { i, m ->
+                    RadioRow(trPlural(R.plurals.settings_sandbox_budget_minutes_n, m), selected = current == m, onClick = { onPick(m) }, first = i == 0)
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.cancel)) } },
+    )
+}
 
 @Composable
 private fun StepLimitDialog(
@@ -401,12 +681,12 @@ private fun ParallelRow(p: ParallelSetting, onMax: (Int) -> Unit) {
         }
         Text(
             "−", Modifier.clickable(enabled = p.max > 1) { onMax(p.max - 1) }.padding(horizontal = 10.dp, vertical = 4.dp),
-            fontSize = 18.sp, color = if (p.max > 1) MikaTheme.colors.accent else MikaTheme.colors.ink3,
+            style = MikaType.Title, color = if (p.max > 1) MikaTheme.colors.accent else MikaTheme.colors.ink3,
         )
         RowValue(trPlural(R.plurals.settings_count_tasks, p.max))
         Text(
             "+", Modifier.clickable(enabled = p.max < 3) { onMax(p.max + 1) }.padding(horizontal = 10.dp, vertical = 4.dp),
-            fontSize = 18.sp, color = if (p.max < 3) MikaTheme.colors.accent else MikaTheme.colors.ink3,
+            style = MikaType.Title, color = if (p.max < 3) MikaTheme.colors.accent else MikaTheme.colors.ink3,
         )
     }
 }
@@ -422,6 +702,15 @@ object CapsuleSettingsCopy {
     val BACKGROUND: String get() = tr(R.string.capsule_settings_background)
     val IDLE_OPACITY: String get() = tr(R.string.capsule_idle_opacity)
     val IDLE_OPACITY_DETAIL: String get() = tr(R.string.capsule_idle_opacity_detail)
+    val CARD_SIZE: String get() = tr(R.string.capsule_card_size)
+    val CARD_SIZE_DETAIL: String get() = tr(R.string.capsule_card_size_detail)
+
+    fun scaleLabel(scale: CapsuleCardScale): String = when (scale) {
+        CapsuleCardScale.Small -> tr(R.string.capsule_card_size_small)
+        CapsuleCardScale.Normal -> tr(R.string.capsule_card_size_normal)
+        CapsuleCardScale.Large -> tr(R.string.capsule_card_size_large)
+        CapsuleCardScale.XLarge -> tr(R.string.capsule_card_size_xlarge)
+    }
 
     fun label(mode: CapsuleMode): String = when (mode) {
         CapsuleMode.Off -> tr(R.string.capsule_mode_off)
@@ -436,7 +725,7 @@ object CapsuleSettingsCopy {
     }
 }
 
-/** 设置 › 悬浮胶囊:关闭 / 有任务时显示(默认) / 一直显示,选了当场生效。 */
+/** 设置 › 悬浮胶囊:关闭 / 有任务时显示(默认) / 一直显示,选了当场生效;静置不透明度与展开卡片的大小。 */
 @Composable
 fun CapsuleScreen(
     mode: CapsuleMode,
@@ -444,7 +733,18 @@ fun CapsuleScreen(
     onBack: () -> Unit,
     idleOpacity: CapsuleIdleOpacity = CapsuleIdleOpacity.DEFAULT,
     onIdleOpacity: (CapsuleIdleOpacity) -> Unit = {},
+    cardScale: CapsuleCardScale = CapsuleCardScale.DEFAULT,
+    onCardScale: (CapsuleCardScale) -> Unit = {},
 ) {
+    val context = LocalContext.current
+    val flags = remember { FeatureFlags.get(context) }
+    val hideAtEdge by remember(flags) { flags.capsuleHideAtEdgeChanges() }.collectAsState(flags.capsuleHideAtEdge())
+    val hideFullscreen by remember(flags) { flags.capsuleHideFullscreenChanges() }.collectAsState(flags.capsuleHideFullscreen())
+    var quickSettings by remember { mutableStateOf(CapsuleTileService.isAvailable(context)) }
+    fun setQuickSettings(on: Boolean) {
+        CapsuleTileService.setAvailable(context, on)
+        quickSettings = CapsuleTileService.isAvailable(context)
+    }
     PageScaffold(CapsuleSettingsCopy.TITLE, onBack) {
         GroupCard {
             CapsuleMode.entries.forEachIndexed { i, m ->
@@ -474,12 +774,47 @@ fun CapsuleScreen(
                 )
             }
         }
+        GroupLabel(CapsuleSettingsCopy.CARD_SIZE)
+        GroupCard {
+            Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp)) {
+                ListRow(
+                    MikaIcons.Photo, CapsuleSettingsCopy.CARD_SIZE, CapsuleSettingsCopy.CARD_SIZE_DETAIL,
+                    first = true, titleColor = if (mode == CapsuleMode.Off) MikaTheme.colors.ink3 else androidx.compose.ui.graphics.Color.Unspecified,
+                ) { RowValue(CapsuleSettingsCopy.scaleLabel(cardScale)) }
+                Slider(
+                    value = CapsuleCardScale.entries.indexOf(cardScale).toFloat(),
+                    onValueChange = {
+                        val index = it.roundToInt().coerceIn(CapsuleCardScale.entries.indices)
+                        onCardScale(CapsuleCardScale.entries[index])
+                    },
+                    valueRange = 0f..3f,
+                    steps = 2,
+                    enabled = mode != CapsuleMode.Off,
+                    modifier = Modifier.testTag("capsule-card-size"),
+                )
+            }
+        }
+        GroupCard {
+            ListRow(MikaIcons.EyeOff, stringResource(R.string.capsule_hide_at_edge), first = true,
+                onClick = { flags.setCapsuleHideAtEdge(!hideAtEdge) }) {
+                MikaSwitch(hideAtEdge, flags::setCapsuleHideAtEdge, Modifier.testTag("capsule-hide-at-edge"))
+            }
+            ListRow(MikaIcons.Screens, stringResource(R.string.capsule_hide_fullscreen),
+                onClick = { flags.setCapsuleHideFullscreen(!hideFullscreen) }) {
+                MikaSwitch(hideFullscreen, flags::setCapsuleHideFullscreen, Modifier.testTag("capsule-hide-fullscreen"))
+            }
+            ListRow(MikaIcons.Apps, stringResource(R.string.capsule_tile_enabled),
+                onClick = { setQuickSettings(!quickSettings) }) {
+                MikaSwitch(quickSettings, ::setQuickSettings, Modifier.testTag("capsule-quick-settings"))
+            }
+        }
         FooterNote(CapsuleSettingsCopy.FOOTNOTE)
         FooterNote(CapsuleSettingsCopy.BACKGROUND)
     }
 }
 
 /** 设置 › 语言:跟随系统、简体中文、繁體中文、English;选了马上换,界面跟着重建。 */
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun LanguageScreen(language: AppLanguage, onLanguage: (AppLanguage) -> Unit, onBack: () -> Unit) {
     val context = LocalContext.current
@@ -494,7 +829,9 @@ fun LanguageScreen(language: AppLanguage, onLanguage: (AppLanguage) -> Unit, onB
             if (!SkinImage.import(context, uri)) Toast.makeText(context, R.string.skin_failed, Toast.LENGTH_SHORT).show()
         }
     }
-    PageScaffold(stringResource(R.string.appearance_title), onBack) {
+    val focusManager = LocalFocusManager.current
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
+    PageScaffold(stringResource(R.string.appearance_title), onBack, modifier = Modifier.imePadding()) {
         // 语言和外观放在同一页:都是「界面长什么样」
         GroupLabel(stringResource(R.string.appearance_group))
         GroupCard {
@@ -534,12 +871,80 @@ fun LanguageScreen(language: AppLanguage, onLanguage: (AppLanguage) -> Unit, onB
             if (skin.active) SkinControls(skin, flags::setSkin, onClear = { SkinImage.clear(context) })
         }
         GroupLabel(stringResource(R.string.language_title))
-        GroupCard {
-            AppLanguage.entries.forEachIndexed { i, l ->
-                RadioRow(
-                    languageLabel(l), selected = l == language, onClick = { if (l != language) onLanguage(l) },
-                    subtitle = if (l == AppLanguage.System) stringResource(R.string.language_system_detail) else null, first = i == 0,
+        var langQuery by remember { mutableStateOf("") }
+        var langSearchFocused by remember { mutableStateOf(false) }
+        val c = MikaTheme.colors
+        val filteredLanguages = remember(langQuery) { filterLanguages(langQuery) }
+
+        LaunchedEffect(langSearchFocused, langQuery) {
+            if (langSearchFocused || langQuery.isNotEmpty()) {
+                bringIntoViewRequester.bringIntoView()
+            }
+        }
+
+        Row(
+            Modifier
+                .fillMaxWidth()
+                .padding(bottom = 8.dp)
+                .height(36.dp)
+                .clip(MikaShapes.Pill)
+                .background(c.fill)
+                .then(if (langSearchFocused) Modifier.border(1.dp, c.accent, MikaShapes.Pill) else Modifier)
+                .padding(horizontal = 10.dp)
+                .bringIntoViewRequester(bringIntoViewRequester),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Icon(MikaIcons.Search, null, Modifier.size(16.dp), tint = c.ink3)
+            Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                if (langQuery.isEmpty()) {
+                    Text(stringResource(R.string.language_search_hint), style = MikaType.Caption, color = c.ink3, maxLines = 1)
+                }
+                BasicTextField(
+                    value = langQuery,
+                    onValueChange = { langQuery = it },
+                    modifier = Modifier.fillMaxWidth().onFocusChanged { langSearchFocused = it.isFocused },
+                    singleLine = true,
+                    textStyle = MikaType.Caption.copy(color = c.ink),
+                    cursorBrush = SolidColor(c.accent),
+                    keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                    keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
                 )
+            }
+            if (langQuery.isNotEmpty()) {
+                Box(
+                    Modifier.size(22.dp).clip(CircleShape).clickable {
+                        langQuery = ""
+                        focusManager.clearFocus()
+                    },
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Icon(MikaIcons.Close, null, Modifier.size(12.dp), tint = c.ink3)
+                }
+            }
+        }
+        GroupCard(Modifier.animateContentSize()) {
+            if (filteredLanguages.isEmpty()) {
+                Box(
+                    Modifier.fillMaxWidth().padding(vertical = 16.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        stringResource(R.string.file_library_empty),
+                        style = MikaType.Caption,
+                        color = c.ink3,
+                    )
+                }
+            } else {
+                filteredLanguages.forEachIndexed { i, l ->
+                    RadioRow(
+                        languageLabel(l), selected = l == language, onClick = {
+                            if (l != language) onLanguage(l)
+                            focusManager.clearFocus()
+                        },
+                        first = i == 0,
+                    )
+                }
             }
         }
     }
@@ -561,6 +966,7 @@ fun languageLabel(l: AppLanguage): String = stringResource(
         AppLanguage.Portuguese -> R.string.language_portuguese
         AppLanguage.Russian -> R.string.language_russian
         AppLanguage.Indonesian -> R.string.language_indonesian
+        AppLanguage.Turkish -> R.string.language_turkish
     },
 )
 

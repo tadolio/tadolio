@@ -1,4 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
 <resources>
     <string name="dev_adaptive">Baca elemen dulu, gambar jika perlu</string>
     <string name="dev_adaptive_sub">Tidak mengirim gambar jika pohon UI sudah cukup; menambahkan satu jika belum</string>
@@ -25,4 +26,8 @@
     <string name="dev_speed">Kecepatan</string>
     <string name="dev_experiments">Eksperimen</string>
     <string name="dev_run_log">Catatan eksekusi</string>
+    <string name="dev_screen_tables">Ringkas elemen layar baru</string>
+    <string name="dev_screen_tables_sub">Saat layar pertama kali dibaca, kirim kolom untuk bidang berulang. Referensi elemen dan pohon lengkap tetap tersedia.</string>
+    <string name="dev_device_files">Impor file perangkat</string>
+    <string name="dev_device_files_sub">Izinkan Tadolio menyalin file dari penyimpanan bersama perangkat ke ruang kerja. Perubahan berlaku untuk tugas baru.</string>
 </resources>

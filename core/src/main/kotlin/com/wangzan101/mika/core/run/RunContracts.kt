@@ -27,6 +27,8 @@ data class RunSpec(
     val allowReadOnlyNavigation: Boolean = true,
     /** 主循环、旁路调用和子任务共享的已报告 Token 预算；null 不限制。 */
     val tokenBudget: Long? = null,
+    /** 由同一批次并行派发的子任务，宿主为它单独分配有状态的资源。 */
+    val parallelChild: Boolean = false,
 ) {
     init {
         require(goal.isNotBlank() && threadId.isNotBlank())

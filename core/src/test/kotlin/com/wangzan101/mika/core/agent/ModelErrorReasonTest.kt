@@ -8,6 +8,13 @@ import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class ModelErrorReasonTest {
+    @Test fun rateLimitHasStableFailureCode() {
+        val failure = StopRules.modelFailed(ModelError.RateLimited(null))
+        assertEquals(FailKind.Model, failure.kind)
+        assertEquals(FailureCode.ModelRateLimited, failure.code)
+        assertEquals(null, StopRules.modelFailed(ModelError.Network()).code)
+    }
+
     /** 找不到模型:知道模型名时说清是哪个、去哪改、模型名大概长什么样;不知道时退回一般的说法。 */
     @Test fun modelNotFoundNamesTheModel() {
         assertEquals(
@@ -67,6 +74,16 @@ class ModelErrorReasonTest {
         assertTrue(reason.contains("思考强度改为默认"))
         assertFalse(reason.contains("Base URL"))
         assertFalse(reason.contains("接口类型"))
+    }
+
+    /** 整条链失败:主消息是主模型的错误,后面附每个模型的状态码与一行摘要(MK-1 第 2 批)。 */
+    @Test fun chainFailedLeadsWithPrimaryAndListsTrail() {
+        val primary = ModelError.RateLimited(null)
+        val e = ModelError.ChainFailed(primary, listOf("inferx-main" to primary, "gemini-backup" to ModelError.Server(400)))
+        val reason = StopRules.modelFailed(e).reason
+        assertTrue(reason.startsWith(userReason(primary)))
+        assertTrue(reason.contains("「inferx-main」 HTTP 429"))
+        assertTrue(reason.contains("「gemini-backup」 HTTP 400"))
     }
 
     /** 断流有自己的说法、不提 Base URL;真的解析不了(格式对不上)才提示检查 Base URL 和接口类型。 */

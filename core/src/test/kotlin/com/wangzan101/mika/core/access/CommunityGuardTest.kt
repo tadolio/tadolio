@@ -44,9 +44,9 @@ class CommunityGuardTest {
         assertEquals(2, fake.calls.count { it.startsWith("open ") })
         val read = tools.executeRead(call("phone_observe"))
         assertTrue(read.content.toString().contains("搜索"))
-        // Screens go to miners as text: their models are not known to accept images.
-        assertFalse(tools.seesImages)
-        assertTrue(read.images.isEmpty())
+        // Vision follows the selected model capability in either compute mode.
+        assertTrue(tools.seesImages)
+        assertTrue(read.images.isNotEmpty())
     }
 
     @Test fun unknownForegroundAndManualFinanceClassificationAllowOpening() = runTest {

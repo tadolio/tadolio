@@ -4,9 +4,13 @@
     <string name="settings_personal_start">Buka asisten pribadi saat aplikasi dimulai</string>
     <string name="settings_personal_start_sub">Jadikan asisten pribadi sebagai layar awal Tadolio</string>
     <string name="language_title">Bahasa</string>
+    <string name="language_prompt_title">Bahasa</string>
+    <string name="language_prompt_hint">Pilih bahasa yang digunakan Tadolio untuk berpikir, narasi langkah, dan menjawab.</string>
+    <string name="language_search_hint">Cari bahasa</string>
+    <string name="language_prompt_confirm">Konfirmasi</string>
+    <string name="language_prompt_dismiss">Nanti saja</string>
     <string name="language_system">Ikuti sistem</string>
     <string name="language_system_detail">Memakai bahasa sistem Anda jika Tadolio mendukungnya, jika tidak memakai bahasa Inggris</string>
-    <string name="settings_basic">Umum</string>
     <string name="settings_language_appearance">Bahasa &amp; tampilan</string>
     <string name="settings_model">Model</string>
     <string name="settings_model_sub">Model, penyedia &amp; penggunaan token</string>
@@ -15,7 +19,6 @@
     <string name="settings_during_work">Menjalankan tugas</string>
     <string name="settings_during_work_sub">Mode mandiri, kecepatan, batas langkah &amp; suara</string>
     <string name="settings_notif_sub">Saat muncul, ubah di setelan sistem</string>
-    <string name="settings_privacy">Data saya</string>
     <string name="settings_memory_data">Memori &amp; data</string>
     <string name="settings_memory_sub">Memori, keterampilan, rute tersimpan &amp; akun situs web</string>
     <string name="settings_saved_data">Data tersimpan</string>
@@ -23,10 +26,8 @@
     <plurals name="settings_count_sites">
         <item quantity="other">%1$d situs</item>
     </plurals>
-    <string name="settings_other">Lainnya</string>
-    <string name="settings_advanced">Lanjutan &amp; lainnya</string>
-    <string name="settings_advanced_sub">Proxy, komputasi, koneksi &amp; perbaikan</string>
-    <string name="settings_connections">Jaringan &amp; koneksi</string>
+    <string name="settings_advanced">Lanjutan</string>
+    <string name="settings_advanced_sub">Ekstensi, jaringan, runtime &amp; pemeliharaan</string>
     <string name="settings_maintenance">Pemeliharaan</string>
     <string name="settings_sandbox">Berkas &amp; lingkungan komputasi</string>
     <string name="settings_routes">Rute tersimpan</string>
@@ -55,6 +56,8 @@
     <string name="settings_notif_master">Semua notifikasi</string>
     <string name="settings_allowed">Diizinkan</string>
     <string name="settings_task_notifs">Notifikasi tugas</string>
+    <string name="settings_live_task_updates">Pembaruan tugas langsung</string>
+    <string name="settings_live_task_updates_detail">Pilih apakah tugas yang sedang berjalan ditampilkan di bilah status</string>
     <string name="settings_keep_on">Biarkan layar menyala</string>
     <string name="settings_keep_on_sub">Layar tetap menyala selama tugas berjalan (tetap meredup seperti biasa saat tidak dipakai), lalu kembali normal</string>
     <string name="settings_mute">Bisukan aplikasi yang dipakai</string>
@@ -67,6 +70,15 @@
     <string name="settings_pace_human">Seperti manusia</string>
     <string name="settings_pace_human_detail">Lambat di semua aplikasi, membaca tiap layar sebelum lanjut</string>
     <string name="settings_pace_foot">Beberapa aplikasi mengeluarkan Anda atau meminta verifikasi jika dipakai terlalu cepat. Semakin lambat kecepatannya, semakin lama tugas selesai.</string>
+    <string name="settings_pace_per_app">Pace per aplikasi</string>
+    <string name="settings_pace_per_app_sub">Perlambat aplikasi dengan pemeriksaan bot ketat, atau percepat yang santai; sisanya mengikuti pace global</string>
+    <string name="settings_pace_per_app_intro">Aplikasi dalam daftar ini memakai pace sendiri; sisanya mengikuti pace global (sekarang %1$s).</string>
+    <string name="settings_pace_per_app_empty">Belum ada aplikasi yang diatur per aplikasi.</string>
+    <string name="settings_pace_per_app_add">Tambah aplikasi</string>
+    <string name="settings_pace_per_app_search">Cari aplikasi</string>
+    <string name="settings_pace_per_app_none">Tidak ada aplikasi yang cocok</string>
+    <string name="settings_pace_per_app_pick">Pilih</string>
+    <string name="settings_pace_per_app_remove">Hapus (ikuti pace global)</string>
     <string name="settings_parallel">Tugas sekaligus</string>
     <string name="settings_parallel_sub">Tugas dari obrolan berbeda masing-masing mendapat layar virtual sendiri</string>
     <plurals name="settings_count_tasks">
@@ -84,6 +96,12 @@
     <string name="capsule_mode_always_detail">Menampilkan ikon Tadolio di layar walau tidak ada tugas</string>
     <string name="capsule_idle_opacity">Opasitas saat diam</string>
     <string name="capsule_idle_opacity_detail">Setelah beberapa detik tidak disentuh; hal yang memerlukan perhatian Anda tetap terlihat penuh</string>
+    <string name="capsule_card_size">Ukuran kartu</string>
+    <string name="capsule_card_size_detail">Kartu yang terbuka dan teksnya diskalakan bersama; kapsul yang tertutup tidak berubah</string>
+    <string name="capsule_card_size_small">Kecil</string>
+    <string name="capsule_card_size_normal">Standar</string>
+    <string name="capsule_card_size_large">Besar</string>
+    <string name="capsule_card_size_xlarge">Sangat besar</string>
     <string name="routes_saved">Rute tersimpan</string>
     <string name="loading">Memuat</string>
     <plurals name="routes_count">
@@ -97,6 +115,8 @@
     <string name="net_proxy">Proksi jaringan</string>
     <string name="net_proxy_row_sub">Untuk panggilan model, pembaruan, browser bawaan, dan perintah</string>
     <string name="net_proxy_hint">Dipakai untuk panggilan model Tadolio (obrolan, daftar model, masuk dengan akun), unduhan pembaruan di dalam aplikasi, browser bawaan, dan perintah di Berkas &amp; lingkungan komputasi selama akses jaringan di sana aktif. Alamat di ponsel ini atau jaringan lokal (localhost, 192.168.x.x, 10.x.x.x, nama yang berakhiran .local) selalu tersambung langsung, jadi model lokal tetap bisa dipakai. Bisa menyertakan user:password@, yang disimpan terenkripsi di ponsel ini. Kosongkan untuk koneksi langsung.</string>
+    <string name="net_proxy_summary">Permintaan model, pembaruan, peramban bawaan, dan perintah lingkungan file memakai proxy ini.</string>
+    <string name="details">Detail</string>
     <string name="net_proxy_invalid">Tulis sebagai http://host:port (socks5, socks5h, dan https juga bisa), opsional dengan user:password@ sebelum host.</string>
     <string name="net_proxy_container_only">Proksi https:// hanya dipakai oleh perintah di Berkas &amp; lingkungan komputasi; koneksi Tadolio sendiri tetap langsung. Pakai http:// atau socks5:// agar semuanya lewat proksi.</string>
     <string name="net_proxy_browser_unsupported">WebView di ponsel ini tidak mendukung proksi khusus aplikasi, jadi browser bawaan tersambung langsung.</string>
@@ -187,6 +207,8 @@
     <string name="mcp_servers_status_fail">Gagal terhubung: %1$s</string>
     <string name="mcp_servers_refresh_all">Uji semua</string>
     <string name="mcp_servers_allowlist">Alat yang diizinkan (dipisah koma, kosong = semua)</string>
+    <string name="settings_show_task_cost">Tampilkan biaya tugas</string>
+    <string name="settings_show_task_cost_sub">Perkirakan biaya API DeepSeek untuk tugas baru dalam yuan.</string>
     <string name="quit_title">Keluar dari Tadolio sepenuhnya</string>
     <string name="quit_row_sub">Menghentikan tugas latar belakang dan menyembunyikan kapsul mengambang</string>
     <string name="quit_confirm_body">Tugas yang sedang berjalan akan berhenti, kapsul mengambang dan notifikasi akan hilang. Saat Tadolio dibuka lagi, semuanya kembali.</string>
@@ -197,6 +219,33 @@
     <string name="settings_token_budget_custom">Anggaran token kustom</string>
     <string name="settings_token_budget_apply">Pakai</string>
     <string name="settings_token_budget_invalid">Masukkan bilangan bulat dari %1$s sampai %2$s.</string>
+    <string name="settings_auto_archive">Arsipkan chat otomatis</string>
+    <string name="settings_auto_archive_sub">Chat tanpa pesan baru untuk sementara waktu dipindahkan ke arsip</string>
+    <string name="settings_auto_archive_hint">Chat tanpa pesan baru selama waktu yang dipilih dipindahkan ke arsip.</string>
+    <plurals name="settings_auto_archive_days">
+        <item quantity="other">%1$d hari</item>
+    </plurals>
+    <string name="settings_scheduled_quiet">Jam hening tugas terjadwal</string>
+    <string name="settings_scheduled_quiet_detail">Hasil dan pengingat terjadwal muncul tanpa suara di panel notifikasi.</string>
+    <string name="settings_scheduled_quiet_start">Waktu mulai</string>
+    <string name="settings_scheduled_quiet_end">Waktu selesai</string>
+    <string name="settings_scheduled_quiet_equal">Pilih waktu mulai dan selesai yang berbeda untuk membisukan notifikasi.</string>
+    <string name="settings_capabilities">Kemampuan</string>
+    <string name="settings_preferences">Preferensi</string>
+    <string name="settings_data">Data</string>
+    <string name="settings_extensions">Ekstensi &amp; koneksi</string>
+    <string name="settings_network">Jaringan</string>
+    <string name="settings_runtime">Runtime</string>
+    <string name="settings_trigger_run_limit">Batas waktu tugas terjadwal</string>
+    <string name="settings_trigger_run_limit_sub">Tugas terjadwal berjalan saat Anda tidak memantau. Mati berarti tanpa batas; saat waktunya habis, tugas berhenti dan menjelaskan bahwa waktunya habis.</string>
+    <plurals name="settings_trigger_run_minutes_n">
+        <item quantity="other">%1$d menit</item>
+    </plurals>
+    <string name="settings_sandbox_budget">Batas waktu lingkungan komputasi per tugas</string>
+    <string name="settings_sandbox_budget_sub">Total waktu menjalankan perintah lingkungan dalam satu tugas (memasang dependensi, build, dan sejenisnya). Default 30 menit; perubahan berlaku mulai tugas berikutnya.</string>
+    <plurals name="settings_sandbox_budget_minutes_n">
+        <item quantity="other">%1$d menit</item>
+    </plurals>
     <string name="settings_advanced_sub_no_sandbox">Proxy, koneksi &amp; perbaikan</string>
     <string name="net_proxy_hint_no_sandbox">Dipakai untuk panggilan model Tadolio (obrolan, daftar model, masuk dengan akun), unduhan pembaruan di dalam aplikasi, browser bawaan. Alamat di ponsel ini atau jaringan lokal (localhost, 192.168.x.x, 10.x.x.x, nama yang berakhiran .local) selalu tersambung langsung, jadi model lokal tetap bisa dipakai. Bisa menyertakan user:password@, yang disimpan terenkripsi di ponsel ini. Kosongkan untuk koneksi langsung.</string>
     <string name="net_proxy_container_only_no_sandbox">Pakai http:// atau socks5://.</string>

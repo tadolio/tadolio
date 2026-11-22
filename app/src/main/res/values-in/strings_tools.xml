@@ -21,9 +21,12 @@
     <string name="tool_find_element">Cari di layar</string>
     <string name="tool_collect">Kumpulkan dari beberapa layar</string>
     <string name="tool_phone_run">Beberapa tindakan ponsel</string>
+    <string name="tool_list_device_files">Jelajahi berkas perangkat</string>
+    <string name="tool_copy_device_file">Salin berkas perangkat</string>
     <string name="tool_process_files">Olah berkas</string>
     <string name="tool_run_script">Jalankan skrip bawaan</string>
     <string name="tool_read_file">Baca berkas</string>
+    <string name="tool_view_image">Lihat gambar</string>
     <string name="tool_write_file">Tulis berkas</string>
     <string name="tool_search_files">Cari berkas</string>
     <string name="tool_export_file">Ekspor berkas</string>
@@ -47,6 +50,9 @@
     <string name="tool_list_settings">Baca pengaturan</string>
     <string name="tool_set_setting">Ubah pengaturan</string>
     <string name="tool_save_skill">Simpan keterampilan</string>
+    <string name="tool_memory_search">Cari di memori</string>
+    <string name="tool_memory_save">Tulis ke memori</string>
+    <string name="tool_memory_edit">Ubah memori</string>
     <string name="tool_explain_failure">Jelaskan mengapa tidak berhasil</string>
     <string name="tool_ask_user">Ajukan pertanyaan kepada Anda</string>
     <string name="tool_takeover">Minta Anda mengambil alih</string>
@@ -75,4 +81,5 @@
     <string name="tool_mika_login_site">Masuk ke situs</string>
     <string name="tool_mika_confirm_login">Konfirmasi login</string>
     <string name="tool_mika_favorites">Situs sering dipakai</string>
+    <string name="tool_wechat_owner">Kirim ke WeChat saya</string>
 </resources>

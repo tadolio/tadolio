@@ -24,7 +24,7 @@ class BundledKnowledgeTest {
     @Test fun bundledTreesPassValidationAndIndexIsCurrent() {
         val r = KnowledgeIndex.build(resources)
         assertTrue(r.errors.joinToString("\n"), r.errors.isEmpty())
-        assertEquals(mapOf("app" to 29, "site" to 19, "skill" to 6), r.entries.groupingBy { it.kind }.eachCount())
+        assertEquals(mapOf("app" to 49, "site" to 29, "skill" to 6), r.entries.groupingBy { it.kind }.eachCount())
         // 类路径上的索引就是按当前文件生成的那份
         assertEquals(r.entries.filterNot { !com.wangzan101.mika.core.HivoFeatures.SANDBOX_ENABLED && it.kind == "skill" && it.name in setOf("documents", "content-transcribe") }, catalog.rows)
     }
@@ -36,7 +36,7 @@ class BundledKnowledgeTest {
 
     // App 的 pace 按包名查 App 知识:限制浏览快慢的那几个内置 App 是 careful,别的没有说法
     @Test fun appPaceFollowsTheAppKnowledgeByPackage() {
-        val careful = listOf("xiaohongshu", "wechat", "douyin", "kuaishou", "weibo", "boss-zhipin", "xianyu")
+        val careful = listOf("xiaohongshu", "wechat", "douyin", "kuaishou", "weibo", "boss-zhipin", "xianyu", "xiaoheihe", "instagram", "tiktok")
         val apps = catalog.rows.filter { it.kind == KnowledgeIndex.APP }
         for (name in careful) {
             val row = apps.single { it.name == name }
@@ -44,10 +44,13 @@ class BundledKnowledgeTest {
         }
         apps.filter { it.name !in careful }.flatMap { it.packages }.forEach { assertEquals(it, null, catalog.appPace(it)) }
         assertEquals(null, catalog.appPace("com.example.unknown"))
+        // carefulApps 给设置里按应用操作节奏列表当初始内容:恰好是这些 App 的全部包名
+        val carefulPkgs = careful.mapNotNull { n -> apps.singleOrNull { it.name == n } }.flatMap { it.packages }.sorted()
+        assertEquals(carefulPkgs, catalog.carefulApps())
     }
 
     @Test fun everyEntryHasABody() {
-        assertEquals(48, bundled.size)
+        assertEquals(78, bundled.size)
         assertTrue(bundled.all { !it.body.isNullOrBlank() && it.body!!.length <= KnowledgeIndex.BODY_LIMIT })
         assertTrue(bundled.map { it.name }.containsAll(listOf("wechat", "xianyu", "android-settings", "github.com", "zhihu.com", "weixin.sogou.com")))
     }

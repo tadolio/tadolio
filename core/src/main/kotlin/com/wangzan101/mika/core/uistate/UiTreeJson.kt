@@ -10,7 +10,7 @@ import kotlinx.serialization.json.buildJsonArray
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 
-/** 给模型看的手机窗口层级;节点完整保留,只省去空字段和默认状态。 */
+/** 给模型看的手机窗口层级;节点只留结构与状态位(role/ref/children/交互态),文字、位置、resourceId 都在 elements 里按 ref 对应,省去重复序列化。 */
 object UiTreeJson {
     fun windows(s: ScreenSnapshot, maxElements: Int = Int.MAX_VALUE): JsonArray = buildJsonArray {
         val elements = s.elements.filter { it.meaningful }.take(maxElements).associateBy { it.ref }

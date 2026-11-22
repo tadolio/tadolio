@@ -42,12 +42,12 @@ class TaskModelsTest {
         assertSame(light, TaskModels(main, light, null, true, false).routedLight)
     }
 
-    @Test fun pureCommunityAuxiliaryStillRedactsAndHasNoStepRouter() = runTest {
+    @Test fun pureCommunityAuxiliaryStillRedactsAndSupportsTheStepRouter() = runTest {
         val main = Fake()
         val light = Fake()
         val models = TaskModels(main, light, null, distinctLight = true, community = true)
         assertSame(light, models.light)
-        assertNull(models.routedLight)
+        assertSame(light, models.routedLight)
         models.auxiliary(light)!!.complete("BASE", message("验证码 123456"), emptyList())
         assertEquals(1, light.requests.size)
         assertFalse(light.requests.single().toString().contains("123456"))

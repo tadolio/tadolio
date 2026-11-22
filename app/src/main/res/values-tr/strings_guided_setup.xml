@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Modified by Tadolio contributors (2026) -->
+<resources>
+
+    <string name="setup_conversation_continue">Start</string>
+    <string name="setup_conversation_later">Later</string>
+    <string name="setup_conversation_retry">Try again</string>
+    <string name="setup_highlight_tap">Tap here</string>
+    <string name="setup_highlight_build">Tap here 7 times</string>
+    <string name="setup_accessibility_toast">Tap Downloaded apps, tap Tadolio, turn the switch on</string>
+</resources>
