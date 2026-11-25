@@ -33,8 +33,8 @@ android {
         applicationId = "com.tadolio.app"
         minSdk = 30
         targetSdk = 35
-        versionCode = 51
-        versionName = "0.1.50"
+        versionCode = 52
+        versionName = "0.1.51"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "POINTS_URL", "\"" + providers.gradleProperty("pointsUrl").getOrElse("").replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") + "\"")
         buildConfigField("String", "HUB_URL", "\"" + providers.gradleProperty("hubUrl").getOrElse("").replace("\\", "\\\\").replace("\"", "\\\"").replace("\n", "\\n").replace("\r", "\\r") + "\"")

@@ -86,6 +86,7 @@
     <string name="miner_siliconflow_name">硅基流动</string>
     <string name="miner_exam_timeout">有题目超时，可能是模型平台当时响应慢</string>
     <string name="miner_exam_answer">有题目没答对</string>
+    <string name="miner_exam_interrupted">上次考试中途连接断了，不算答错。可以立即重考，不点也会稍后自动再考</string>
     <string name="miner_exam_retry">立即重考（今天还剩 %1$d 次）</string>
     <string name="miner_change_model">换个模型</string>
     <string name="miner_exam_reset">明天 %1$s 可以再考</string>

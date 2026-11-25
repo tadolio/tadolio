@@ -26,6 +26,7 @@
     <string name="miner_price_note">內建價格更新於 %1$s；DeepSeek 按尖峰價估算。快取優惠和額外費用另計，以平台帳單為準。</string>
     <string name="miner_exam_timeout">有題目逾時，可能是模型平台當時回應慢</string>
     <string name="miner_exam_answer">有題目沒答對</string>
+    <string name="miner_exam_interrupted">上次考試中途連線斷了，不算答錯。可以立即重考，不點也會稍後自動再考</string>
     <string name="miner_exam_retry">立即重考（今天還剩 %1$d 次）</string>
     <string name="miner_change_model">換個模型</string>
     <string name="miner_exam_reset">明天 %1$s 可以再考</string>

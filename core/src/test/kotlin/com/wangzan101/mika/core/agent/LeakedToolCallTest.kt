@@ -40,6 +40,25 @@ class LeakedToolCallTest {
         assertEquals("web_read_page", LeakedToolCall.find(text, tools))
     }
 
+    /** gpt-oss-20b 在社区显卡矿工上真实写出的样子(2026-11-24):以工具名为标签名。 */
+    @Test fun toolNameAsTagIsFound() {
+        val text = "<ask_user reason=\"请告诉我您所在的城市或地区，以便查询明天的天气。\" prompt=\"您在哪个城市？\" options={}>"
+        assertEquals("ask_user", LeakedToolCall.find(text, tools))
+        assertEquals("wait", LeakedToolCall.find("好的。<wait/>", tools))
+    }
+
+    @Test fun harmonyMarkersAreFound() {
+        val text = "<|channel|>commentary to=functions.ask_user <|constrain|>json<|message|>{\"question\":\"哪个城市?\"}<|call|>"
+        assertEquals("ask_user", LeakedToolCall.find(text, tools))
+    }
+
+    /** 尖括号后面只是工具名的前缀,或者是普通比较符号,不算。 */
+    @Test fun tagMustBeTheWholeToolName() {
+        assertNull(LeakedToolCall.find("<ask_user_later reason=\"x\">", tools))
+        assertNull(LeakedToolCall.find("温度 <find 不了的情况很少见", tools.filter { it != "find" }))
+        assertNull(LeakedToolCall.find("a<b 并且 3 < 5", tools))
+    }
+
     /** 工具名只是别的词的一部分时不算提到了这个工具。 */
     @Test fun toolNameMustBeAWholeWord() {
         assertNull(LeakedToolCall.find("<tool_call>{\"name\": \"ask_user_later\"}</tool_call>", tools))

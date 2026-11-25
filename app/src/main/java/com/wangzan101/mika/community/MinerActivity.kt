@@ -295,7 +295,11 @@ class MinerActivity : ComponentActivity() {
                                 Text(stringResource(state.message), style = MaterialTheme.typography.titleLarge)
                             }
                             if (examStatus["retryAllowed"]?.jsonPrimitive?.booleanOrNull == true) {
-                                Text(stringResource(if (examStatus["failureReason"]?.jsonPrimitive?.contentOrNull == "timeout") R.string.miner_exam_timeout else R.string.miner_exam_answer))
+                                Text(stringResource(when {
+                                    examStatus["failureDetail"]?.jsonPrimitive?.contentOrNull == "interrupted" -> R.string.miner_exam_interrupted
+                                    examStatus["failureReason"]?.jsonPrimitive?.contentOrNull == "timeout" -> R.string.miner_exam_timeout
+                                    else -> R.string.miner_exam_answer
+                                }))
                                 val remaining=examStatus["retryRemaining"]?.jsonPrimitive?.intOrNull ?: 0
                                 Button(enabled=!busy && remaining > 0, onClick={ scope.launch {
                                     busy=true
